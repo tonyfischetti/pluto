@@ -1,6 +1,6 @@
 
-(asdf:defsystem :clix
-  :description "My personal common lisp utilities"
+(asdf:defsystem :pluto
+  :description "A common lisp package that's out there"
   :author "Tony Fischetti"
   :license "GPL-3"
-  :components ((:file "clix")))
+  :components ((:file "pluto")))

@@ -62,11 +62,9 @@
 
            ))
 
-
 (in-package :pluto)
 
 (pushnew :pluto *features*)
-
 
 
 ;---------------------------------------------------------;
@@ -281,29 +279,6 @@
       `(format *error-output* "~20S -> ~S~%" ',this ,this)))
     `(progn ,@(mapcar #'debug therest))))
 
-; (defmacro with-a-file (filename key &body body)
-;   "Anaphoric macro that binds `stream!` to the stream
-;    First argument is the filename
-;    The second argument is one of
-;      `:w` - write to a file  (clobber if already exists)
-;      `:a` - append to a file (create if doesn't exist)
-;      `:r` - read a file      (in text mode)
-;      `:b` - read a file      (in binary mode [unsigned-byte 8])
-;     Only provide one of these arguments"
-;    (let ((dir (cond
-;                 ((eq key :w) :output)       ((eq key :a) :output)
-;                 ((eq key :r) :input)        ((eq key :b) :input)))
-;          (iex (cond
-;                 ((eq key :w) :supersede)    ((eq key :a) :append)
-;                 ((eq key :r) :append)       ((eq key :b) :append))))
-;     `(with-open-file (stream! ,filename :direction ,dir :if-exists ,iex
-;                               ,@(when (eq key :b)
-;                                   `(':element-type 'unsigned-byte))
-;                               :if-does-not-exist :create)
-;                               ;#-clisp :external-format #-clisp *pluto-external-format*
-;                               ;)
-;        ,@body)))
-
 ; TODO: use gensyms?
 ; TODO: implementation specific
 (defmacro with-a-file (filename key &body body)
@@ -328,6 +303,7 @@
                               :external-format *pluto-external-format*)
        ,@body)))
 
+; TODO: add to vim syntax file
 (defun str-join (delim strings)
   "Join STRINGS with DELIM."
   (format nil (format nil "~~{~~A~~^~A~~}" delim) strings))
