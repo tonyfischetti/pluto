@@ -5,7 +5,8 @@
   :license "GPL-3"
 
   ; TODO: do I really need all of these?
-  :depends-on (:pluto :alexandria :cl-ppcre :parse-float :yason)
+  :depends-on (:pluto :alexandria :cl-ppcre :parse-float :yason
+                      :bordeaux-threads)
 
   ; fails: drakma
   ;        cxml (because of puri)

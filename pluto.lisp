@@ -12,8 +12,6 @@
 
 (defpackage :pluto
   (:use :common-lisp)
-  ; TODO:
-  ; (:import-from :parse-float :parse-float)
   (:export
     ; formatting
     :fn :ft :info
@@ -58,7 +56,10 @@
 
     ; terminal things / terminal manipulation
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
-    :ansi-left-one :progress-bar
+    :ansi-left-one :progress-bar :loading-forever
+
+    ; other abbreviations and shortcuts
+    :λ
 
            ))
 
@@ -1095,7 +1096,30 @@
               (if out-of (fn "~C~A/~A" #\Tab index limit) "")))
       (force-output where))))
 
+(defun loading-forever ()
+  (let ((counter -1))
+    (forever
+      (incf counter)
+      (setq counter (mod counter 4))
+      (let ((rune (case counter
+                    (0  "-")
+                    (1  "\\")
+                    (2  "|")
+                    (t  "/"))))
+        (format t "~A" rune)
+        (force-output)
+        (ansi-left-one *standard-output*)
+        (sleep 0.1)))))
+
 ;---------------------------------------------------------;
 
+
+; ------------------------------------------------------- ;
+; other abbreviations and shortcuts --------------------- ;
+
+(defmacro λ (&body body)
+  `(lambda ,@body))
+
+;---------------------------------------------------------;
 
 
