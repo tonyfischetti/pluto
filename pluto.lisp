@@ -56,10 +56,10 @@
 
     ; terminal things / terminal manipulation
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
-    :ansi-left-one :progress-bar :loading-forever
+    :ansi-left-one :progress-bar :loading-forever :give-choices
 
     ; other abbreviations and shortcuts
-    :λ
+    :λ :get-size
 
            ))
 
@@ -1053,12 +1053,16 @@
 ; ------------------------------------------------------- ;
 ; terminal things / terminal manipulation --------------- ;
 
+; TODO: SBCL doesn't have the COLUMNS environment variable. fix it
 (defun get-terminal-columns ()
   "Retrieves the number of columns in terminal by querying
    `$COLUMNS` environment variable. Returns
    (values num-of-columns t) if successful and (values 200 nil)
    if not"
-  (let ((raw-res (ignore-errors (parse-integer (get-envvar "COLUMNS" "80")))))
+  (let ((raw-res (ignore-errors (parse-integer
+                                  #+sbcl (zsh "echo $COLUMNS")
+                                  #-sbcl (get-envvar "COLUMNS" "80")
+                                  ))))
     (if raw-res (values raw-res t) (values 200 nil))))
 
 ; TODO: is there are better DRY way?
@@ -1111,6 +1115,37 @@
         (ansi-left-one *standard-output*)
         (sleep 0.1)))))
 
+(defun give-choices (choices &key (limit 37)
+                                  (num-p nil)
+                                  (mode :table)
+                                  (sep nil))
+  "Uses `smenu` (must be installed) to give the user some choices in
+   a list (princs the elements). The user's choice(s) are returned
+   unless they Control-C, in which case it return `nil`. You can also
+   use '/' to search through the choices!
+   It's (smenu) is very flexible and this function offers a lot
+   of optional keyword parameters
+   `limit` sets the limit of choices (and presents a scroll bar)
+   `num-p` if true, puts a number next to the choices for easy
+           selection (default nil)
+   `mode` :table (default), :columns, :lines, and nil
+   `sep` if not nil, it will allow the user to select multiple choices (with
+         't') and this string will separate them all"
+  (let ((tmpvar   (fn "tmp~A"   (get-unix-time)))
+        (xchoice  (fn "'~A'"    (str-join "'\\n'" choices)))
+        (xmode    (case mode
+                    (:columns   "-c")
+                    (:table     "-t")
+                    (:lines     "-l")
+                    (otherwise  ""))))
+    (let ((response
+            (zsh (fn "~A=$(echo -e \"~A\" | smenu ~A -n~A ~A ~A); echo $~A"
+                     tmpvar xchoice (if num-p "-N" "")
+                     limit xmode
+                     (if sep (fn "-T '~A'" sep) "")
+                     tmpvar) :echo nil)))
+      (if (string= response "") nil response))))
+
 ;---------------------------------------------------------;
 
 
@@ -1119,6 +1154,22 @@
 
 (defmacro λ (&body body)
   `(lambda ,@body))
+
+(defun %remove-after-first-whitespace (astring)
+  (let ((pos1 (position-if (lambda (x) (member x *whitespaces*)) astring)))
+    (substr astring 0 pos1)))
+
+; TODO: check if unix first
+(defun get-size (afile &key (just-bytes nil))
+  "Uses `du` to return just the size of the provided file.
+   `just-bytes` ensures that the size is only counted in bytes (returns integer) [default nil]"
+  (let ((result
+          (%remove-after-first-whitespace
+            (zsh (format nil "du ~A '~A'" (if just-bytes "-sb" "") afile)))))
+    (if just-bytes
+      (nth-value 0 (parse-integer result))
+      result)))
+
 
 ;---------------------------------------------------------;
 

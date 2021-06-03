@@ -22,11 +22,20 @@
     :~ra :~s :~f :~c :~e
 
     ; terminal things / terminal manipulation
-    ; :with-loading
+    :with-loading
+
+    ; HTML/XML stuff
+    :parse-xml :parse-xml-file :xpath :xpath-compile :use-xml-namespace
+    :xpath-string
+
+    ; other abbriviations and shortcuts
+    :alist->hash-table :hash-table->alist :hash-keys :parse-json
+    :parse-json-file :make-octet-vector :concat-octet-vector :parse-html
+    :$$
 
     ))
 
-(use-package :pluto) ;????
+(use-package :pluto)
 (in-package :charon)
 
 (pushnew :charon *features*)
@@ -153,7 +162,139 @@
 
 ; ------------------------------------------------------- ;
 
-    (for-each `(heaven or las vegas)
-      (ft •processing: ~10A~C• value! #\Tab)
-      (with-loading
-        (sleep 3)))
+;; !!! BELOW THIS IS UNTESTED ON CLISP
+;; !!! AND DIDN'T PIECEMEAL COMPILE FOR SBCL WARNINGS
+
+; ------------------------------------------------------- ;
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
+; HTML/XML stuff ---------------------------------------- ;
+
+; (defmacro request (&rest everything)
+;   `(drakma:http-request ,@everything))
+
+(defun parse-xml (astring)
+  (cxml:parse astring (cxml-dom:make-dom-builder)))
+
+(defun parse-xml-file (afile)
+  (cxml:parse-file afile (cxml-dom:make-dom-builder)))
+
+(defun xpath (doc anxpath &key (all t) (compiled-p nil) (text nil))
+  (let ((result (if compiled-p
+                  (xpath:evaluate-compiled anxpath doc)
+                  (xpath:evaluate anxpath doc))))
+    (unless (xpath:node-set-empty-p result)
+      (if (and all text)
+        (mapcar (lambda (x) (xpath:string-value x)) (xpath:all-nodes result))
+        (if (and all (not text))
+          (xpath:all-nodes result)
+          (if (and (not all) text)
+            (xpath:string-value result)
+            result))))))
+
+(defmacro xpath-compile (&rest everything)
+  `(xpath:compile-xpath ,@everything))
+
+(defmacro use-xml-namespace (anns)
+  `(setq xpath::*dynamic-namespaces*
+         (cons
+           (cons nil ,anns)
+           xpath::*dynamic-namespaces*)))
+
+(abbr xpath-string xpath:string-value)
+
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
+; other abbriviations and shortcuts --------------------- ;
+
+(abbr alist->hash-table alexandria:alist-hash-table)
+(abbr hash-table->alist alexandria:hash-table-alist)
+(abbr hash-keys alexandria:hash-table-keys)
+(abbr parse-json yason:parse)
+(abbr export-json yason:encode)
+
+(defun parse-json-file (afile)
+  (with-a-file afile :r
+    (yason:parse stream!)))
+
+(defmacro make-octet-vector (n)
+  `(make-array ,n :element-type '(unsigned-byte 8)))
+
+(defmacro concat-octet-vector (&rest everything)
+  `(concatenate '(vector (unsigned-byte 8)) ,@everything))
+
+(abbr parse-html plump:parse)
+(abbr $$ lquery:$)
+
+;---------------------------------------------------------;
+
+
+; ;---------------------------------------------------------;
+; ; experimental logging and reader macros ---------------- ;
+;
+; ; (defun prettify-time-output (thetimeoutput)
+; ;   (subseq thetimeoutput 0 (- (length thetimeoutput) 4)))
+; ;
+; ; ; TODO: REALLY LOOK INTO THIS BECAUSE THERE ARE A LOT OF WARNINGS AND IT SUCKS
+; ; (defun clix-log-verbose (stream char arg)
+; ;   ;;;;;; HOW UNHYGENIC IS THIS???!!
+; ;   (declare (ignore char))
+; ;   (multiple-value-bind (second minute hour date month year day-of-week dst-p tz)
+; ;                        (get-decoded-time)
+; ;     (let ((sexp               (read stream t))
+; ;           (thetime            (get-universal-time))
+; ;           (thereturnvalue     nil)
+; ;           (thetimingresults   nil)
+; ;           (daoutputstream     (make-string-output-stream)))
+; ;       `(progn
+; ;          (with-a-file *clix-log-file* :a
+; ;            (format stream!
+; ;                    "--------------------~%[~A-~A-~A ~2,'0d:~2,'0d:~2,'0d]~%~%FORM:~%~A~%"
+; ;                    ,year ,month ,date ,hour ,minute ,second
+; ;                    ; (write-to-string ',sexp))
+; ;                    (format nil "λ ~S~%" ',sexp))
+; ;            (let ((daoutputstream (make-string-output-stream)))
+; ;              (let ((*trace-output* daoutputstream))
+; ;                (setq thereturnvalue (progn (time ,sexp))))
+; ;                  (setq thetimingresults
+; ;                        (prettify-time-output
+; ;                          (get-output-stream-string daoutputstream))))
+; ;            (format stream! "RETURNED:~%~A~%" thereturnvalue)
+; ;            (format stream! "~%~A~%--------------------~%~%~%" thetimingresults)
+; ;            (finish-output stream!)
+; ;            thereturnvalue)))))
+; ;
+; ;
+; ; ; REALLY LOOK INTO THIS BECAUSE THERE ARE A LOT OF WARNINGS AND IT SUCKS
+; ; ; (defun clix-log-just-echo (stream char arg)
+; ; ;   ;;;;;; HOW UNHYGENIC IS THIS???!!
+; ; ;   (declare (ignore char))
+; ; ;   (let ((sexp               (read stream t))
+; ; ;     ;       (thetime            (get-universal-time))
+; ; ;     ;       (thereturnvalue     nil)
+; ; ;     ;       (thetimingresults   nil))
+; ; ;       `(progn
+; ; ;          (with-a-file *clix-log-file* :a
+; ; ;            (format t "~S~%" ',sexp)
+; ; ;            (format stream! "~%λ ~S~%" ',sexp)
+; ; ;            (let* ((daoutputstream   (make-string-output-stream))
+; ; ;                   (*trace-output*   daoutputstream)
+; ; ;                   (thereturnvalue   (progn (time ,sexp))))
+; ; ;              (finish-output stream!)
+; ; ;              ,thereturnvalue))))))
+; ;
+; ;
+; ; (defun clix-log (stream char arg)
+; ;   (cond ((= *clix-log-level* 2)    (clix-log-verbose   stream char arg))
+; ;         ; ((= *clix-log-level* 1)    (clix-log-just-echo stream char arg))
+; ;         (                          nil)))
+; ;
+; ; (set-dispatch-macro-character #\# #\! #'clix-log)
+;
+; ;---------------------------------------------------------;
+
+
