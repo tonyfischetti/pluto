@@ -1,12 +1,13 @@
 
-
-
 (defparameter *all-tests* nil)
+(defparameter ret-val! nil)
 (defparameter output! nil)
+(defparameter tmp nil)
 
 (defstruct atest
   the-function doc test-closure code-closure)
 
+; TODO has warnings
 (defmacro deftest (&body body)
   (with-gensyms (ifun idoc itest)
     `(let ((ifun ,(car body))
@@ -17,34 +18,21 @@
            :doc idoc
            :test-closure (lambda () ,(caddr body))
            :code-closure
-             (lambda () ,(cadddr body)))
+             (lambda () (progn ,@(cdddr body))))
          *all-tests*))))
 
 
+(defmacro capture-ret-and-output (&body body)
+  `(let ((*standard-output* (make-string-output-stream)))
+     (let ((ret (funcall ,@body)))
+       `(,ret ,(get-output-stream-string *standard-output*)))))
 
 (defun run-test (ateststruct)
-  (let* ((output! (funcall (atest-code-closure ateststruct)))
-         (test-result (funcall (atest-test-closure ateststruct))))
-    (if test-result
-      (ft (green "passed: ~A~%" (atest-the-function ateststruct)))
-      (ft (red "failed: ~A~%" (atest-the-function ateststruct))))
-    test-result))
-
-
-
-(deftest
-  'get-size
-  "hi"
-  (string= output! "17k")
-  (get-size "interior-of-a-heart.txt"))
-
-(deftest
-  'get-size
-  "hi"
-  (= output! 14433)
-  (get-size "interior-of-a-heart.txt" :just-bytes t))
-
-(run-test (car *all-tests*))
-
-
+  (destructuring-bind (ret-val! output!)
+    (capture-ret-and-output (atest-code-closure ateststruct))
+    (let ((test-result (funcall (atest-test-closure ateststruct))))
+      (if test-result
+        (ft (green "passed: ~A~%" (atest-the-function ateststruct)))
+        (ft (red "failed: ~A~%" (atest-the-function ateststruct))))
+      test-result)))
 
