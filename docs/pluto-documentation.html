@@ -1,0 +1,58 @@
+<h1 id="pluto-documentation">Pluto documentation</h1>
+<p><strong>GET-SIZE</strong>:</p>
+<p><em>Returns the size as reported by <code>du -sb</code></em></p>
+<pre><code>(GET-SIZE &quot;interior-of-a-heart.txt&quot;)</code></pre>
+<p>Returns:</p>
+<pre><code>17k</code></pre>
+<hr />
+<p><strong>GET-SIZE</strong>:</p>
+<p><em>With the :just-bytes parameter, it’ll only return the number of bytes as an integer</em></p>
+<pre><code>(GET-SIZE &quot;interior-of-a-heart.txt&quot; :JUST-BYTES T)</code></pre>
+<p>Returns:</p>
+<pre><code>14433</code></pre>
+<hr />
+<p><strong>FOR-EACH/HASH</strong>:</p>
+<p><em>hi</em></p>
+<pre><code>(LET ((TMP (MAKE-HASH-TABLE)))
+  (SETF (GETHASH &#39;GREEN TMP) &quot;veridian&quot;)
+  (SETF (GETHASH &#39;RED TMP) &quot;cadmium&quot;)
+  (FOR-EACH TMP
+    (FORMAT T &quot;~A -&gt; ~A~%&quot; KEY! VALUE!)))</code></pre>
+<p>Output:</p>
+<pre><code>GREEN -&gt; veridian
+RED -&gt; cadmium
+</code></pre>
+<hr />
+<p><strong>FOR-EACH/LINE</strong>:</p>
+<p><em>hi</em></p>
+<pre><code>(FOR-EACH/LINE &quot;somebody.txt&quot;
+  (FORMAT T &quot;~A -&gt; ~A~%&quot; INDEX! VALUE!))</code></pre>
+<p>Output:</p>
+<pre><code>1 -&gt; we gotta celebrate diversity
+2 -&gt; in the university
+</code></pre>
+<hr />
+<p><strong>FOR-EACH/LIST</strong>:</p>
+<p><em>hi</em></p>
+<pre><code>(FOR-EACH/LIST &#39;(A B C D E)
+  (IF (&gt; INDEX! 2)
+      (BREAK!))
+  (FORMAT T &quot;~A~%&quot; VALUE!))</code></pre>
+<p>Output:</p>
+<pre><code>A
+B
+</code></pre>
+<hr />
+<p><strong>FOR-EACH/LIST</strong>:</p>
+<p><em>hi</em></p>
+<pre><code>(FOR-EACH/LIST &#39;(A B C D E)
+  (IF (= INDEX! 3)
+      (CONTINUE!))
+  (FORMAT T &quot;~A~%&quot; VALUE!))</code></pre>
+<p>Output:</p>
+<pre><code>A
+B
+D
+E
+</code></pre>
+<hr />
