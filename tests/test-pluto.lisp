@@ -25,7 +25,8 @@
   'for-each/hash
   "hi"
   'prints
-  (string= output! (fn "GREEN -> veridian~%RED -> cadmium~%"))
+  (or (string= output! (fn "GREEN -> veridian~%RED -> cadmium~%"))
+      (string= output! (fn "RED -> cadmium~%GREEN -> veridian~%")))
   (let ((tmp (make-hash-table)))
     (setf (gethash 'green tmp) "veridian")
     (setf (gethash 'red tmp) "cadmium")

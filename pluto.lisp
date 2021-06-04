@@ -949,9 +949,8 @@
   (let ((s (make-string-output-stream))
         (num-lines (length lines)))
     (for-each/list lines
-      (format s "~A~A" value!
-              (if (= num-lines index!) "" (fn "~%"))))
-    (get-output-stream-string s)))
+      (format s "~A~%" value!))
+    (substr (get-output-stream-string s) 0 -1)))
 
 ; TODO: a whole bunch
 ; TODO: implementation dependent
@@ -999,9 +998,9 @@
 
 #+ clisp
 (defun zsh (acommand &key (dry-run nil)
-                           (err-fun #'error)
-                           (echo nil)
-                           (split nil))
+                          (err-fun #'error)
+                          (echo nil)
+                          (split nil))
   "Runs command `acommand` through the ZSH shell specified by the global *pluto-zsh*
    `dry-run` just prints the command (default nil)
    `err-fun` takes a function that takes an error code and the STDERR output
@@ -1019,6 +1018,37 @@
         (if split
           (%slurp-stream-lines s)
           (%reconstruct-stream (%slurp-stream-lines s)))))))
+
+; TODO: fill in doc string
+#+ecl
+(defun zsh (acommand &key (dry-run nil)
+                          (err-fun #'(lambda (code stderr)
+                                       (error
+                                         (format nil "~A (~A)" stderr code))))
+                          (echo nil)
+                          (return-string t)
+                          (split nil))
+  (flet ((strip (astring)
+    (if (string= "" astring)
+      astring
+      (subseq astring 0 (- (length astring) 1)))))
+    (when (or echo dry-run)
+      (format t "$ ~A~%" acommand))
+    (unless dry-run
+      (let* ((outs        (if return-string (make-string-output-stream) t))
+             (errs        (make-string-output-stream)))
+        (multiple-value-bind (procstream retcode process)
+              (ext:run-program *pluto-zsh* `("-ic" ,(format nil "~A;exit" acommand))
+                               :output outs :error errs)
+              (ext:external-process-wait process)
+              (when (> retcode 0)
+                (funcall err-fun retcode (strip (get-output-stream-string errs))))
+              (when return-string
+                (values (if split
+                          (split-string->lines (get-output-stream-string outs))
+                          (strip (get-output-stream-string outs)))
+                        (strip (get-output-stream-string errs))
+                        retcode)))))))
 
 ; TODO: write documentation
 ; TODO: implementation dependent
