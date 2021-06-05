@@ -124,41 +124,55 @@
 ; terminal things / terminal manipulation --------------- ;
 
 ; TODO: doesn't work on clisp ?
-#-clisp
-(defmacro with-loading (&body body)
-  "This function runs `body` in a separate thread
-   and also starts a thread that displays a spinner.
-   When the `body` thread finishes, it kills the
-   spinner thread. Here's an example....
-   ```
-    (for-each `(heaven or las vegas)
-      (ft •processing: ~10A~C• value! #\Tab)
-      (with-loading
-        (sleep 3)))
-    ```
-    its particularly neat combined with
-    ```
-    (progress index! 5 :newline-p nil :where *standard-output*)
-    (ft •~C• #\Tab #\Tab)
-    ``` "
-  ; TODO: what does clisp do with with-gensyms?
-  ; (with-gensyms (tmp long-thread loading-thread wrapper the-return)
-  (let ((tmp (gensym))
-        (long-thread (gensym))
-        (loading-thread (gensym))
-        (wrapper (gensym))
-        (the-return (gensym)))
-    `(progn
-       (defun ,tmp ()
-         ,@body)
-       (let ((,long-thread      (bt:make-thread #',tmp
-                                                :name "long-thread"))
-             (,loading-thread   (bt:make-thread #'loading-forever
-                                                :name "loading-thread")))
-         (setq ,the-return (bt:join-thread ,long-thread))
-         (bt:destroy-thread ,loading-thread)
-         (terpri)
-         ,the-return))))
+; TODO: shadow because sbcl and ecl version is on pluto
+; (defmacro with-loading (&body body)
+;   "This function runs `body` in a separate thread
+;    and also starts a thread that displays a spinner.
+;    When the `body` thread finishes, it kills the
+;    spinner thread. Here's an example....
+;    ```
+;     (for-each `(heaven or las vegas)
+;       (ft •processing: ~10A~C• value! #\Tab)
+;       (with-loading
+;         (sleep 3)))
+;     ```
+;     its particularly neat combined with
+;     ```
+;     (progress index! 5 :newline-p nil :where *standard-output*)
+;     (ft •~C• #\Tab #\Tab)
+;     ``` "
+;   (let ((long-thread	  (gensym))
+;         (loading-thread (gensym))
+;         (the-return     (gensym)))
+;     `(progn
+;        (let ((,long-thread
+;                #+sbcl (sb-thread:make-thread
+;                         (lambda () ,@body)
+;                         :name "background-thread")
+;                #+ecl (mp:process-run-function
+;                        'background-thread
+;                        (lambda () ,@body))
+;                ; (bt:make-thread (lambda () ,@body) :name "long-thread")
+;                )
+;              (,loading-thread
+;                #+sbcl (sb-thread:make-thread
+;                         #'loading-forever
+;                         :name "loading-thread")
+;                #+ecl (mp:process-run-function
+;                        'loading-thead
+;                        #'loading-forever)
+;                ; (bt:make-thread #'loading-forever :name "loading-thread")
+;                ))
+;          (let ((,the-return
+;                  #+sbcl (sb-thread:join-thread ,long-thread)
+;                  #+ecl (mp:process-join ,long-thread)
+;                  ; (bt:join-thread ,long-thread)
+;                  ))
+;            #+sbcl (sb-thread:terminate-thread ,loading-thread)
+;            #+ecl (mp:process-kill ,loading-thread)
+;            ; (bt:destroy-thread ,loading-thread)
+;            (terpri)
+;            ,the-return)))))
 
 ; ------------------------------------------------------- ;
 

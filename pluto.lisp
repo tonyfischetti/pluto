@@ -56,7 +56,7 @@
 
     ; terminal things / terminal manipulation
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
-    :ansi-left-one :progress-bar :loading-forever :give-choices
+    :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
     ; other abbreviations and shortcuts
     :λ :get-size
@@ -946,8 +946,7 @@
         while this collect this))
 
 (defun %reconstruct-stream (lines)
-  (let ((s (make-string-output-stream))
-        (num-lines (length lines)))
+  (let ((s (make-string-output-stream)))
     (for-each/list lines
       (format s "~A~%" value!))
     (substr (get-output-stream-string s) 0 -1)))
@@ -1144,6 +1143,61 @@
         (force-output)
         (ansi-left-one *standard-output*)
         (sleep 0.1)))))
+
+; TODO: only sbcl and ecl
+; TODO: update doc string
+(defmacro with-loading (&body body)
+  "This function runs `body` in a separate thread
+   and also starts a thread that displays a spinner.
+   When the `body` thread finishes, it kills the
+   spinner thread. Here's an example....
+   ```
+    (for-each `(heaven or las vegas)
+      (ft •processing: ~10A~C• value! #\Tab)
+      (with-loading
+        (sleep 3)))
+    ```
+    its particularly neat combined with
+    ```
+    (progress index! 5 :newline-p nil :where *standard-output*)
+    (ft •~C• #\Tab #\Tab)
+    ``` "
+  (let ((long-thread	  (gensym))
+        (loading-thread (gensym))
+        (the-return     (gensym)))
+    `(progn
+       (let ((,long-thread
+               #+sbcl (sb-thread:make-thread
+                        (lambda () ,@body)
+                        :name "background-thread")
+               #+ecl (mp:process-run-function
+                       'background-thread
+                       (lambda () ,@body))
+               ; (bt:make-thread (lambda () ,@body) :name "long-thread")
+               )
+             (,loading-thread
+               #+sbcl (sb-thread:make-thread
+                        #'loading-forever
+                        :name "loading-thread")
+               #+ecl (mp:process-run-function
+                       'loading-thead
+                       #'loading-forever)
+               ; (bt:make-thread #'loading-forever :name "loading-thread")
+               ))
+         (let ((,the-return
+                 #+sbcl (sb-thread:join-thread ,long-thread)
+                 #+ecl (mp:process-join ,long-thread)
+                 ; (bt:join-thread ,long-thread)
+                 ))
+           #+sbcl (sb-thread:terminate-thread ,loading-thread)
+           #+ecl (mp:process-kill ,loading-thread)
+           ; (bt:destroy-thread ,loading-thread)
+           (terpri)
+           ,the-return)))))
+
+#-(or sbcl ecl)
+(defun with-loading ()
+  (warn "only implemented for sbcl and ecl"))
 
 (defun give-choices (choices &key (limit 37)
                                   (num-p nil)

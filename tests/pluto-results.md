@@ -83,7 +83,10 @@ A super-duper imperative looping construct.
 
 for-each/list
 ```
-(FOR-EACH/LIST '(A B C D E) (IF (> INDEX! 2) (BREAK!)) (FORMAT T "~A~%" VALUE!))
+(FOR-EACH/LIST '(A B C D E)
+  (IF (> INDEX! 2)
+      (BREAK!))
+  (FORMAT T "~A~%" VALUE!))
 ```
 
 Output:
@@ -98,7 +101,10 @@ B
 
 for-each/list
 ```
-(FOR-EACH '(A B C D E) (IF (= INDEX! 3) (CONTINUE!)) (FORMAT T "~A~%" VALUE!))
+(FOR-EACH '(A B C D E)
+  (IF (= INDEX! 3)
+      (CONTINUE!))
+  (FORMAT T "~A~%" VALUE!))
 ```
 
 Output:
@@ -115,7 +121,8 @@ E
 
 for-each/line
 ```
-(FOR-EACH "somebody.txt" (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
+(FOR-EACH "somebody.txt"
+  (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
 ```
 
 Output:
@@ -133,13 +140,14 @@ for-each/hash
 (LET ((TMP (MAKE-HASH-TABLE)))
   (SETF (GETHASH 'GREEN TMP) "veridian")
   (SETF (GETHASH 'RED TMP) "cadmium")
-  (FOR-EACH TMP (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
+  (FOR-EACH TMP
+    (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
 ```
 
 Output:
 ```
-RED -> cadmium
 GREEN -> veridian
+RED -> cadmium
 
 ```
 
