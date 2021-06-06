@@ -26,15 +26,15 @@
 
     ; some essential utilities/macros
     #-clisp :with-gensyms
-    :mac :nil!  :alambda :abbr :flatten :take :group :mkstr
-    :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :slurp
-    :slurp-lines :barf :debug-these :with-a-file :stream! :str-join :substr
-    :interpose :delim :defparams :round-to :advise :alistp :with-hash-entry
-    :entry! :if-hash-entry :if-not-hash-entry :string->char-list
-    :split-string->lines
+    :mac :nil!  :alambda :self! :abbr :flatten :take :group :mkstr
+    :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :it!
+    :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :str-join
+    :substr :interpose :delim :defparams :round-to :advise :alistp
+    :with-hash-entry :entry! :if-hash-entry :if-not-hash-entry
+    :string->char-list :split-string->lines
 
     ; error handling
-    :die :or-die :or-do :die-if-null
+    :die :or-die :or-do :die-if-null :error!
     ; reader macros
     ; #? Ø ? «
 
