@@ -425,11 +425,11 @@
   (let (chars)
     (do ((prev (read-char stream) curr)
          (curr (read-char stream) (read-char stream)))
-        ((char= curr #\Bullet) (push prev chars))
+        ((char= curr #\•) (push prev chars))
       (push prev chars))
     (coerce (nreverse chars) 'string)))
 
-(set-macro-character #\Bullet #'|•-reader|)
+(set-macro-character #\• #'|•-reader|)
 
 ; ------------------------------------------------------- ;
 
@@ -1196,8 +1196,8 @@
            ,the-return)))))
 
 #-(or sbcl ecl)
-(defun with-loading ()
-  (warn "only implemented for sbcl and ecl"))
+(defmacro with-loading (&body body)
+  `(warn "only implemented for sbcl and ecl"))
 
 (defun give-choices (choices &key (limit 37)
                                   (num-p nil)
