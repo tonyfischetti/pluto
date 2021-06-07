@@ -140,7 +140,7 @@
 
 
 ;---------------------------------------------------------;
-; Some utilities -----------------------------------------;
+; some essential utilities/macros ------------------------;
 
 ; TODO: Do all of these need to be in _this_ section?
 
