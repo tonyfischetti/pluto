@@ -31,7 +31,7 @@
     :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :str-join
     :substr :interpose :delim :defparams :round-to :advise :alistp
     :with-hash-entry :entry! :if-hash-entry :if-not-hash-entry
-    :string->char-list :split-string->lines
+    :string->char-list :split-string->lines :capture-all-outputs
 
     ; error handling
     :die :or-die :or-do :die-if-null :error!
@@ -430,6 +430,16 @@
     (coerce (nreverse chars) 'string)))
 
 (set-macro-character #\• #'|•-reader|)
+
+; TODO: document
+(defmacro capture-all-outputs (&body body)
+  (let ((ret (gensym)))
+    `(let ((*standard-output*   (make-string-output-stream))
+           (*error-output*      (make-string-output-stream)))
+       (let ((ret (funcall ,@body)))
+         (values ret
+                 (get-output-stream-string *standard-output*)
+                 (get-output-stream-string *error-output*))))))
 
 ; ------------------------------------------------------- ;
 
