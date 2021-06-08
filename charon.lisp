@@ -33,6 +33,9 @@
     :parse-json-file :make-octet-vector :concat-octet-vector :parse-html
     :$$
 
+    ; re-exports
+    :parse-float
+
     ))
 
 (use-package :pluto)
