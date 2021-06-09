@@ -577,26 +577,32 @@
   "Get current UNIX time"
   (universal->unix-time (get-universal-time)))
 
-(defun make-pretty-time (a-unix-time &key (just-date nil) (just-time nil) (time-sep ":"))
+(defun make-pretty-time (a-unix-time &key (just-date nil) (just-time nil)
+                                          (time-sep ":") (dt-sep " "))
   "Makes a nicely formatted (YYYY-MM-DD HH?:MM:SS) from a UNIX time
    `just-date` will return just the pretty date
    `just-time` will return just the pretty time
-   `time-sep`  will use the supplied character to separate the hours minutes and seconds (default ':')"
+   `time-sep`  will use the supplied string to separate the hours
+   minutes and seconds (default ':')
+   `dt-sep` will use the supplied string to separate the date from the time
+   (default ' ')"
   (let ((thisuniversaltime (unix->universal-time a-unix-time)))
     (multiple-value-bind (second minute hour date month year)
       (decode-universal-time thisuniversaltime)
       (if (and (not just-date) (not just-time))
-        (format nil "~d-~2,'0d-~2,'0d ~d~A~2,'0d~A~2,'0d"
-                year month date hour TIME-SEP minute TIME-SEP second)
+        (format nil "~d-~2,'0d-~2,'0d~A~d~A~2,'0d~A~2,'0d"
+                year month date dt-sep hour TIME-SEP minute TIME-SEP second)
         (if just-date
           (format nil "~d-~2,'0d-~2,'0d" year month date)
           (format nil "~d~A~2,'0d~A~2,'0d"
                   hour TIME-SEP minute TIME-SEP second))))))
 
-(defun get-current-time (&key (just-date nil) (just-time nil) (time-sep ":"))
+(defun get-current-time (&key (just-date nil) (just-time nil)
+                              (time-sep ":") (dt-sep " "))
   "Uses `make-pretty-time` to get the current datetime"
   (make-pretty-time (-<> (get-universal-time) universal->unix-time)
-                    :just-date just-date :just-time just-time :time-sep time-sep))
+                    :just-date just-date :just-time just-time
+                    :time-sep time-sep :dt-sep dt-sep))
 
 (defmacro with-time (&body aform)
   "Anaphoric macro that executes the car of the body and
