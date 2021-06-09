@@ -52,7 +52,7 @@
     :process-args!
 
     ; shell and zsh
-    :zsh :get-envvar :clean-screen
+    :zsh :zsh-fast :get-envvar :clean-screen
 
     ; terminal things / terminal manipulation
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
@@ -1058,6 +1058,16 @@
                           (strip (get-output-stream-string outs)))
                         (strip (get-output-stream-string errs))
                         retcode)))))))
+
+; TODO document
+(defmacro zsh-fast (acommand)
+  #+sbcl
+  `(sb-ext:run-program *pluto-zsh* `("-c" ,,acommand))
+  #+clisp
+  `(ext:run-program *pluto-zsh* :arguments `("-c" ,,acommand))
+  #+ecl
+  `(ext:run-program *pluto-zsh* `("-c" ,,acommand))
+  )
 
 ; TODO: write documentation
 ; TODO: implementation dependent
