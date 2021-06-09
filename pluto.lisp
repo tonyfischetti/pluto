@@ -28,8 +28,8 @@
     #-clisp :with-gensyms
     :mac :nil!  :alambda :self! :abbr :flatten :take :group :mkstr
     :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :it!
-    :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :str-join
-    :substr :interpose :delim :defparams :round-to :advise :alistp
+    :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :str+
+    :str-join :substr :interpose :delim :defparams :round-to :advise :alistp
     :with-hash-entry :entry! :if-hash-entry :if-not-hash-entry
     :string->char-list :split-string->lines :capture-all-outputs
 
@@ -304,7 +304,10 @@
                               :external-format *pluto-external-format*)
        ,@body)))
 
-; TODO: add to vim syntax file
+(defmacro str+ (&rest strings)
+  "Combine an arbitrary number of strings into one"
+  `(concatenate 'string ,@strings))
+
 (defun str-join (delim strings)
   "Join STRINGS with DELIM."
   (format nil (format nil "~~{~~A~~^~A~~}" delim) strings))
