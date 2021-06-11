@@ -1,14 +1,14 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                                                  ;;
-;;  Pluto                                           ;;
-;;    a common lisp library that's out there        ;;
-;;                                                  ;;
-;;              Tony Fischetti                      ;;
-;;              tony.fischetti@gmail.com            ;;
-;;                                                  ;;
-;;              License: GPL-3                      ;;
-;;                                                  ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                                                            ;;
+;;  Pluto                                                     ;;
+;;    a common lisp library that's out there                  ;;
+;;                                                            ;;
+;;              Tony Fischetti                                ;;
+;;              tony.fischetti@gmail.com                      ;;
+;;                                                            ;;
+;;              License: GPL-3                                ;;
+;;                                                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defpackage :pluto
   (:use :common-lisp)
@@ -18,7 +18,7 @@
 
     ; global parameters and ansi terminal colors
     :*pluto-output-stream* :*pluto-log-level* :*pluto-curly-test*
-    :*pluto-external-format* :*pluto-log-file* :*pluto-zsh* :*whitespaces*
+    :*pluto-external-format* :*pluto-log-file* :*pluto-shell* :*whitespaces*
     :make-ansi-escape :+reset-terminal-color+ :+magenta-bold+ :+red-bold+
     :+yellow-bold+ :+green-bold+ :+cyan-bold+ :+blue-bold+ :+ansi-escape-up+
     :+ansi-escape-left-all+ :+ansi-escape-left-one+ :magenta :red :yellow
@@ -52,7 +52,7 @@
     :process-args!
 
     ; shell and zsh
-    :zsh :zsh-fast :get-envvar :clean-screen
+    :zsh :sh :zsh-simple :sh-simple :get-envvar :clean-screen
 
     ; terminal things / terminal manipulation
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
@@ -92,7 +92,7 @@
 (defparameter *pluto-curly-test*       #'equal)
 ; TODO: implementation dependent
 (defparameter *pluto-external-format*  #+clisp CHARSET:UTF-8 #-clisp :UTF-8)
-(defparameter *pluto-zsh*              "/usr/local/bin/zsh")
+(defparameter *pluto-shell*            "/usr/local/bin/zsh")
 
 (defvar *unix-epoch-difference*
   (encode-universal-time 0 0 0 1 1 1970 0))
@@ -892,7 +892,7 @@
 
 
 ; ------------------------------------------------------- ;
-; universal indexing operator syntax --------------------- ;
+; universal indexing operator syntax -------------------- ;
 
 (defun |{-reader| (stream char)
   (declare (ignore char))
@@ -973,23 +973,24 @@
 ; TODO: a whole bunch
 ; TODO: implementation dependent
 #+sbcl
-(defun zsh (acommand &key (dry-run nil)
-                          (err-fun #'(lambda (code stderr)
-                                       (error
-                                         (format nil "~A (~A)" stderr code))))
-                          (echo nil)
-                          (enc *pluto-external-format*)
-                          (in  t)
-                          (return-string t)
-                          (split nil))
-  "Runs command `acommand` through the ZSH shell specified by the global *pluto-zsh*
+(defun zsh (acommand &key (dry-run        nil)
+                          (err-fun        #'(lambda (code stderr)
+                                              (error (format nil "~A (~A)" stderr code))))
+                          (echo           nil)
+                          (enc            *pluto-external-format*)
+                          (in             t)
+                          (return-string  t)
+                          (split          nil)
+                          (interactive    nil))
+  "Runs command `acommand` through the shell specified by the global *pluto-shell*
    `dry-run` just prints the command (default nil)
    `err-fun` takes a function that takes an error code and the STDERR output
    `echo` will print the command before running it
    `enc` takes a format (default is *pluto-external-format* [which is :UTF-8 by default])
    `in` t is inherited STDIN. nil is /dev/null. (default t)
    `return-string` t returns the output string. nil inherits stdout (default t)
-   `split` will separate the stdout by newlines and return a list (default: nil)"
+   `split` will separate the stdout by newlines and return a list (default: nil)
+   `interactive` will use the '-i' option to make the shell interactive (default: nil)"
   (flet ((strip (astring)
     (if (string= "" astring)
       astring
@@ -997,10 +998,12 @@
     (when (or echo dry-run)
       (format t "$ ~A~%" acommand))
     (unless dry-run
-      (let* ((outs        (if return-string (make-string-output-stream) t))
+      (let* ((arglist     `(,(if interactive "-ic" "-c")
+                             ,(fn "~A;~A" acommand (if interactive "exit" ""))))
+             (outs        (if return-string (make-string-output-stream) t))
              (errs        (make-string-output-stream))
              (theprocess
-               (sb-ext:run-program *pluto-zsh* `("-ic" ,(fn "~A;exit" acommand))
+               (sb-ext:run-program *pluto-shell* arglist
                                    :input in :output outs :error errs
                                    :external-format enc))
              (retcode
@@ -1015,37 +1018,41 @@
                   retcode))))))
 
 #+ clisp
-(defun zsh (acommand &key (dry-run nil)
-                          (err-fun #'error)
-                          (echo nil)
-                          (split nil))
-  "Runs command `acommand` through the ZSH shell specified by the global *pluto-zsh*
+(defun zsh (acommand &key (dry-run      nil)
+                          (err-fun      #'error)
+                          (echo         nil)
+                          (split        nil)
+                          (interactive  nil))
+  "Runs command `acommand` through the ZSH shell specified by the global *pluto-shell*
    `dry-run` just prints the command (default nil)
    `err-fun` takes a function that takes an error code and the STDERR output
    `echo` will print the command before running it
-   `split` will separate the stdout by newlines and return a list (default: nil)"
+   `split` will separate the stdout by newlines and return a list (default: nil)
+   `interactive` will use the '-i' option to make the shell interactive (default: nil)"
   (when (or echo dry-run)
     (format t "$ ~A~%" acommand))
   (unless dry-run
-    (or-die ((fn "error <~A> with zsh command <~A>" error! acommand)
-             :errfun error)
-      (with-open-stream
-        (s (ext:run-program *pluto-zsh*
-                            :arguments `("-ic" ,(fn "~A;exit" acommand))
-                            :output :stream))
-        (if split
-          (%slurp-stream-lines s)
-          (%reconstruct-stream (%slurp-stream-lines s)))))))
+    (let* ((arglist `(,(if interactive "-ic" "-c")
+                       ,(fn "~A;~A" acommand (if interactive "exit" "")))))
+      (or-die ((fn "error <~A> with shell command <~A>" error! acommand)
+               :errfun error)
+        (with-open-stream
+          (s (ext:run-program *pluto-shell*
+                              :arguments arglist
+                              :output :stream))
+          (if split
+            (%slurp-stream-lines s)
+            (%reconstruct-stream (%slurp-stream-lines s))))))))
 
 ; TODO: fill in doc string
 #+ecl
-(defun zsh (acommand &key (dry-run nil)
-                          (err-fun #'(lambda (code stderr)
-                                       (error
-                                         (format nil "~A (~A)" stderr code))))
-                          (echo nil)
-                          (return-string t)
-                          (split nil))
+(defun zsh (acommand &key (dry-run        nil)
+                          (err-fun        #'(lambda (code stderr)
+                                              (error (format nil "~A (~A)" stderr code))))
+                          (echo           nil)
+                          (return-string  t)
+                          (split          nil)
+                          (interactive  nil))
   (flet ((strip (astring)
     (if (string= "" astring)
       astring
@@ -1053,10 +1060,12 @@
     (when (or echo dry-run)
       (format t "$ ~A~%" acommand))
     (unless dry-run
-      (let* ((outs        (if return-string (make-string-output-stream) t))
+      (let* ((arglist     `(,(if interactive "-ic" "-c")
+                             ,(fn "~A;~A" acommand (if interactive "exit" ""))))
+             (outs        (if return-string (make-string-output-stream) t))
              (errs        (make-string-output-stream)))
         (multiple-value-bind (procstream retcode process)
-              (ext:run-program *pluto-zsh* `("-ic" ,(format nil "~A;exit" acommand))
+              (ext:run-program *pluto-shell* arglist
                                :output outs :error errs)
               (ext:external-process-wait process)
               (when (> retcode 0)
@@ -1068,15 +1077,21 @@
                         (strip (get-output-stream-string errs))
                         retcode)))))))
 
+#+(or sbcl ecl clisp)
+(setf (fdefinition 'sh) #'zsh)
+
 ; TODO document
-(defmacro zsh-fast (acommand)
+(defmacro zsh-simple (acommand)
   #+sbcl
-  `(sb-ext:run-program *pluto-zsh* `("-c" ,,acommand))
+  `(sb-ext:run-program *pluto-shell* `("-c" ,,acommand))
   #+clisp
-  `(ext:run-program *pluto-zsh* :arguments `("-c" ,,acommand))
+  `(ext:run-program *pluto-shell* :arguments `("-c" ,,acommand))
   #+ecl
-  `(ext:run-program *pluto-zsh* `("-c" ,,acommand))
+  `(ext:run-program *pluto-shell* `("-c" ,,acommand))
   )
+
+#+(or sbcl ecl clisp)
+(abbr sh-simple zsh-simple)
 
 ; TODO: write documentation
 ; TODO: implementation dependent
