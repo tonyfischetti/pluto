@@ -12,9 +12,9 @@
 
 ; --------------------------------------------------------------- ;
 
-(def-test-section "some essential utilities/macros")
+(def-test/doc-section "some essential utilities/macros")
 
-(def-test-doc '-<>
+(def-test/doc-test '-<>
   "test doc"
   'returns
   (= test-return-value! 2)
@@ -24,16 +24,16 @@
 
 ; --------------------------------------------------------------- ;
 
-(def-test-section "for-each and friends")
+(def-test/doc-section "for-each and friends")
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
   "test doc"
   'stdout
   (string= test-stdout! (fn "1 -> A~%2 -> B~%3 -> C~%"))
   (for-each/list '(a b c)
     (format t "~A -> ~A~%" index! value!)))
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
   "test doc"
   'stdout
   (string= test-stdout! (fn "A~%B~%"))
@@ -41,7 +41,7 @@
     (if (> index! 2) (break!))
     (format t "~A~%" value!)))
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
   "test doc"
   'stdout
   (string= test-stdout! (fn "A~%B~%D~%E~%"))
@@ -49,7 +49,7 @@
     (if (= index! 3) (continue!))
     (format t "~A~%" value!)))
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
   "for-each/line"
   'stdout
   (string= test-stdout! (fn "1 -> we gotta celebrate diversity~%2 -> in the university~%"))
@@ -58,7 +58,7 @@
 
 ; TODO: warning about undefined variable: PLUTO:KEY!
 ; that doesn't happen when using for-each/hash
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
   "for-each/hash"
   'stdout
   (or (string= test-stdout! (fn "GREEN -> veridian~%RED -> cadmium~%"))
@@ -71,15 +71,15 @@
 
 ; --------------------------------------------------------------- ;
 
-(def-test-section "other abbreviations and shortcuts")
+(def-test/doc-section "other abbreviations and shortcuts")
 
-(def-test-doc 'get-size
+(def-test/doc-test 'get-size
   "test doc"
   'returns
   (string= test-return-value! "17k")
   (get-size "interior-of-a-heart.txt"))
 
-(def-test-doc 'get-size
+(def-test/doc-test 'get-size
   "test doc"
   'returns
   (= test-return-value! 14433)
