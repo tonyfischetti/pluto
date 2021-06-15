@@ -12,6 +12,12 @@
 
 ;; -----------------------------------
 ;; classes
+
+; mixins
+(defclass run-able () ())
+(defclass doc-able () ())
+(defclass benchmark-able () ())
+
 (defclass test/doc-element ()
   ((section :initarg :section :initform /test-section/)
    (doc :initarg :doc :initform "")))
@@ -30,11 +36,15 @@
    (pass-p :initform nil)
    output))
 
-(defclass test/doc-test-returns (test/doc-test) ())
+(defclass test/doc-test-run-able (test/doc-test) ())
 
-(defclass test/doc-test-stdout  (test/doc-test) ())
+(defclass test/doc-test-returns  (test/doc-test-run-able) ())
 
-(defclass test/doc-test-stderr  (test/doc-test) ())
+(defclass test/doc-test-stdout   (test/doc-test-run-able) ())
+
+(defclass test/doc-test-stderr   (test/doc-test-runable) ())
+
+
 ;; -----------------------------------
 
 
@@ -60,7 +70,7 @@
   (push (make-instance 'test/doc-section) /all-test-docs/))
 
 (defmacro def-test/doc-test (&body body)
-  (destructuring-bind (the-function doc test-type test &rest code) body
+  (destructuring-bind (the-function traits doc test &rest code) body
     `(push (make-instance
              (ecase ,test-type
                ('returns  'test/doc-test-returns)
@@ -78,7 +88,7 @@
 
 ;; -----------------------------------
 ;; testing
-(defgeneric run-test (test/doc-element))
+(defgeneric run-test (runnable))
 
 (defmethod run-test ((test test/doc-title))
   (ft (cyan "beginning tests for ~A~%" { test 'section })))

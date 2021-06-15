@@ -15,8 +15,8 @@
 (def-test/doc-section "some essential utilities/macros")
 
 (def-test/doc-test '-<>
+  ('doc-able 'run-able 'returns)
   "test doc"
-  'returns
   (= test-return-value! 2)
   (-<> "4"
        (parse-integer <>)
@@ -27,31 +27,31 @@
 (def-test/doc-section "for-each and friends")
 
 (def-test/doc-test 'for-each
+  ('doc-able 'run-able 'stdout)
   "test doc"
-  'stdout
   (string= test-stdout! (fn "1 -> A~%2 -> B~%3 -> C~%"))
   (for-each/list '(a b c)
     (format t "~A -> ~A~%" index! value!)))
 
 (def-test/doc-test 'for-each
+  ('doc-able 'run-able 'stdout)
   "test doc"
-  'stdout
   (string= test-stdout! (fn "A~%B~%"))
   (for-each/list '(a b c d e)
     (if (> index! 2) (break!))
     (format t "~A~%" value!)))
 
 (def-test/doc-test 'for-each
+  ('doc-able 'run-able 'stdout)
   "test doc"
-  'stdout
   (string= test-stdout! (fn "A~%B~%D~%E~%"))
   (for-each/list '(a b c d e)
     (if (= index! 3) (continue!))
     (format t "~A~%" value!)))
 
 (def-test/doc-test 'for-each
+  ('doc-able 'run-able 'stdout)
   "for-each/line"
-  'stdout
   (string= test-stdout! (fn "1 -> we gotta celebrate diversity~%2 -> in the university~%"))
   (for-each "somebody.txt"
     (format t "~A -> ~A~%" index! value!)))
@@ -59,8 +59,8 @@
 ; TODO: warning about undefined variable: PLUTO:KEY!
 ; that doesn't happen when using for-each/hash
 (def-test/doc-test 'for-each
+  ('doc-able 'run-able 'stdout)
   "for-each/hash"
-  'stdout
   (or (string= test-stdout! (fn "GREEN -> veridian~%RED -> cadmium~%"))
       (string= test-stdout! (fn "RED -> cadmium~%GREEN -> veridian~%")))
   (let ((tmp (make-hash-table)))
@@ -74,14 +74,14 @@
 (def-test/doc-section "other abbreviations and shortcuts")
 
 (def-test/doc-test 'get-size
+  ('doc-able 'run-able 'returns)
   "test doc"
-  'returns
   (string= test-return-value! "17k")
   (get-size "interior-of-a-heart.txt"))
 
 (def-test/doc-test 'get-size
+  ('doc-able 'run-able 'returns)
   "test doc"
-  'returns
   (= test-return-value! 14433)
   (get-size "interior-of-a-heart.txt" :just-bytes t))
 
