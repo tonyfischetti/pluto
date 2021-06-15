@@ -20,9 +20,9 @@
     :*pluto-output-stream* :*pluto-log-level* :*pluto-curly-test*
     :*pluto-external-format* :*pluto-log-file* :*pluto-shell* :*whitespaces*
     :make-ansi-escape :+reset-terminal-color+ :+magenta-bold+ :+red-bold+
-    :+yellow-bold+ :+green-bold+ :+cyan-bold+ :+blue-bold+ :+ansi-escape-up+
-    :+ansi-escape-left-all+ :+ansi-escape-left-one+ :magenta :red :yellow
-    :green :cyan :blue
+    :+yellow-bold+ :+green-bold+ :+cyan-bold+ :+blue-bold+ :+grey-bold+
+    :+ansi-escape-up+ :+ansi-escape-left-all+ :+ansi-escape-left-one+
+    :magenta :red :yellow :green :cyan :blue :grey
 
     ; some essential utilities/macros
     #-clisp :with-gensyms
@@ -115,6 +115,7 @@
 (defvar +green-bold+            (make-ansi-escape 32))
 (defvar +cyan-bold+             (make-ansi-escape 36))
 (defvar +blue-bold+             (make-ansi-escape 34))
+(defvar +grey-bold+             (make-ansi-escape 90))
 
 (defvar +ansi-escape-up+        (format nil "~c[1A" #\ESC))
 (defvar +ansi-escape-left-all+  (format nil "~c[500D" #\ESC))
@@ -135,6 +136,7 @@
 (make-color-fun green   +green-bold+)
 (make-color-fun cyan    +cyan-bold+)
 (make-color-fun blue    +blue-bold+)
+(make-color-fun grey    +grey-bold+)
 
 ;---------------------------------------------------------;
 

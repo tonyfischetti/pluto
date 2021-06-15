@@ -22,6 +22,35 @@ Returns:
 
 -----
 
+# other abbreviations and shortcuts
+
+
+### GET-SIZE
+
+```
+(GET-SIZE "interior-of-a-heart.txt")
+```
+
+Returns:
+```
+17k
+```
+
+
+### GET-SIZE
+
+```
+(GET-SIZE "interior-of-a-heart.txt" :JUST-BYTES T)
+```
+
+Returns:
+```
+14433
+```
+
+
+-----
+
 # for-each and friends
 
 
@@ -107,34 +136,5 @@ Outputs:
 GREEN -> veridian
 RED -> cadmium
 
-```
-
-
------
-
-# other abbreviations and shortcuts
-
-
-### GET-SIZE
-
-```
-(GET-SIZE "interior-of-a-heart.txt")
-```
-
-Returns:
-```
-17k
-```
-
-
-### GET-SIZE
-
-```
-(GET-SIZE "interior-of-a-heart.txt" :JUST-BYTES T)
-```
-
-Returns:
-```
-14433
 ```
 
