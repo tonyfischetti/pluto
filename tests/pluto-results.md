@@ -5,126 +5,101 @@ heres the documentation
 
 -----
 
-# some essential utilities/macros
+### some essential utilities/macros
 
 
-### -<>
+#### -<>
 
-```
+```lisp
 (-<> "4" (PARSE-INTEGER <>) (SQRT <>))
 ```
 
-Returns:
-```
-2.0
-```
+<pre>=> 2.0</pre>
 
-## this is raw markdown
+
 
 -----
 
-# other abbreviations and shortcuts
+### other abbreviations and shortcuts
 
 
-### GET-SIZE
+#### GET-SIZE
 
-```
+```lisp
 (GET-SIZE "interior-of-a-heart.txt")
 ```
 
-Returns:
-```
-17k
-```
+<pre>=> 17k</pre>
 
 
-### GET-SIZE
-
-```
+<br/>
+```lisp
 (GET-SIZE "interior-of-a-heart.txt" :JUST-BYTES T)
 ```
 
-Returns:
-```
-14433
-```
+<pre>=> 14433</pre>
+
 
 
 -----
 
-# for-each and friends
+### for-each and friends
 
 
-### FOR-EACH
+#### FOR-EACH
 
-```
+```lisp
 (FOR-EACH/LIST '(A B C)
   (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
 ```
 
-Outputs:
-```
-1 -> A
+<pre>>> 1 -> A
 2 -> B
 3 -> C
+</pre>
 
-```
 
-
-### FOR-EACH
-
-```
+<br/>
+```lisp
 (FOR-EACH/LIST '(A B C D E)
   (IF (> INDEX! 2)
       (BREAK!))
   (FORMAT T "~A~%" VALUE!))
 ```
 
-Outputs:
-```
-A
+<pre>>> A
 B
+</pre>
 
-```
 
-
-### FOR-EACH
-
-```
+<br/>
+```lisp
 (FOR-EACH/LIST '(A B C D E)
   (IF (= INDEX! 3)
       (CONTINUE!))
   (FORMAT T "~A~%" VALUE!))
 ```
 
-Outputs:
-```
-A
+<pre>>> A
 B
 D
 E
+</pre>
 
-```
 
-
-### FOR-EACH
-
-```
+<br/>
+```lisp
 (FOR-EACH "somebody.txt"
   (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
 ```
 
-Outputs:
-```
-1 -> we gotta celebrate diversity
+<pre>>> 1 -> we gotta celebrate diversity
 2 -> in the university
+</pre>
 
-```
 
-
-### FOR-EACH
-
-```
+<br/>
+```lisp
 (LET ((TMP (MAKE-HASH-TABLE)))
   (SETF (GETHASH 'GREEN TMP) "veridian")
   (SETF (GETHASH 'RED TMP) "cadmium")
@@ -132,10 +107,8 @@ Outputs:
     (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
 ```
 
-Outputs:
-```
-GREEN -> veridian
+<pre>>> GREEN -> veridian
 RED -> cadmium
+</pre>
 
-```
 

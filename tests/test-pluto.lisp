@@ -21,8 +21,6 @@
        (parse-integer <>)
        (sqrt <>)))
 
-(def-raw-markdown "## this is raw markdown")
-
 ; --------------------------------------------------------------- ;
 
 (def-test/doc-section "other abbreviations and shortcuts")

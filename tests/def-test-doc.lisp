@@ -1,8 +1,10 @@
 
+(setq *print-pretty* t)
 
 (defparameter /all-test-docs/ nil)
 (defparameter /test-counter/ 0)
 (defparameter /test-section/ nil)
+(defparameter /last-element-rendered/ nil)
 
 (defparameter test-return-value! nil)
 (defparameter test-stdout! nil)
@@ -94,6 +96,43 @@
          (setf (slot-value ,newone 'traits) ,thetraits)
          (push ,newone /all-test-docs/)))))
 
+
+(defmacro def-test/doc-tests (the-function &body body)
+  (let ((tmp (gensym)))
+    `(dolist (,tmp ',body)
+       (ft "tmp: ~S~%" (cons ,the-function ,tmp))
+       )))
+       ;(def-test/doc-test ,(cons the-function tmp)))))
+
+  ; (let ((thetraits (gensym))
+  ;       (newone (gensym))
+  ;       (tmp (gensym)))
+  ;   `(progn
+  ;      (dolist (tmp ',body)
+  ;        (destructuring-bind (traits doc test &rest code) tmp
+  ;          (let ((,thetraits nil)
+  ;                (,newone (make-instance 'test/doc-test
+  ;                                        :the-function ,the-function
+  ;                                        :doc doc
+  ;                                        :test-closure (lambda () test)
+  ;                                        :raw-code (quote code)
+  ;                                        :code-closure (lambda () code))))
+  ;            (setf ,thetraits `(markdown-able))
+  ;            (push ,newone /all-test-docs/)))))))
+           ; (debug-these traits doc test code)))))
+  ; (ft "body: ~S~%" body)
+  ; (ft "length: ~S~%" (length body))
+  ; (let ((tmp (mapcar
+  ;              (lambda (x)
+  ;                ; (ft "x: ~S~%~%" x))
+  ;                (destructuring-bind (traits doc test &rest code) x
+  ;                  (debug-these traits doc test code)))
+  ;              body)))
+  ;   ))
+
+
+
+
 (defmacro def-raw-markdown (astring)
   `(push
      (make-instance 'test/doc-element :doc ,astring
@@ -172,23 +211,31 @@
           { test 'doc }))
 
 (defmethod to-markdown ((test test/doc-section) &optional (stream t))
-  (format stream "~%-----~%~%# ~A~%~%" { test 'section }))
+  (format stream "~%-----~%~%### ~A~%~%" { test 'section }))
 
 (defmethod to-markdown ((test test/doc-test) &optional (stream t))
-  (format stream "~%### ~A~%~%" { test 'the-function })
-  (format stream "```~%~S~%```~%~%" (car { test 'raw-code })))
+  (let ((thefun { test 'the-function }))
+    (if (eq thefun /last-element-rendered/)
+      (format stream "<br/>~%")
+      (format stream "~%#### ~A~%~%" { test 'the-function }))
+    (format stream "```lisp~%~S~%```~%~%" (car { test 'raw-code }))
+    (setq /last-element-rendered/ thefun)))
+
+(defmethod to-markdown :after ((test test/doc-test) &optional (stream t))
+  (ft "setting last rendered to: ~S~%" { test 'the-function }))
 
 ; TODO: test test-able nil
 (defmethod to-markdown :after ((test test/doc-test) &optional (stream t))
   (aif (output-type test)
     (let ((tmp
             (cond ((eq it! 'returns)
-                     (list "Returns"   (car { test 'output })))
+                     (list "=>"   (car { test 'output })))
                   ((eq it! 'stdout)
-                     (list "Outputs"   (cadr { test 'output })))
+                     (list ">>"   (cadr { test 'output })))
                   ((eq it! 'stderr)
                      (list "Std error" (caddr { test 'output }))))))
-      (format stream "~A:~%```~%~A~%```~%~%"
+      ; (format stream "`~A ~A~%`~%~%"
+      (format stream "<pre>~A ~A</pre>~%~%~%"
               (car tmp) (cadr tmp)))))
 
 (defun render-markdown (&optional (stream t))

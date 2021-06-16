@@ -2,66 +2,57 @@
 <p><em>A common lisp package that’s out there</em></p>
 <p>heres the documentation</p>
 <hr />
-<h1 id="some-essential-utilitiesmacros">some essential utilities/macros</h1>
-<h3 id="section">-&lt;&gt;</h3>
-<pre><code>(-&lt;&gt; &quot;4&quot; (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</code></pre>
-<p>Returns:</p>
-<pre><code>2.0</code></pre>
-<h2 id="this-is-raw-markdown">this is raw markdown</h2>
+<h3 id="some-essential-utilitiesmacros">some essential utilities/macros</h3>
+<h4 id="section">-&lt;&gt;</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</span></code></pre></div>
+<pre>=> 2.0</pre>
 <hr />
-<h1 id="other-abbreviations-and-shortcuts">other abbreviations and shortcuts</h1>
-<h3 id="get-size">GET-SIZE</h3>
-<pre><code>(GET-SIZE &quot;interior-of-a-heart.txt&quot;)</code></pre>
-<p>Returns:</p>
-<pre><code>17k</code></pre>
-<h3 id="get-size-1">GET-SIZE</h3>
-<pre><code>(GET-SIZE &quot;interior-of-a-heart.txt&quot; :JUST-BYTES T)</code></pre>
-<p>Returns:</p>
-<pre><code>14433</code></pre>
+<h3 id="other-abbreviations-and-shortcuts">other abbreviations and shortcuts</h3>
+<h4 id="get-size">GET-SIZE</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(GET-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</span></code></pre></div>
+<pre>=> 17k</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(GET-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</span></code></pre></div>
+<pre>=> 14433</pre>
 <hr />
-<h1 id="for-each-and-friends">for-each and friends</h1>
-<h3 id="for-each">FOR-EACH</h3>
-<pre><code>(FOR-EACH/LIST &#39;(A B C)
-  (FORMAT T &quot;~A -&gt; ~A~%&quot; INDEX! VALUE!))</code></pre>
-<p>Outputs:</p>
-<pre><code>1 -&gt; A
-2 -&gt; B
-3 -&gt; C
-</code></pre>
-<h3 id="for-each-1">FOR-EACH</h3>
-<pre><code>(FOR-EACH/LIST &#39;(A B C D E)
-  (IF (&gt; INDEX! 2)
-      (BREAK!))
-  (FORMAT T &quot;~A~%&quot; VALUE!))</code></pre>
-<p>Outputs:</p>
-<pre><code>A
+<h3 id="for-each-and-friends">for-each and friends</h3>
+<h4 id="for-each">FOR-EACH</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<pre>>> 1 -> A
+2 -> B
+3 -> C
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      (BREAK!))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
+<pre>>> A
 B
-</code></pre>
-<h3 id="for-each-2">FOR-EACH</h3>
-<pre><code>(FOR-EACH/LIST &#39;(A B C D E)
-  (IF (= INDEX! 3)
-      (CONTINUE!))
-  (FORMAT T &quot;~A~%&quot; VALUE!))</code></pre>
-<p>Outputs:</p>
-<pre><code>A
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>      (CONTINUE!))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
+<pre>>> A
 B
 D
 E
-</code></pre>
-<h3 id="for-each-3">FOR-EACH</h3>
-<pre><code>(FOR-EACH &quot;somebody.txt&quot;
-  (FORMAT T &quot;~A -&gt; ~A~%&quot; INDEX! VALUE!))</code></pre>
-<p>Outputs:</p>
-<pre><code>1 -&gt; we gotta celebrate diversity
-2 -&gt; in the university
-</code></pre>
-<h3 id="for-each-4">FOR-EACH</h3>
-<pre><code>(LET ((TMP (MAKE-HASH-TABLE)))
-  (SETF (GETHASH &#39;GREEN TMP) &quot;veridian&quot;)
-  (SETF (GETHASH &#39;RED TMP) &quot;cadmium&quot;)
-  (FOR-EACH TMP
-    (FORMAT T &quot;~A -&gt; ~A~%&quot; KEY! VALUE!)))</code></pre>
-<p>Outputs:</p>
-<pre><code>GREEN -&gt; veridian
-RED -&gt; cadmium
-</code></pre>
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH <span class="st">&quot;somebody.txt&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<pre>>> 1 -> we gotta celebrate diversity
+2 -> in the university
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH TMP</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</span></code></pre></div>
+<pre>>> GREEN -> veridian
+RED -> cadmium
+</pre>
