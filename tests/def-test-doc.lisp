@@ -94,6 +94,12 @@
          (setf (slot-value ,newone 'traits) ,thetraits)
          (push ,newone /all-test-docs/)))))
 
+(defmacro def-raw-markdown (astring)
+  `(push
+     (make-instance 'test/doc-element :doc ,astring
+                    :traits `((markdown-able t)))
+     /all-test-docs/))
+
 ;; -----------------------------------
 
 
@@ -112,6 +118,9 @@
         (call-next-method))
       (call-next-method))
     (ft (grey "skipping test of ~S~%" { test 'the-function }))))
+
+(defmethod run-test ((test test/doc-element))
+  t)
 
 (defmethod run-test ((test test/doc-title))
   (ft (cyan "beginning tests for ~A~%" { test 'section })))
@@ -149,9 +158,12 @@
 
 (defgeneric to-markdown (test/doc-element &optional stream))
 
-(defmethod to-markdown :around ((test test/doc-test) &optional (stream t))
+(defmethod to-markdown :around ((test test/doc-element) &optional (stream t))
   (when (has-trait test 'markdown-able)
     (call-next-method)))
+
+(defmethod to-markdown ((test test/doc-element) &optional (stream t))
+  (format stream "~A~%" { test 'doc }))
 
 (defmethod to-markdown ((test test/doc-title) &optional (stream t))
   (format stream "# ~A documentation~%_~A_~%~%~A~%"
@@ -170,9 +182,12 @@
 (defmethod to-markdown :after ((test test/doc-test) &optional (stream t))
   (aif (output-type test)
     (let ((tmp
-            (cond ((eq it! 'returns) (list "Returns"   (car { test 'output })))
-                  ((eq it! 'stdout)  (list "Outputs"   (cadr { test 'output })))
-                  ((eq it! 'stderr)  (list "Std error" (caddr { test 'output }))))))
+            (cond ((eq it! 'returns)
+                     (list "Returns"   (car { test 'output })))
+                  ((eq it! 'stdout)
+                     (list "Outputs"   (cadr { test 'output })))
+                  ((eq it! 'stderr)
+                     (list "Std error" (caddr { test 'output }))))))
       (format stream "~A:~%```~%~A~%```~%~%"
               (car tmp) (cadr tmp)))))
 
