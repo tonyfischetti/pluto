@@ -74,6 +74,38 @@
     (make-instance 'test/doc-section :traits '((markdown-able t)))
     /all-test-docs/))
 
+; (defun from-list->test-element (somelist)
+;   (destructuring-bind (traits doc test &rest code) somelist
+;     (debug-these test code)
+;     (let ((thetraits nil)
+;           (newone (make-instance 'test/doc-test
+;                                  :doc doc
+;                                  :test-closure `(lambda () ,test)
+;                                  :raw-code code
+;                                  :code-closure `(lambda () ,@code))))
+;       ; (debug-these traits)
+;       (setf thetraits (mapcar
+;                         (lambda (x)
+;                           ; (ft "x->~S~%" x)
+;                           (if (listp x) x (list x t)))
+;                         traits))
+;       ; (debug-these thetraits)
+;       (setf (slot-value newone 'traits) thetraits)
+;       newone)))
+
+(defmacro def-test/doc-tests (the-function &body body)
+  `(let ((newones
+           (mapcar
+             (lambda (traits doc test &rest code)
+               (debug-these traits doc test code))
+             ,body)))))
+             
+    ;          #'from-list->test-element ',body)))
+    ; (mapcar (lambda (x) (setf (slot-value x 'the-function) ,the-function))
+    ;         newones)
+    ; (mapcar (lambda (x) (push x /all-test-docs/)) newones)))
+
+
 (defmacro def-test/doc-test (&body body)
   (destructuring-bind (the-function traits doc test &rest code) body
     (let ((thetraits (gensym))
