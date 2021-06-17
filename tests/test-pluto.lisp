@@ -23,6 +23,23 @@
 
 ; --------------------------------------------------------------- ;
 
+(def-test/doc-section "other abbreviations and shortcuts")
+
+; not markdown able or test able (as a test)
+(def-test/doc-test 'file-size
+  `(markdown-able (test-able returns))
+  "test doc"
+  (string= test-return-value! "17k")
+  (file-size "interior-of-a-heart.txt"))
+
+(def-test/doc-test 'file-size
+  `(markdown-able (test-able returns))
+  "test doc"
+  (= test-return-value! 14433)
+  (file-size "interior-of-a-heart.txt" :just-bytes t))
+
+; --------------------------------------------------------------- ;
+
 (def-test/doc-section "for-each and friends")
 
 (def-test/doc-test 'for-each
@@ -68,21 +85,6 @@
     (for-each tmp
       (format t "~A -> ~A~%" key! value!))))
 
-; --------------------------------------------------------------- ;
-
-(def-test-section "other abbreviations and shortcuts")
-
-(def-test-doc 'file-size
-  "test doc"
-  'returns
-  (string= test-return-value! "17k")
-  (file-size "interior-of-a-heart.txt"))
-
-(def-test-doc 'file-size
-  "test doc"
-  'returns
-  (= test-return-value! 14433)
-  (file-size "interior-of-a-heart.txt" :just-bytes t))
 
 ; --------------------------------------------------------------- ;
 

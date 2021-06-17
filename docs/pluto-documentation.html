@@ -1,0 +1,58 @@
+<h1 id="pluto-documentation">Pluto documentation</h1>
+<p><em>A common lisp package that’s out there</em></p>
+<p>heres the documentation</p>
+<hr />
+<h3 id="some-essential-utilitiesmacros">some essential utilities/macros</h3>
+<h4 id="section">-&lt;&gt;</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb1-1" title="1">(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</a></code></pre></div>
+<pre>=> 2.0</pre>
+<hr />
+<h3 id="other-abbreviations-and-shortcuts">other abbreviations and shortcuts</h3>
+<h4 id="file-size">FILE-SIZE</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb2-1" title="1">(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</a></code></pre></div>
+<pre>=> 17k</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb3-1" title="1">(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</a></code></pre></div>
+<pre>=> 14433</pre>
+<hr />
+<h3 id="for-each-and-friends">for-each and friends</h3>
+<h4 id="for-each">FOR-EACH</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb4-1" title="1">(FOR-EACH/LIST &#39;(A B C)</a>
+<a class="sourceLine" id="cb4-2" title="2">  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</a></code></pre></div>
+<pre>>> 1 -> A
+2 -> B
+3 -> C
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb5-1" title="1">(FOR-EACH/LIST &#39;(A B C D E)</a>
+<a class="sourceLine" id="cb5-2" title="2">  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb5-3" title="3">      (BREAK!))</a>
+<a class="sourceLine" id="cb5-4" title="4">  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</a></code></pre></div>
+<pre>>> A
+B
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb6-1" title="1">(FOR-EACH/LIST &#39;(A B C D E)</a>
+<a class="sourceLine" id="cb6-2" title="2">  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb6-3" title="3">      (CONTINUE!))</a>
+<a class="sourceLine" id="cb6-4" title="4">  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</a></code></pre></div>
+<pre>>> A
+B
+D
+E
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb7-1" title="1">(FOR-EACH <span class="st">&quot;somebody.txt&quot;</span></a>
+<a class="sourceLine" id="cb7-2" title="2">  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</a></code></pre></div>
+<pre>>> 1 -> we gotta celebrate diversity
+2 -> in the university
+</pre>
+<p><br/></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb8-1" title="1">(LET ((TMP (MAKE-HASH-TABLE)))</a>
+<a class="sourceLine" id="cb8-2" title="2">  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</a>
+<a class="sourceLine" id="cb8-3" title="3">  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</a>
+<a class="sourceLine" id="cb8-4" title="4">  (FOR-EACH TMP</a>
+<a class="sourceLine" id="cb8-5" title="5">    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</a></code></pre></div>
+<pre>>> GREEN -> veridian
+RED -> cadmium
+</pre>
