@@ -4,7 +4,6 @@
 
 (load "def-test-doc.lisp")
 
-
 (start-tests
   :title "Pluto"
   :tagline "A common lisp package that's out there"
@@ -12,11 +11,11 @@
 
 ; --------------------------------------------------------------- ;
 
-(def-test-section "some essential utilities/macros")
+(def-test/doc-section "some essential utilities/macros")
 
-(def-test-doc '-<>
+(def-test/doc-test '-<>
+  `(markdown-able (test-able returns) (bench-able 5))
   "test doc"
-  'returns
   (= test-return-value! 2)
   (-<> "4"
        (parse-integer <>)
@@ -24,43 +23,43 @@
 
 ; --------------------------------------------------------------- ;
 
-(def-test-section "for-each and friends")
+(def-test/doc-section "for-each and friends")
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
+  `(markdown-able (test-able stdout))
   "test doc"
-  'stdout
   (string= test-stdout! (fn "1 -> A~%2 -> B~%3 -> C~%"))
   (for-each/list '(a b c)
     (format t "~A -> ~A~%" index! value!)))
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
+  `(markdown-able (test-able stdout))
   "test doc"
-  'stdout
   (string= test-stdout! (fn "A~%B~%"))
   (for-each/list '(a b c d e)
     (if (> index! 2) (break!))
     (format t "~A~%" value!)))
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
+  `(markdown-able (test-able stdout))
   "test doc"
-  'stdout
   (string= test-stdout! (fn "A~%B~%D~%E~%"))
   (for-each/list '(a b c d e)
     (if (= index! 3) (continue!))
     (format t "~A~%" value!)))
 
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
+  `(markdown-able (test-able stdout))
   "for-each/line"
-  'stdout
   (string= test-stdout! (fn "1 -> we gotta celebrate diversity~%2 -> in the university~%"))
   (for-each "somebody.txt"
     (format t "~A -> ~A~%" index! value!)))
 
 ; TODO: warning about undefined variable: PLUTO:KEY!
 ; that doesn't happen when using for-each/hash
-(def-test-doc 'for-each
+(def-test/doc-test 'for-each
+  `(markdown-able (test-able stdout))
   "for-each/hash"
-  'stdout
   (or (string= test-stdout! (fn "GREEN -> veridian~%RED -> cadmium~%"))
       (string= test-stdout! (fn "RED -> cadmium~%GREEN -> veridian~%")))
   (let ((tmp (make-hash-table)))
@@ -94,22 +93,3 @@
   (with-a-file "pluto-results.md" :w
     (render-markdown stream!)))
 
-
-
-; (with-a-file "pluto-results.md" :w
-;   (format stream! "# Pluto documentation~%~%")
-;   (for-each *all-results*
-;     (let ((thefun {value! 'the-function }))
-;       (if (gethash thefun /seen-p/)
-;         (format stream! •<hr size="1">•)
-;         (progn
-;           (format stream! "~%---~%### ~A~%" thefun)
-;           (format stream!  "<pre>~%~A~%</pre>~%<br>" (documentation thefun 'function))))
-;       (setf {/seen-p/ thefun} t)
-;       (format stream! •~%~%~A~%```~%~S~%```~%~A~%~%•
-;           (if {value! 'doc} {value! 'doc} "")
-;           (car {value! 'raw-code })
-;           (if (eq {value! 'the-type } 'returns)
-;             (fn "~%Returns:~%```~%~A~%```~%" {value! 'return-value })
-;             (fn "~%Output:~%```~%~A~%```~%" {value! 'output }))
-;           ))))
