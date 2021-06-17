@@ -115,10 +115,10 @@ RED -> cadmium
 # other abbreviations and shortcuts
 
 
-### GET-SIZE
+### FILE-SIZE
 
 ```
-(GET-SIZE "interior-of-a-heart.txt")
+(FILE-SIZE "interior-of-a-heart.txt")
 ```
 
 Returns:
@@ -127,10 +127,10 @@ Returns:
 ```
 
 
-### GET-SIZE
+### FILE-SIZE
 
 ```
-(GET-SIZE "interior-of-a-heart.txt" :JUST-BYTES T)
+(FILE-SIZE "interior-of-a-heart.txt" :JUST-BYTES T)
 ```
 
 Returns:

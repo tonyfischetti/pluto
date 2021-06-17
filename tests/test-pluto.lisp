@@ -73,17 +73,17 @@
 
 (def-test-section "other abbreviations and shortcuts")
 
-(def-test-doc 'get-size
+(def-test-doc 'file-size
   "test doc"
   'returns
   (string= test-return-value! "17k")
-  (get-size "interior-of-a-heart.txt"))
+  (file-size "interior-of-a-heart.txt"))
 
-(def-test-doc 'get-size
+(def-test-doc 'file-size
   "test doc"
   'returns
   (= test-return-value! 14433)
-  (get-size "interior-of-a-heart.txt" :just-bytes t))
+  (file-size "interior-of-a-heart.txt" :just-bytes t))
 
 ; --------------------------------------------------------------- ;
 

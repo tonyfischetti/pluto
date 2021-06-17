@@ -59,7 +59,7 @@
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
     ; other abbreviations and shortcuts
-    :λ :get-size
+    :λ :file-size
 
            ))
 
@@ -1288,7 +1288,7 @@
     (substr astring 0 pos1)))
 
 ; TODO: check if unix first
-(defun get-size (afile &key (just-bytes nil))
+(defun file-size (afile &key (just-bytes nil))
   "Uses `du` to return just the size of the provided file.
    `just-bytes` ensures that the size is only counted in bytes (returns integer) [default nil]"
   (let ((result
