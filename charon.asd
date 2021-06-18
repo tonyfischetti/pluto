@@ -1,7 +1,9 @@
 
 (asdf:defsystem :charon
   :description "A companion to pluto (with external dependencies)"
-  :author "Tony Fischetti"
+  :author "Tony Fischetti <tony.fischetti@gmail.com>"
+  :homepage "https://github.com/tonyfischetti/pluto"
+  :version "0.1.1"
   :license "GPL-3"
 
   ; TODO: do I really need all of these?
