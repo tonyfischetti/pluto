@@ -10,6 +10,8 @@
 ;;                                                            ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#+clisp (unuse-package :ext)
+
 (defpackage :pluto
   (:use :common-lisp)
   (:export
@@ -25,10 +27,9 @@
     :magenta :red :yellow :green :cyan :blue :grey
 
     ; some essential utilities/macros
-    #-clisp :with-gensyms
-    :mac :nil!  :alambda :self! :abbr :flatten :take :group :mkstr
-    :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :it!
-    :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :str+
+    :with-gensyms :mac :nil!  :alambda :self! :abbr :flatten :take :group
+    :mkstr :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif
+    :it!  :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :str+
     :str-join :substr :interpose :delim :defparams :round-to :advise :alistp
     :with-hash-entry :entry! :if-hash-entry :if-not-hash-entry
     :string->char-list :split-string->lines :capture-all-outputs
@@ -60,7 +61,7 @@
 
     ; other abbreviations and shortcuts
     :λ
-    #-clisp :file-size
+    :file-size
 
            ))
 
@@ -148,7 +149,6 @@
 ; TODO: Do all of these need to be in _this_ section?
 
 ; Stolen from "Practical Common Lisp"
-; TODO: with-gensyms has a name conflict in clisp?!
 (defmacro with-gensyms ((&rest names) &body body)
   "Why mess with the classics"
   `(let ,(loop for n in names collect `(,n (gensym)))
@@ -1291,8 +1291,6 @@
     (substr astring 0 pos1)))
 
 ; TODO: check if unix first
-; TODO: conflicts with clisp?
-#-clisp
 (defun file-size (afile &key (just-bytes nil))
   "Uses `du` to return just the size of the provided file.
    `just-bytes` ensures that the size is only counted in bytes (returns integer) [default nil]"
@@ -1302,7 +1300,6 @@
     (if just-bytes
       (nth-value 0 (parse-integer result))
       result)))
-
 
 ;---------------------------------------------------------;
 
