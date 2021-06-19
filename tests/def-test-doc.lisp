@@ -44,21 +44,25 @@
     (cadr it!)
     nil))
 
+(defun process-docstring (astring)
+  (when (not (null astring))
+    (-<> astring
+      (split-string->lines <>)
+      (mapcar (lambda (x) (fn "> ~A\\~%" x)) <>)
+      (str-join (fn "") <>))))
+
 ;; -----------------------------------
 
 
-(defun start-tests (&key title tagline doc)
+(defun start-test/doc (&key title tagline doc)
   (setq /all-test-docs/ nil)
   (setq /test-counter/ 0)
-  (push
-    (make-instance 'test/doc-title
-                   :section title
-                   :tagline tagline
-                   :doc doc
-                   :traits `((markdown-able t)))
+  (push (make-instance 'test/doc-title
+                       :section title
+                       :traits `((markdown-able t)))
     /all-test-docs/))
 
-(defun end-tests ()
+(defun end-test/doc ()
   (setq /all-test-docs/ (reverse /all-test-docs/)))
 
 
@@ -80,13 +84,17 @@
   (destructuring-bind (the-function traits doc test &rest code) body
     (let ((thetraits (gensym))
           (newone    (gensym)))
-      `(let* ((,thetraits nil)
-              (,newone (make-instance 'test/doc-test
-                                     :the-function ,the-function
-                                     :doc ,doc
-                                     :test-closure (lambda () ,test)
-                                     :raw-code (quote ,code)
-                                     :code-closure (lambda () ,@code))))
+      `(let*
+         ((,thetraits nil)
+          (,newone (make-instance 'test/doc-test
+                                  :the-function ,the-function
+                                  :doc (if (symbolp ,doc)
+                                         (process-docstring
+                                           (documentation ,the-function ,doc))
+                                         ,doc)
+                                  :test-closure (lambda () ,test)
+                                  :raw-code (quote ,code)
+                                  :code-closure (lambda () ,@code))))
          (setf ,thetraits (mapcar
                             (lambda (x)
                               (if (listp x) x (list x t)))
@@ -95,43 +103,6 @@
          ; (setf { ,newone 'traits } ,thetraits)
          (setf (slot-value ,newone 'traits) ,thetraits)
          (push ,newone /all-test-docs/)))))
-
-
-(defmacro def-test/doc-tests (the-function &body body)
-  (let ((tmp (gensym)))
-    `(dolist (,tmp ',body)
-       (ft "tmp: ~S~%" (cons ,the-function ,tmp))
-       )))
-       ;(def-test/doc-test ,(cons the-function tmp)))))
-
-  ; (let ((thetraits (gensym))
-  ;       (newone (gensym))
-  ;       (tmp (gensym)))
-  ;   `(progn
-  ;      (dolist (tmp ',body)
-  ;        (destructuring-bind (traits doc test &rest code) tmp
-  ;          (let ((,thetraits nil)
-  ;                (,newone (make-instance 'test/doc-test
-  ;                                        :the-function ,the-function
-  ;                                        :doc doc
-  ;                                        :test-closure (lambda () test)
-  ;                                        :raw-code (quote code)
-  ;                                        :code-closure (lambda () code))))
-  ;            (setf ,thetraits `(markdown-able))
-  ;            (push ,newone /all-test-docs/)))))))
-           ; (debug-these traits doc test code)))))
-  ; (ft "body: ~S~%" body)
-  ; (ft "length: ~S~%" (length body))
-  ; (let ((tmp (mapcar
-  ;              (lambda (x)
-  ;                ; (ft "x: ~S~%~%" x))
-  ;                (destructuring-bind (traits doc test &rest code) x
-  ;                  (debug-these traits doc test code)))
-  ;              body)))
-  ;   ))
-
-
-
 
 (defmacro def-raw-markdown (astring)
   `(push
@@ -205,10 +176,8 @@
   (format stream "~A~%" { test 'doc }))
 
 (defmethod to-markdown ((test test/doc-title) &optional (stream t))
-  (format stream "# ~A documentation~%_~A_~%~%~A~%"
-          { test 'section }
-          { test 'tagline }
-          { test 'doc }))
+  (format stream "---~%title: ~A documentation~%...~%~%"
+          { test 'section }))
 
 (defmethod to-markdown ((test test/doc-section) &optional (stream t))
   (format stream "~%-----~%~%### ~A~%~%" { test 'section }))
@@ -216,9 +185,10 @@
 (defmethod to-markdown ((test test/doc-test) &optional (stream t))
   (let ((thefun { test 'the-function }))
     (if (eq thefun /last-element-rendered/)
-      (format stream "<br/>~%")
-      (format stream "~%#### ~A~%~%" { test 'the-function }))
-    (format stream "```lisp~%~S~%```~%~%" (car { test 'raw-code }))
+      (format stream "~%")
+      (format stream "~%#### ~A~%~%~A~%" { test 'the-function }
+                                         { test 'doc }))
+    (format stream "```{.commonlisp}~%~S~%```~%~%" (car { test 'raw-code }))
     (setq /last-element-rendered/ thefun)))
 
 (defmethod to-markdown :after ((test test/doc-test) &optional (stream t))
@@ -235,7 +205,7 @@
                   ((eq it! 'stderr)
                      (list "Std error" (caddr { test 'output }))))))
       ; (format stream "`~A ~A~%`~%~%"
-      (format stream "<pre>~A ~A</pre>~%~%~%"
+      (format stream "<small><pre>~A ~A</pre></small>~%~%~%"
               (car tmp) (cadr tmp)))))
 
 (defun render-markdown (&optional (stream t))

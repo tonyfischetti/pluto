@@ -325,11 +325,10 @@
 
 (defun interpose (separator list)
   "Returns a sequence of the elements of SEQUENCE separated by SEPARATOR."
-  (labels ((rec (s acc)
-                (if s
-                  (rec (cdr s) (nconc acc
-                                      (list separator (car s))))
-                  acc)))
+  (labels
+    ((rec (s acc) (if s
+                    (rec (cdr s) (nconc acc (list separator (car s))))
+                    acc)))
     (cdr (rec list nil))))
 
 (defun delim (anlist &key (what :list) (sep #\Tab))

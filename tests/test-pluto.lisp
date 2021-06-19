@@ -4,10 +4,12 @@
 
 (load "def-test-doc.lisp")
 
-(start-tests
-  :title "Pluto"
-  :tagline "A common lisp package that's out there"
-  :doc "heres the documentation")
+(start-test/doc :title "Pluto")
+
+; --------------------------------------------------------------- ;
+
+(def-raw-markdown
+  (fn "-----~%~%### about~%~%a common lisp package that's out there~%~%"))
 
 ; --------------------------------------------------------------- ;
 
@@ -15,11 +17,17 @@
 
 (def-test/doc-test '-<>
   `(markdown-able (test-able returns) (bench-able 5))
-  "test doc"
+  'function
   (= test-return-value! 2)
   (-<> "4"
        (parse-integer <>)
        (sqrt <>)))
+
+(def-test/doc-test 'interpose
+  `((test-able returns) markdown-able)
+  (documentation 'interpose 'function)
+  (equal test-return-value! `(a sep b sep c))
+  (interpose 'sep `(a b c)))
 
 ; --------------------------------------------------------------- ;
 
@@ -28,13 +36,13 @@
 ; not markdown able or test able (as a test)
 (def-test/doc-test 'file-size
   `(markdown-able (test-able returns))
-  "test doc"
+  'function
   (string= test-return-value! "17k")
   (file-size "interior-of-a-heart.txt"))
 
 (def-test/doc-test 'file-size
   `(markdown-able (test-able returns))
-  "test doc"
+  nil
   (= test-return-value! 14433)
   (file-size "interior-of-a-heart.txt" :just-bytes t))
 
@@ -44,7 +52,7 @@
 
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
-  "test doc"
+  'function
   (string= test-stdout! (fn "1 -> A~%2 -> B~%3 -> C~%"))
   (for-each/list '(a b c)
     (format t "~A -> ~A~%" index! value!)))
@@ -89,7 +97,7 @@
 ; --------------------------------------------------------------- ;
 
 
-(end-tests)
+(end-test/doc)
 
 (when (run-tests)
   (with-a-file "pluto-results.md" :w

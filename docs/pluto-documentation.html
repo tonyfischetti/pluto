@@ -1,58 +1,346 @@
-<h1 id="pluto-documentation">Pluto documentation</h1>
-<p><em>A common lisp package that’s out there</em></p>
-<p>heres the documentation</p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Pluto documentation</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Pluto documentation</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#about">about</a></li>
+<li><a href="#some-essential-utilitiesmacros">some essential utilities/macros</a>
+<ul>
+<li><a href="#section">-&lt;&gt;</a></li>
+<li><a href="#interpose">INTERPOSE</a></li>
+</ul></li>
+<li><a href="#other-abbreviations-and-shortcuts">other abbreviations and shortcuts</a>
+<ul>
+<li><a href="#file-size">FILE-SIZE</a></li>
+</ul></li>
+<li><a href="#for-each-and-friends">for-each and friends</a>
+<ul>
+<li><a href="#for-each">FOR-EACH</a></li>
+</ul></li>
+</ul>
+</nav>
+<hr />
+<h3 id="about">about</h3>
+<p>a common lisp package that’s out there</p>
 <hr />
 <h3 id="some-essential-utilitiesmacros">some essential utilities/macros</h3>
 <h4 id="section">-&lt;&gt;</h4>
-<div class="sourceCode" id="cb1"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb1-1" title="1">(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</a></code></pre></div>
+<blockquote>
+<p>Threading macro (put &lt;&gt; where the argument should be)<br />
+Stolen from https://github.com/sjl/cl-losh/blob/master/src/control-flow.lisp<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb1"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</span></code></pre></div>
+<small>
 <pre>=> 2.0</pre>
+<p></small></p>
+<h4 id="interpose">INTERPOSE</h4>
+<p>Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(INTERPOSE &#39;SEP `(A B C))</span></code></pre></div>
+<small>
+<pre>=> (A SEP B SEP C)</pre>
+<p></small></p>
 <hr />
 <h3 id="other-abbreviations-and-shortcuts">other abbreviations and shortcuts</h3>
 <h4 id="file-size">FILE-SIZE</h4>
-<div class="sourceCode" id="cb2"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb2-1" title="1">(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</a></code></pre></div>
+<blockquote>
+<p>Uses <code>du</code> to return just the size of the provided file.<br />
+<code>just-bytes</code> ensures that the size is only counted in bytes (returns integer) [default nil]<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</span></code></pre></div>
+<small>
 <pre>=> 17k</pre>
-<p><br/></p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb3-1" title="1">(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</a></code></pre></div>
+<p></small></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</span></code></pre></div>
+<small>
 <pre>=> 14433</pre>
+<p></small></p>
 <hr />
 <h3 id="for-each-and-friends">for-each and friends</h3>
 <h4 id="for-each">FOR-EACH</h4>
-<div class="sourceCode" id="cb4"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb4-1" title="1">(FOR-EACH/LIST &#39;(A B C)</a>
-<a class="sourceLine" id="cb4-2" title="2">  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</a></code></pre></div>
+<blockquote>
+<p>A super-duper imperative looping construct.<br />
+It takes either<br />
+a filename string (to be treated as a file and goes line by line)<br />
+a hash-table<br />
+a vector<br />
+a list<br />
+a string (that goes character by character)<br />
+or a stream (that goes line by line)<br />
+It is anaphoric and introduces<br />
+<code>index!</code> (which is a zero indexed counter of which element we are on)<br />
+<code>key!</code> (the key of the current hash-table entry [only for hash-tables and alists])<br />
+<code>value!</code> (the value of the current element)<br />
+<code>this-pass!</code> (a block that returning from immediately moves to the next iteration)<br />
+<code>this-loop!</code> (a block that returning from exits the loop)<br />
+For convenience, <code>(continue!)</code> and <code>(break!)</code> will execute <code>(return-from this-pass!)</code><br />
+and <code>(return-from this-loop!)</code>, respectively<br />
+If it’s a filename, the external format is <em>pluto-external-format</em> (:UTF-8 by default)<br />
+Oh, it’ll die gracefully if Control-C is used during the loops execution.<br />
+And, finally, for extra performance, you can call it’s subordinate functions directly.<br />
+They are… for-each/line, for-each/list, for-each/hash, for-each/vector,<br />
+for-each/stream, and for-each/alist<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb5"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<small>
 <pre>>> 1 -> A
 2 -> B
 3 -> C
 </pre>
-<p><br/></p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb5-1" title="1">(FOR-EACH/LIST &#39;(A B C D E)</a>
-<a class="sourceLine" id="cb5-2" title="2">  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb5-3" title="3">      (BREAK!))</a>
-<a class="sourceLine" id="cb5-4" title="4">  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</a></code></pre></div>
+<p></small></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>      (BREAK!))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
+<small>
 <pre>>> A
 B
 </pre>
-<p><br/></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb6-1" title="1">(FOR-EACH/LIST &#39;(A B C D E)</a>
-<a class="sourceLine" id="cb6-2" title="2">  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</a>
-<a class="sourceLine" id="cb6-3" title="3">      (CONTINUE!))</a>
-<a class="sourceLine" id="cb6-4" title="4">  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</a></code></pre></div>
+<p></small></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      (CONTINUE!))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
+<small>
 <pre>>> A
 B
 D
 E
 </pre>
-<p><br/></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb7-1" title="1">(FOR-EACH <span class="st">&quot;somebody.txt&quot;</span></a>
-<a class="sourceLine" id="cb7-2" title="2">  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</a></code></pre></div>
+<p></small></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH <span class="st">&quot;somebody.txt&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<small>
 <pre>>> 1 -> we gotta celebrate diversity
 2 -> in the university
 </pre>
-<p><br/></p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb8-1" title="1">(LET ((TMP (MAKE-HASH-TABLE)))</a>
-<a class="sourceLine" id="cb8-2" title="2">  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</a>
-<a class="sourceLine" id="cb8-3" title="3">  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</a>
-<a class="sourceLine" id="cb8-4" title="4">  (FOR-EACH TMP</a>
-<a class="sourceLine" id="cb8-5" title="5">    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</a></code></pre></div>
+<p></small></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH TMP</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</span></code></pre></div>
+<small>
 <pre>>> GREEN -> veridian
 RED -> cadmium
 </pre>
+<p></small></p>
+</body>
+</html>

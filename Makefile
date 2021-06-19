@@ -12,5 +12,5 @@ test-ecl:
 	cd tests; ecl --eval '(progn (load "test-pluto.lisp") (quit))'
 
 doc:
-	pandoc -f markdown -t html5 -o ./docs/pluto-documentation.html ./tests/pluto-results.md
+	pandoc --toc --toc-depth=4 -s -f markdown -t html5 -o ./docs/pluto-documentation.html ./tests/pluto-results.md
 
