@@ -839,6 +839,7 @@
 ; command line arguments ---------------------------------;
 
 ; TODO: implementation dependent
+; TODO: get program name in clisp
 (defun cmdargs ()
   "A multi-implementation function to return argv (program name is CAR)"
   (or

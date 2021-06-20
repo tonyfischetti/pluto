@@ -161,91 +161,129 @@
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
   'function
-  (string= test-stdout! (fn "1 -> A~%2 -> B~%3 -> C~%"))
+  (string= test-stdout! "1 -> A;2 -> B;3 -> C;")
   (for-each/list '(a b c)
-    (format t "~A -> ~A~%" index! value!)))
+    (format t "~A -> ~A;" index! value!)))
 
   ; auto-"dispatch" variant
   (def-test/doc-test 'for-each
     `((test-able stdout))
     'function
-    (string= test-stdout! (fn "1 -> A~%2 -> B~%3 -> C~%"))
+    (string= test-stdout! "1 -> A;2 -> B;3 -> C;")
     (for-each '(a b c)
-      (format t "~A -> ~A~%" index! value!)))
+      (format t "~A -> ~A;" index! value!)))
 
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
   'function
-  (string= test-stdout! (fn "A~%B~%"))
+  (string= test-stdout! "A;B;")
   (for-each/list '(a b c d e)
     (if (> index! 2) (break!))
-    (format t "~A~%" value!)))
+    (format t "~A;" value!)))
 
   ; auto-"dispatch" variant
   (def-test/doc-test 'for-each
     `((test-able stdout))
     'function
-    (string= test-stdout! (fn "A~%B~%"))
+    (string= test-stdout! "A;B;")
     (for-each '(a b c d e)
       (if (> index! 2) (break!))
-      (format t "~A~%" value!)))
+      (format t "~A;" value!)))
 
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
-  "test doc"
-  (string= test-stdout! (fn "A~%B~%D~%E~%"))
+  'function
+  (string= test-stdout! "A;B;D;E;")
   (for-each/list '(a b c d e)
     (if (= index! 3) (continue!))
-    (format t "~A~%" value!)))
+    (format t "~A;" value!)))
 
   ; auto-"dispatch" variant
   (def-test/doc-test 'for-each
     `((test-able stdout))
     'function
-    (string= test-stdout! (fn "A~%B~%D~%E~%"))
+    (string= test-stdout! "A;B;D;E;")
     (for-each '(a b c d e)
       (if (= index! 3) (continue!))
-      (format t "~A~%" value!)))
+      (format t "~A;" value!)))
 
 (def-test/doc-test 'for-each
-  `(markdown-able (test-able stdout))
+  `((test-able stdout))
   'function
-  (string= test-stdout! (fn "1 -> we gotta celebrate diversity~%2 -> in the university~%"))
-  (for-each/line "somebody.txt"
-    (format t "~A -> ~A~%" index! value!)))
+  (string= test-stdout! "a;b;d;e;")
+  (for-each/vector #("a" "b" "c" "d" "e")
+    (if (= index! 3) (continue!))
+    (format t "~A;" value!)))
 
   ; auto-"dispatch" variant
   (def-test/doc-test 'for-each
     `((test-able stdout))
     'function
-      (string= test-stdout! (fn "1 -> we gotta celebrate diversity~%2 -> in the university~%"))
-    (for-each "somebody.txt"
-      (format t "~A -> ~A~%" index! value!)))
+    (string= test-stdout! "a;b;d;e;")
+    (for-each #("a" "b" "c" "d" "e")
+      (if (= index! 3) (continue!))
+      (format t "~A;" value!)))
+
+(def-raw-markdown
+  "If the argument to `for-each` is a string and the file exists,\
+  `for-each/line` is dispatched. Otherwise, it is treated like a\
+  character vector")
 
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
   'function
-  (or (string= test-stdout! (fn "GREEN -> veridian~%RED -> cadmium~%"))
-      (string= test-stdout! (fn "RED -> cadmium~%GREEN -> veridian~%")))
+  (string= test-stdout! "1 -> we gotta celebrate diversity;2 -> in the university;")
+  (for-each/line "somebody.txt"
+    (when (> index! 2) (break!))
+    (format t "~A -> ~A;" index! value!)))
+
+  ; auto-"dispatch" variant
+  (def-test/doc-test 'for-each
+    `((test-able stdout))
+    'function
+      (string= test-stdout! "1 -> we gotta celebrate diversity;2 -> in the university;")
+    (for-each "somebody.txt"
+      (when (> index! 2) (break!))
+      (format t "~A -> ~A;" index! value!)))
+
+(def-test/doc-test 'for-each
+  `(markdown-able (test-able stdout))
+  'function
+  (string= test-stdout! "n;o;t;-;a;-;f;i;l;e;.;t;x;t;")
+  (for-each "not-a-file.txt"
+    (format t "~A;" value!)))
+
+(def-test/doc-test 'for-each
+  `(markdown-able (test-able stdout))
+  'function
+  (or (string= test-stdout! (fn "GREEN -> veridian;RED -> cadmium;"))
+      (string= test-stdout! (fn "RED -> cadmium;GREEN -> veridian;")))
   (let ((tmp (make-hash-table)))
     (setf (gethash 'green tmp) "veridian")
     (setf (gethash 'red tmp) "cadmium")
     (for-each/hash tmp
-      (format t "~A -> ~A~%" key! value!))))
+      (format t "~A -> ~A;" key! value!))))
 
-; TODO: warning about undefined variable: PLUTO:KEY!
-; that doesn't happen when using for-each/hash
   ; auto-"dispatch" variant
   (def-test/doc-test 'for-each
     `(markdown-able (test-able stdout))
     'function
-    (or (string= test-stdout! (fn "GREEN -> veridian~%RED -> cadmium~%"))
-        (string= test-stdout! (fn "RED -> cadmium~%GREEN -> veridian~%")))
+    (or (string= test-stdout! (fn "GREEN -> veridian;RED -> cadmium;"))
+        (string= test-stdout! (fn "RED -> cadmium;GREEN -> veridian;")))
     (let ((tmp (make-hash-table)))
       (setf (gethash 'green tmp) "veridian")
       (setf (gethash 'red tmp) "cadmium")
       (for-each tmp
-        (format t "~A -> ~A~%" key! value!))))
+        (format t "~A -> ~A;" key! value!))))
+
+(def-test/doc-test 'for-each/alist
+  `(markdown-able (test-able stdout))
+  'function
+  (string= test-stdout! (fn "RED -> cadmium;GREEN -> veridian;"))
+  (let ((tmp (list (cons 'red "cadmium")
+                   (cons 'green "veridian"))))
+    (for-each/alist tmp
+      (format t "~A -> ~A;" key! value!))))
 
 ; --------------------------------------------------------------- ;
 

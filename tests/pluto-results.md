@@ -272,13 +272,10 @@ fill this out
 
 ```{.commonlisp}
 (FOR-EACH/LIST '(A B C)
-  (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
+  (FORMAT T "~A -> ~A;" INDEX! VALUE!))
 ```
 
-<small><pre>>> "1 -> A
-2 -> B
-3 -> C
-"</pre></small>
+<small><pre>>> "1 -> A;2 -> B;3 -> C;"</pre></small>
 
 
 
@@ -286,12 +283,10 @@ fill this out
 (FOR-EACH/LIST '(A B C D E)
   (IF (> INDEX! 2)
       (BREAK!))
-  (FORMAT T "~A~%" VALUE!))
+  (FORMAT T "~A;" VALUE!))
 ```
 
-<small><pre>>> "A
-B
-"</pre></small>
+<small><pre>>> "A;B;"</pre></small>
 
 
 
@@ -299,25 +294,32 @@ B
 (FOR-EACH/LIST '(A B C D E)
   (IF (= INDEX! 3)
       (CONTINUE!))
-  (FORMAT T "~A~%" VALUE!))
+  (FORMAT T "~A;" VALUE!))
 ```
 
-<small><pre>>> "A
-B
-D
-E
-"</pre></small>
+<small><pre>>> "A;B;D;E;"</pre></small>
+
+
+If the argument to `for-each` is a string and the file exists,
+  `for-each/line` is dispatched. Otherwise, it is treated like a
+  character vector
+
+```{.commonlisp}
+(FOR-EACH/LINE "somebody.txt"
+  (WHEN (> INDEX! 2) (BREAK!))
+  (FORMAT T "~A -> ~A;" INDEX! VALUE!))
+```
+
+<small><pre>>> "1 -> we gotta celebrate diversity;2 -> in the university;"</pre></small>
 
 
 
 ```{.commonlisp}
-(FOR-EACH/LINE "somebody.txt"
-  (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
+(FOR-EACH "not-a-file.txt"
+  (FORMAT T "~A;" VALUE!))
 ```
 
-<small><pre>>> "1 -> we gotta celebrate diversity
-2 -> in the university
-"</pre></small>
+<small><pre>>> "n;o;t;-;a;-;f;i;l;e;.;t;x;t;"</pre></small>
 
 
 
@@ -326,12 +328,10 @@ E
   (SETF (GETHASH 'GREEN TMP) "veridian")
   (SETF (GETHASH 'RED TMP) "cadmium")
   (FOR-EACH/HASH TMP
-    (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
+    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
-<small><pre>>> "GREEN -> veridian
-RED -> cadmium
-"</pre></small>
+<small><pre>>> "GREEN -> veridian;RED -> cadmium;"</pre></small>
 
 
 
@@ -340,11 +340,25 @@ RED -> cadmium
   (SETF (GETHASH 'GREEN TMP) "veridian")
   (SETF (GETHASH 'RED TMP) "cadmium")
   (FOR-EACH TMP
-    (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
+    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
-<small><pre>>> "GREEN -> veridian
-RED -> cadmium
-"</pre></small>
+<small><pre>>> "GREEN -> veridian;RED -> cadmium;"</pre></small>
+
+
+
+#### FOR-EACH/ALIST
+
+> This works like `for-each/hash` (see documentation for `for-each`)\
+>   but it has to be called explicitly (as `for-each/alist`) instead\
+>   of relying on `for-each`'s 'dispatch' mechanism.\
+
+```{.commonlisp}
+(LET ((TMP (LIST (CONS 'RED "cadmium") (CONS 'GREEN "veridian"))))
+  (FOR-EACH/ALIST TMP
+    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
+```
+
+<small><pre>>> "RED -> cadmium;GREEN -> veridian;"</pre></small>
 
 
