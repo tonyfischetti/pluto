@@ -320,7 +320,7 @@ D
 E
 "</pre>
 <p></small></p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb22-1" title="1">(FOR-EACH <span class="st">&quot;somebody.txt&quot;</span></a>
+<div class="sourceCode" id="cb22"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb22-1" title="1">(FOR-EACH/LINE <span class="st">&quot;somebody.txt&quot;</span></a>
 <a class="sourceLine" id="cb22-2" title="2">  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</a></code></pre></div>
 <small>
 <pre>>> "1 -> we gotta celebrate diversity
@@ -330,8 +330,18 @@ E
 <div class="sourceCode" id="cb23"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb23-1" title="1">(LET ((TMP (MAKE-HASH-TABLE)))</a>
 <a class="sourceLine" id="cb23-2" title="2">  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</a>
 <a class="sourceLine" id="cb23-3" title="3">  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</a>
-<a class="sourceLine" id="cb23-4" title="4">  (FOR-EACH TMP</a>
+<a class="sourceLine" id="cb23-4" title="4">  (FOR-EACH/HASH TMP</a>
 <a class="sourceLine" id="cb23-5" title="5">    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</a></code></pre></div>
+<small>
+<pre>>> "GREEN -> veridian
+RED -> cadmium
+"</pre>
+<p></small></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb24-1" title="1">(LET ((TMP (MAKE-HASH-TABLE)))</a>
+<a class="sourceLine" id="cb24-2" title="2">  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</a>
+<a class="sourceLine" id="cb24-3" title="3">  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</a>
+<a class="sourceLine" id="cb24-4" title="4">  (FOR-EACH TMP</a>
+<a class="sourceLine" id="cb24-5" title="5">    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</a></code></pre></div>
 <small>
 <pre>>> "GREEN -> veridian
 RED -> cadmium

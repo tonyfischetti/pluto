@@ -4,6 +4,8 @@
 
 (load "def-test-doc.lisp")
 
+(declaim (optimize (speed 3)))
+
 (start-test/doc :title "Pluto")
 
 ; --------------------------------------------------------------- ;
@@ -148,7 +150,7 @@
 
 (def-test/doc-test 'file-size
   `(markdown-able (test-able returns))
-  nil
+  'function
   (= test-return-value! 14433)
   (file-size "interior-of-a-heart.txt" :just-bytes t))
 
@@ -163,13 +165,30 @@
   (for-each/list '(a b c)
     (format t "~A -> ~A~%" index! value!)))
 
+  ; auto-"dispatch" variant
+  (def-test/doc-test 'for-each
+    `((test-able stdout))
+    'function
+    (string= test-stdout! (fn "1 -> A~%2 -> B~%3 -> C~%"))
+    (for-each '(a b c)
+      (format t "~A -> ~A~%" index! value!)))
+
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
-  "test doc"
+  'function
   (string= test-stdout! (fn "A~%B~%"))
   (for-each/list '(a b c d e)
     (if (> index! 2) (break!))
     (format t "~A~%" value!)))
+
+  ; auto-"dispatch" variant
+  (def-test/doc-test 'for-each
+    `((test-able stdout))
+    'function
+    (string= test-stdout! (fn "A~%B~%"))
+    (for-each '(a b c d e)
+      (if (> index! 2) (break!))
+      (format t "~A~%" value!)))
 
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
@@ -179,33 +198,62 @@
     (if (= index! 3) (continue!))
     (format t "~A~%" value!)))
 
+  ; auto-"dispatch" variant
+  (def-test/doc-test 'for-each
+    `((test-able stdout))
+    'function
+    (string= test-stdout! (fn "A~%B~%D~%E~%"))
+    (for-each '(a b c d e)
+      (if (= index! 3) (continue!))
+      (format t "~A~%" value!)))
+
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
-  "for-each/line"
+  'function
   (string= test-stdout! (fn "1 -> we gotta celebrate diversity~%2 -> in the university~%"))
-  (for-each "somebody.txt"
+  (for-each/line "somebody.txt"
     (format t "~A -> ~A~%" index! value!)))
 
-; TODO: warning about undefined variable: PLUTO:KEY!
-; that doesn't happen when using for-each/hash
+  ; auto-"dispatch" variant
+  (def-test/doc-test 'for-each
+    `((test-able stdout))
+    'function
+      (string= test-stdout! (fn "1 -> we gotta celebrate diversity~%2 -> in the university~%"))
+    (for-each "somebody.txt"
+      (format t "~A -> ~A~%" index! value!)))
+
 (def-test/doc-test 'for-each
   `(markdown-able (test-able stdout))
-  "for-each/hash"
+  'function
   (or (string= test-stdout! (fn "GREEN -> veridian~%RED -> cadmium~%"))
       (string= test-stdout! (fn "RED -> cadmium~%GREEN -> veridian~%")))
   (let ((tmp (make-hash-table)))
     (setf (gethash 'green tmp) "veridian")
     (setf (gethash 'red tmp) "cadmium")
-    (for-each tmp
+    (for-each/hash tmp
       (format t "~A -> ~A~%" key! value!))))
 
+; TODO: warning about undefined variable: PLUTO:KEY!
+; that doesn't happen when using for-each/hash
+  ; auto-"dispatch" variant
+  (def-test/doc-test 'for-each
+    `(markdown-able (test-able stdout))
+    'function
+    (or (string= test-stdout! (fn "GREEN -> veridian~%RED -> cadmium~%"))
+        (string= test-stdout! (fn "RED -> cadmium~%GREEN -> veridian~%")))
+    (let ((tmp (make-hash-table)))
+      (setf (gethash 'green tmp) "veridian")
+      (setf (gethash 'red tmp) "cadmium")
+      (for-each tmp
+        (format t "~A -> ~A~%" key! value!))))
 
 ; --------------------------------------------------------------- ;
 
 
 (end-test/doc)
 
-(when (run-tests)
+(if (run-tests)
   (with-a-file "pluto-results.md" :w
-    (render-markdown stream!)))
+    (render-markdown stream!))
+  (die "~%at least one test failed"))
 

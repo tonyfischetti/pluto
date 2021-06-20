@@ -707,7 +707,8 @@
 
 (defmacro for-each/hash (a-thing &body body)
   "(see documentation for `for-each`)"
-  (let ((the-hash         (gensym)))
+  (let ((the-hash         (gensym))
+        (tmp              (gensym)))
     `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
        (let ((index!      0)
              (key!        nil)
@@ -716,8 +717,9 @@
          (declare (ignorable value!))
          (declare (ignorable key!))
          (block this-loop!
-                (loop for key! being the hash-keys of ,the-hash
+                (loop for ,tmp being the hash-keys of ,the-hash
                       do (progn (incf index!)
+                                (setq key! ,tmp)
                                 (setq value! (gethash key! ,the-hash))
                                 (block this-pass! ,@body))))))))
 
@@ -812,7 +814,6 @@
   for-each/stream, and for-each/alist"
   (let ((tmp (gensym)))
     `(let ((,tmp ,a-thing))
-      ; (declare (type (or simple-array hash-table cons stream list vector) ,tmp))
       (cond
         ((and (stringp ,tmp) (probe-file ,tmp))
            (for-each/line ,tmp ,@body))

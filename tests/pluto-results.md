@@ -311,12 +311,26 @@ E
 
 
 ```{.commonlisp}
-(FOR-EACH "somebody.txt"
+(FOR-EACH/LINE "somebody.txt"
   (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
 ```
 
 <small><pre>>> "1 -> we gotta celebrate diversity
 2 -> in the university
+"</pre></small>
+
+
+
+```{.commonlisp}
+(LET ((TMP (MAKE-HASH-TABLE)))
+  (SETF (GETHASH 'GREEN TMP) "veridian")
+  (SETF (GETHASH 'RED TMP) "cadmium")
+  (FOR-EACH/HASH TMP
+    (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
+```
+
+<small><pre>>> "GREEN -> veridian
+RED -> cadmium
 "</pre></small>
 
 
