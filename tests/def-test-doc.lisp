@@ -20,8 +20,7 @@
    (section :initarg :section :initform /test-section/)
    (doc :initarg :doc :initform "")))
 
-(defclass test/doc-title (test/doc-element)
-  ((tagline :initarg :tagline)))
+(defclass test/doc-title (test/doc-element) ())
 
 (defclass test/doc-section (test/doc-element) ())
 
@@ -54,7 +53,7 @@
 ;; -----------------------------------
 
 
-(defun start-test/doc (&key title tagline doc)
+(defun start-test/doc (&key title)
   (setq /all-test-docs/ nil)
   (setq /test-counter/ 0)
   (push (make-instance 'test/doc-title
@@ -169,6 +168,7 @@
 (defgeneric to-markdown (test/doc-element &optional stream))
 
 (defmethod to-markdown :around ((test test/doc-element) &optional (stream t))
+  (declare (ignore stream))
   (when (has-trait test 'markdown-able)
     (call-next-method)))
 
@@ -190,9 +190,6 @@
                                          { test 'doc }))
     (format stream "```{.commonlisp}~%~S~%```~%~%" (car { test 'raw-code }))
     (setq /last-element-rendered/ thefun)))
-
-(defmethod to-markdown :after ((test test/doc-test) &optional (stream t))
-  (ft "setting last rendered to: ~S~%" { test 'the-function }))
 
 ; TODO: test test-able nil
 (defmethod to-markdown :after ((test test/doc-test) &optional (stream t))
