@@ -15,24 +15,30 @@
 (defpackage :pluto
   (:use :common-lisp)
   (:export
-    ; formatting
-    :fn :ft :info
 
-    ; global parameters and ansi terminal colors
-    :*pluto-output-stream* :*pluto-log-level* :*pluto-curly-test*
-    :*pluto-external-format* :*pluto-log-file* :*pluto-shell* :*whitespaces*
+    ; pluto parameters
+    :*pluto-output-stream* :*pluto-log-level* :*pluto-log-file*
+    :*pluto-curly-test* :*pluto-external-format* :*pluto-shell*
+    :*unix-epoch-difference* :*whitespaces*
+
+    ; formatting
+    :fn :ft
+
+    ; ansi colors and codes
     :make-ansi-escape :+reset-terminal-color+ :+magenta-bold+ :+red-bold+
     :+yellow-bold+ :+green-bold+ :+cyan-bold+ :+blue-bold+ :+grey-bold+
     :+ansi-escape-up+ :+ansi-escape-left-all+ :+ansi-escape-left-one+
     :magenta :red :yellow :green :cyan :blue :grey
 
+    ; string operations
+    :str+ :str-join :substr :string->char-list :split-string->lines
+
     ; some essential utilities/macros
-    :with-gensyms :mac :nil!  :alambda :self! :abbr :flatten :take :group
-    :mkstr :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif
-    :it!  :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :str+
-    :str-join :substr :interpose :delim :defparams :round-to :advise :alistp
-    :with-hash-entry :entry! :if-hash-entry :if-not-hash-entry
-    :string->char-list :split-string->lines :capture-all-outputs
+    :with-gensyms :mac :nil! :alambda :self! :abbr :flatten :take :group
+    :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :it!
+    :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :interpose
+    :delim :defparams :round-to :advise :alistp :with-hash-entry :entry!
+    :if-hash-entry :if-not-hash-entry :capture-all-outputs
 
     ; error handling
     :die :or-die :or-do :die-if-null :error!
@@ -60,8 +66,7 @@
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
     ; other abbreviations and shortcuts
-    :λ
-    :file-size
+    :λ :file-size
 
            ))
 
@@ -71,22 +76,7 @@
 
 
 ;---------------------------------------------------------;
-; formatting ---------------------------------------------;
-
-(defmacro fn (&rest everything)
-  `(format nil ,@everything))
-
-(defmacro ft (&rest everything)
-  `(format t ,@everything))
-
-(defmacro info (&rest everything)
-  `(format *error-output* (green ,@everything)))
-
-;---------------------------------------------------------;
-
-
-;---------------------------------------------------------;
-; parameters and colors ----------------------------------;
+; pluto parameters ---------------------------------------;
 
 (defparameter *pluto-output-stream*    *terminal-io*)
 (defparameter *pluto-log-level*        2)
@@ -102,6 +92,25 @@
 (defvar *whitespaces* '(#\Space #\Newline #\Backspace #\Tab
                         #\Linefeed #\Page #\Return #\Rubout))
 
+;---------------------------------------------------------;
+
+
+;---------------------------------------------------------;
+; formatting ---------------------------------------------;
+
+(defmacro fn (&rest everything)
+  "Alias to (format nil ...)"
+  `(format nil ,@everything))
+
+(defmacro ft (&rest everything)
+  "Alias to (format t ...)"
+  `(format t ,@everything))
+
+;---------------------------------------------------------;
+
+
+;---------------------------------------------------------;
+; ansi colors and codes ----------------------------------;
 
 (defun make-ansi-escape (anum &optional (decoration 'bold))
   (format nil "~c[~A~Am" #\ESC anum (cond
@@ -143,12 +152,47 @@
 ;---------------------------------------------------------;
 
 
+; ------------------------------------------------------- ;
+; string operations ------------------------------------- ;
+
+(defun str+ (&rest args)
+  "Combine (using princ) an arbitrary number of args into one string"
+  (with-output-to-string (s)
+    (dolist (a args) (princ a s))))
+
+(defun str-join (delim strings)
+  "Join STRINGS with DELIM."
+  (format nil (format nil "~~{~~A~~^~A~~}" delim) strings))
+
+; TODO: did I take this from somewhere
+(defun substr (string start &optional end)
+  "Efficient substring of STRING from START to END (optional),
+  where both can be negative, which means counting from the end."
+  (let ((len (length string)))
+    (subseq string
+            (if (minusp start) (+ len start) start)
+            (if (and end (minusp end)) (+ len end) end))))
+
+; TODO: check all for undocumented
+
+(defun string->char-list (astring)
+  "Make a string a list of single character strings"
+  (map 'list #'string astring))
+
+(defun split-string->lines (astring)
+  "Split a string with new lines into a list of strings (one for each line)"
+  (with-input-from-string (s astring)
+    (loop for value = (read-line s nil)
+          while value collect value)))
+
+; ------------------------------------------------------- ;
+
+
 ;---------------------------------------------------------;
 ; some essential utilities/macros ------------------------;
 
 ; TODO: Do all of these need to be in _this_ section?
 
-; Stolen from "Practical Common Lisp"
 (defmacro with-gensyms ((&rest names) &body body)
   "Why mess with the classics"
   `(let ,(loop for n in names collect `(,n (gensym)))
@@ -198,21 +242,13 @@
     (multiple-value-bind (eins zwei) (take alist n)
       (group zwei n (cons eins acc)))))
 
-; stolen from "Let Over Lambda"
-(defun mkstr (&rest args)
-  "PRINCs `args` into a string and returns it"
-  (with-output-to-string (s)
-    (dolist (a args) (princ a s))))
-
 (defun create-symbol (&rest args)
-  "Interns an UP-cased string as a symbol. Uses `mkstr` to
-   make a string out of all of the `args`"
-  (values (intern (string-upcase (apply #'mkstr args)))))
+  "Interns an UP-cased string as a symbol."
+  (values (intern (string-upcase (apply #'str+ args)))))
 
 (defun create-keyword (&rest args)
-  "Interns an UP-cased string as a keyword symbol. Uses `mkstr` to
-   make a string out of all of the `args`"
-  (values (intern (string-upcase (apply #'mkstr args)) :keyword)))
+  "Interns an UP-cased string as a keyword symbol."
+  (values (intern (string-upcase (apply #'str+ args)) :keyword)))
 
 (defun walk-replace-sexp (alist oldform newform &key (test #'equal))
   "Walks sexpression substituting `oldform` for `newform`.
@@ -307,22 +343,6 @@
                               :external-format *pluto-external-format*)
        ,@body)))
 
-(defmacro str+ (&rest strings)
-  "Combine an arbitrary number of strings into one"
-  `(concatenate 'string ,@strings))
-
-(defun str-join (delim strings)
-  "Join STRINGS with DELIM."
-  (format nil (format nil "~~{~~A~~^~A~~}" delim) strings))
-
-(defun substr (string start &optional end)
-  "Efficient substring of STRING from START to END (optional),
-  where both can be negative, which means counting from the end."
-  (let ((len (length string)))
-    (subseq string
-            (if (minusp start) (+ len start) start)
-            (if (and end (minusp end)) (+ len end) end))))
-
 (defun interpose (separator list)
   "Returns a sequence of the elements of SEQUENCE separated by SEPARATOR."
   (labels
@@ -412,17 +432,6 @@
            (,thekey  ,akey))
        (with-hash-entry (,thehash ,thekey)
          (if (not entry!) ,then ,else)))))
-
-; TODO: undocumented
-; TODO: check all for undocumented
-(defun string->char-list (astring)
-  (map 'list #'string astring))
-
-; TODO: undocumented
-(defun split-string->lines (astring)
-  (with-input-from-string (s astring)
-    (loop for value = (read-line s nil)
-          while value collect value)))
 
 (defun |•-reader| (stream char)
   "Alternate double quote"
@@ -658,11 +667,11 @@
 (defmacro with-interactive-interrupt-handler (the-message &body body)
   `(handler-case
      ,@body
-     (#+sbcl sb-sys:interactive-interrupt
-      #+ecl  ext:interactive-interrupt
-      #+clisp system::simple-interrupt-condition
-      #+ccl  ccl:interrupt-signal-condition
-      #+allegro excl:interrupt-signal
+     (#+sbcl    sb-sys:interactive-interrupt
+      #+ecl     ext:interactive-interrupt
+      #+clisp   system::simple-interrupt-condition
+      #+ccl     ccl:interrupt-signal-condition
+      #+allegro	excl:interrupt-signal
        () (die ,the-message))))
 
 ; TODO: external format doesn't work on clisp
@@ -787,13 +796,13 @@
      a string             (that goes character by character)
      or a stream          (that goes line by line)
   It is anaphoric and introduces
-     `index!`             (which is a zero indexed counter of which element we are on)
-     `key!`               (the key of the current hash-table entry [only for hash-tables and alists])
-     `value!`             (the value of the current element)
-     `this-pass!`         (a block that returning from immediately moves to the next iteration)
-     `this-loop!`         (a block that returning from exits the loop)
-  For convenience, `(continue!)` and `(break!)` will execute `(return-from this-pass!)`
-  and `(return-from this-loop!)`, respectively
+     index!               (which is a zero indexed counter of which element we are on)
+     key!                 (the key of the current hash-table entry [only for hash-tables and alists])
+     value!               (the value of the current element)
+     this-pass!           (a block that returning from immediately moves to the next iteration)
+     this-loop!           (a block that returning from exits the loop)
+  For convenience, (continue!) and (break!) will execute (return-from this-pass!)
+  and (return-from this-loop!), respectively
   If it's a filename, the external format is *pluto-external-format* (:UTF-8 by default)
   Oh, it'll die gracefully if Control-C is used during the loops execution.
   And, finally, for extra performance, you can call it's subordinate functions directly.

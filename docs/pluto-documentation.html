@@ -218,6 +218,21 @@
 <nav id="TOC" role="doc-toc">
 <ul>
 <li><a href="#about">about</a></li>
+<li><a href="#pluto-parameters">pluto parameters</a></li>
+<li><a href="#formatting">formatting</a>
+<ul>
+<li><a href="#fn">FN</a></li>
+<li><a href="#ft">FT</a></li>
+</ul></li>
+<li><a href="#ansi-colors-and-codes">ansi colors and codes</a></li>
+<li><a href="#string-operations">string operations</a>
+<ul>
+<li><a href="#str">STR+</a></li>
+<li><a href="#str-join">STR-JOIN</a></li>
+<li><a href="#substr">SUBSTR</a></li>
+<li><a href="#string-char-list">STRING-&gt;CHAR-LIST</a></li>
+<li><a href="#split-string-lines">SPLIT-STRING-&gt;LINES</a></li>
+</ul></li>
 <li><a href="#some-essential-utilitiesmacros">some essential utilities/macros</a>
 <ul>
 <li><a href="#section">-&lt;&gt;</a></li>
@@ -237,6 +252,92 @@
 <h3 id="about">about</h3>
 <p>a common lisp package that’s out there</p>
 <hr />
+<h3 id="pluto-parameters">pluto parameters</h3>
+<p>fill this out</p>
+<hr />
+<h3 id="formatting">formatting</h3>
+<h4 id="fn">FN</h4>
+<blockquote>
+<p>Alias to (format nil …)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb1"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(FN <span class="st">&quot;~A ~A&quot;</span> <span class="st">&quot;hello&quot;</span> <span class="st">&quot;goodbye&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "hello goodbye"</pre>
+<p></small></p>
+<h4 id="ft">FT</h4>
+<blockquote>
+<p>Alias to (format t …)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb2"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(FT <span class="st">&quot;~A ~A&quot;</span> <span class="st">&quot;hello&quot;</span> <span class="st">&quot;goodbye&quot;</span>)</span></code></pre></div>
+<small>
+<pre>>> "hello goodbye"</pre>
+<p></small></p>
+<hr />
+<h3 id="ansi-colors-and-codes">ansi colors and codes</h3>
+<p>fill this out</p>
+<hr />
+<h3 id="string-operations">string operations</h3>
+<h4 id="str">STR+</h4>
+<blockquote>
+<p>Combine (using princ) an arbitrary number of args into one string<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(STR+ <span class="st">&quot;belle&quot;</span> <span class="st">&quot;and&quot;</span> <span class="st">&quot;sebastian&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "belleandsebastian"</pre>
+<p></small></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(STR+ &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>) <span class="st">&quot; go&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "(1 2 3) go"</pre>
+<p></small></p>
+<h4 id="str-join">STR-JOIN</h4>
+<blockquote>
+<p>Join STRINGS with DELIM.<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb5"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(STR-JOIN <span class="st">&quot;;&quot;</span> &#39;(<span class="st">&quot;one&quot;</span> <span class="st">&quot;two&quot;</span>))</span></code></pre></div>
+<small>
+<pre>=> "one;two"</pre>
+<p></small></p>
+<h4 id="substr">SUBSTR</h4>
+<blockquote>
+<p>Efficient substring of STRING from START to END (optional),<br />
+where both can be negative, which means counting from the end.<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb6"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">0</span> <span class="dv">5</span>)</span></code></pre></div>
+<small>
+<pre>=> "belle"</pre>
+<p></small></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">0</span> -<span class="dv">14</span>)</span></code></pre></div>
+<small>
+<pre>=> "belle"</pre>
+<p></small></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">10</span>)</span></code></pre></div>
+<small>
+<pre>=> "sebastian"</pre>
+<p></small></p>
+<h4 id="string-char-list">STRING-&gt;CHAR-LIST</h4>
+<blockquote>
+<p>Make a string a list of single character strings<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb9"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(STRING-&gt;CHAR-LIST <span class="st">&quot;belle&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> ("b" "e" "l" "l" "e")</pre>
+<p></small></p>
+<h4 id="split-string-lines">SPLIT-STRING-&gt;LINES</h4>
+<blockquote>
+<p>Split a string with new lines into a list of strings (one for each line)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb10"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(SPLIT-STRING-&gt;LINES (FORMAT NIL <span class="st">&quot;this~%that~%and the other&quot;</span>))</span></code></pre></div>
+<small>
+<pre>=> ("this" "that" "and the other")</pre>
+<p></small></p>
+<hr />
 <h3 id="some-essential-utilitiesmacros">some essential utilities/macros</h3>
 <h4 id="section">-&lt;&gt;</h4>
 <blockquote>
@@ -244,13 +345,13 @@
 Stolen from https://github.com/sjl/cl-losh/blob/master/src/control-flow.lisp<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb1"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</span></code></pre></div>
 <small>
 <pre>=> 2.0</pre>
 <p></small></p>
 <h4 id="interpose">INTERPOSE</h4>
 <p>Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(INTERPOSE &#39;SEP `(A B C))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(INTERPOSE &#39;SEP `(A B C))</span></code></pre></div>
 <small>
 <pre>=> (A SEP B SEP C)</pre>
 <p></small></p>
@@ -262,11 +363,11 @@ Stolen from https://github.com/sjl/cl-losh/blob/master/src/control-flow.lisp<br 
 <code>just-bytes</code> ensures that the size is only counted in bytes (returns integer) [default nil]<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb3"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</span></code></pre></div>
 <small>
-<pre>=> 17k</pre>
+<pre>=> "17k"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</span></code></pre></div>
 <small>
 <pre>=> 14433</pre>
 <p></small></p>
@@ -283,13 +384,13 @@ a list<br />
 a string (that goes character by character)<br />
 or a stream (that goes line by line)<br />
 It is anaphoric and introduces<br />
-<code>index!</code> (which is a zero indexed counter of which element we are on)<br />
-<code>key!</code> (the key of the current hash-table entry [only for hash-tables and alists])<br />
-<code>value!</code> (the value of the current element)<br />
-<code>this-pass!</code> (a block that returning from immediately moves to the next iteration)<br />
-<code>this-loop!</code> (a block that returning from exits the loop)<br />
-For convenience, <code>(continue!)</code> and <code>(break!)</code> will execute <code>(return-from this-pass!)</code><br />
-and <code>(return-from this-loop!)</code>, respectively<br />
+index! (which is a zero indexed counter of which element we are on)<br />
+key! (the key of the current hash-table entry [only for hash-tables and alists])<br />
+value! (the value of the current element)<br />
+this-pass! (a block that returning from immediately moves to the next iteration)<br />
+this-loop! (a block that returning from exits the loop)<br />
+For convenience, (continue!) and (break!) will execute (return-from this-pass!)<br />
+and (return-from this-loop!), respectively<br />
 If it’s a filename, the external format is <em>pluto-external-format</em> (:UTF-8 by default)<br />
 Oh, it’ll die gracefully if Control-C is used during the loops execution.<br />
 And, finally, for extra performance, you can call it’s subordinate functions directly.<br />
@@ -297,50 +398,50 @@ They are… for-each/line, for-each/list, for-each/hash, for-each/vector,<br />
 for-each/stream, and for-each/alist<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb5"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
 <small>
-<pre>>> 1 -> A
+<pre>>> "1 -> A
 2 -> B
 3 -> C
-</pre>
+"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>      (BREAK!))</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>      (BREAK!))</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
 <small>
-<pre>>> A
+<pre>>> "A
 B
-</pre>
+"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      (CONTINUE!))</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>      (CONTINUE!))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A~%&quot;</span> VALUE!))</span></code></pre></div>
 <small>
-<pre>>> A
+<pre>>> "A
 B
 D
 E
-</pre>
+"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH <span class="st">&quot;somebody.txt&quot;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH <span class="st">&quot;somebody.txt&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> INDEX! VALUE!))</span></code></pre></div>
 <small>
-<pre>>> 1 -> we gotta celebrate diversity
+<pre>>> "1 -> we gotta celebrate diversity
 2 -> in the university
-</pre>
+"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH TMP</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH TMP</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A~%&quot;</span> KEY! VALUE!)))</span></code></pre></div>
 <small>
-<pre>>> GREEN -> veridian
+<pre>>> "GREEN -> veridian
 RED -> cadmium
-</pre>
+"</pre>
 <p></small></p>
 </body>
 </html>

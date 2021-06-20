@@ -13,6 +13,86 @@
 
 ; --------------------------------------------------------------- ;
 
+(def-test/doc-section "pluto parameters")
+
+(def-raw-markdown "fill this out")
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "formatting")
+
+(def-test/doc-test 'fn
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "hello goodbye")
+  (fn "~A ~A" "hello" "goodbye"))
+
+(def-test/doc-test 'ft
+  `(markdown-able (test-able stdout))
+  'function
+  (string= test-stdout! "hello goodbye")
+  (ft "~A ~A" "hello" "goodbye"))
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "ansi colors and codes")
+
+(def-raw-markdown "fill this out")
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "string operations")
+
+(def-test/doc-test 'str+
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "belleandsebastian")
+  (str+ "belle" "and" "sebastian"))
+
+(def-test/doc-test 'str+
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "(1 2 3) go")
+  (str+ '(1 2 3) " go"))
+
+(def-test/doc-test 'str-join
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "one;two")
+  (str-join ";" '("one" "two")))
+
+(def-test/doc-test 'substr
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "belle")
+  (substr "belle and sebastian" 0 5))
+
+(def-test/doc-test 'substr
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "belle")
+  (substr "belle and sebastian" 0 -14))
+
+(def-test/doc-test 'substr
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "sebastian")
+  (substr "belle and sebastian" 10))
+
+(def-test/doc-test 'string->char-list
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("b" "e" "l" "l" "e"))
+  (string->char-list "belle"))
+
+(def-test/doc-test 'split-string->lines
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! '("this" "that" "and the other"))
+  (split-string->lines (format nil "this~%that~%and the other")))
+
+; --------------------------------------------------------------- ;
+
 (def-test/doc-section "some essential utilities/macros")
 
 (def-test/doc-test '-<>

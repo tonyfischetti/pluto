@@ -205,7 +205,7 @@
                   ((eq it! 'stderr)
                      (list "Std error" (caddr { test 'output }))))))
       ; (format stream "`~A ~A~%`~%~%"
-      (format stream "<small><pre>~A ~A</pre></small>~%~%~%"
+      (format stream "<small><pre>~A ~S</pre></small>~%~%~%"
               (car tmp) (cadr tmp)))))
 
 (defun render-markdown (&optional (stream t))
