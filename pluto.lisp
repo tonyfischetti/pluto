@@ -624,7 +624,7 @@
    all the other forms in the body are executed"
   (let ((began      (gensym))
         (ended      (gensym)))
-    `(let ((time! nil))
+    `(let (,began ,ended time!)
        (setq ,began (get-universal-time))
        ,(car aform)
        (setq ,ended (get-universal-time))
@@ -751,7 +751,9 @@
                                       (block this-pass! ,@body))))))))
 
 (defmacro for-each/alist (aalist &body body)
-  "(see documentation for `for-each`)"
+  "This works like `for-each/hash` (see documentation for `for-each`)
+  but it has to be called explicitly (as `for-each/alist`) instead
+  of relying on `for-each`'s 'dispatch' mechanism."
   (let ((tmp          (gensym))
         (resolved     (gensym)))
     `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
@@ -810,9 +812,8 @@
   for-each/stream, and for-each/alist"
   (let ((tmp (gensym)))
     `(let ((,tmp ,a-thing))
+      ; (declare (type (or simple-array hash-table cons stream list vector) ,tmp))
       (cond
-        ((alistp ,tmp)
-           (for-each/alist ,tmp ,@body))
         ((and (stringp ,tmp) (probe-file ,tmp))
            (for-each/line ,tmp ,@body))
         (t
