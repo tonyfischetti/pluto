@@ -105,9 +105,35 @@
 
 (def-test/doc-test 'interpose
   `((test-able returns) markdown-able)
-  (documentation 'interpose 'function)
+  'function
   (equal test-return-value! `(a sep b sep c))
   (interpose 'sep `(a b c)))
+
+(def-test/doc-test 'with-time
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "time elapsed: 1")
+  (with-time
+    (sleep 1)
+    (format nil "time elapsed: ~A" time!)))
+
+(def-test/doc-test 'time-for-humans
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "4 seconds")
+  (time-for-humans 4))
+
+(def-test/doc-test 'time-for-humans
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "1.11 hours")
+  (time-for-humans 4000))
+
+(def-test/doc-test 'time-for-humans
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "2.21 days")
+  (time-for-humans 191000))
 
 ; --------------------------------------------------------------- ;
 

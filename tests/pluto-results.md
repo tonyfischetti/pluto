@@ -155,18 +155,61 @@ fill this out
 (-<> "4" (PARSE-INTEGER <>) (SQRT <>))
 ```
 
-<small><pre>=> 2.0</pre></small>
+<small><pre>=> 2</pre></small>
 
 
 
 #### INTERPOSE
 
-Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.
+> Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.\
+
 ```{.commonlisp}
 (INTERPOSE 'SEP `(A B C))
 ```
 
 <small><pre>=> (A SEP B SEP C)</pre></small>
+
+
+
+#### WITH-TIME
+
+> Anaphoric macro that executes the car of the body and\
+>    binds the seconds of execution time to TIME!. Then\
+>    all the other forms in the body are executed\
+
+```{.commonlisp}
+(WITH-TIME (SLEEP 1) (FORMAT NIL "time elapsed: ~A" TIME!))
+```
+
+<small><pre>=> "time elapsed: 1"</pre></small>
+
+
+
+#### TIME-FOR-HUMANS
+
+> Converts SECONDS into minutes, hours, or days (based on magnitude)\
+
+```{.commonlisp}
+(TIME-FOR-HUMANS 4)
+```
+
+<small><pre>=> "4 seconds"</pre></small>
+
+
+
+```{.commonlisp}
+(TIME-FOR-HUMANS 4000)
+```
+
+<small><pre>=> "1.11 hours"</pre></small>
+
+
+
+```{.commonlisp}
+(TIME-FOR-HUMANS 191000)
+```
+
+<small><pre>=> "2.21 days"</pre></small>
 
 
 
@@ -226,11 +269,11 @@ Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.
 >   for-each/stream, and for-each/alist\
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C)
-  (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
+(FOR-EACH/LIST '(A B C) (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
 ```
 
-<small><pre>>> "1 -> A
+<small><pre>>> 
+"1 -> A
 2 -> B
 3 -> C
 "</pre></small>
@@ -238,26 +281,22 @@ Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.
 
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C D E)
-  (IF (> INDEX! 2)
-      (BREAK!))
-  (FORMAT T "~A~%" VALUE!))
+(FOR-EACH/LIST '(A B C D E) (IF (> INDEX! 2) (BREAK!)) (FORMAT T "~A~%" VALUE!))
 ```
 
-<small><pre>>> "A
+<small><pre>>> 
+"A
 B
 "</pre></small>
 
 
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C D E)
-  (IF (= INDEX! 3)
-      (CONTINUE!))
-  (FORMAT T "~A~%" VALUE!))
+(FOR-EACH/LIST '(A B C D E) (IF (= INDEX! 3) (CONTINUE!)) (FORMAT T "~A~%" VALUE!))
 ```
 
-<small><pre>>> "A
+<small><pre>>> 
+"A
 B
 D
 E
@@ -266,26 +305,25 @@ E
 
 
 ```{.commonlisp}
-(FOR-EACH "somebody.txt"
-  (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
+(FOR-EACH "somebody.txt" (FORMAT T "~A -> ~A~%" INDEX! VALUE!))
 ```
 
-<small><pre>>> "1 -> we gotta celebrate diversity
+<small><pre>>> 
+"1 -> we gotta celebrate diversity
 2 -> in the university
 "</pre></small>
 
 
 
 ```{.commonlisp}
-(LET ((TMP (MAKE-HASH-TABLE)))
-  (SETF (GETHASH 'GREEN TMP) "veridian")
-  (SETF (GETHASH 'RED TMP) "cadmium")
-  (FOR-EACH TMP
-    (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
+(LET ((TMP (MAKE-HASH-TABLE))) (SETF (GETHASH 'GREEN TMP) "veridian")
+ (SETF (GETHASH 'RED TMP) "cadmium")
+ (FOR-EACH TMP (FORMAT T "~A -> ~A~%" KEY! VALUE!)))
 ```
 
-<small><pre>>> "GREEN -> veridian
-RED -> cadmium
+<small><pre>>> 
+"RED -> cadmium
+GREEN -> veridian
 "</pre></small>
 
 
