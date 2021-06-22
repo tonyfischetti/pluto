@@ -1,15 +1,19 @@
+
 .PHONY: all test doc
 
 all: test-sbcl doc
 
 test-sbcl:
-	cd tests; sbcl --eval '(progn (load "test-pluto.lisp") (sb-ext:exit))' --warnings --without-pluto
-
-test-clisp:
-	cd tests; clisp -i ~/.clisprc.lisp test-pluto.lisp
+	cd tests; sbcl --no-userinit --eval '(progn (load "test-pluto.lisp") (sb-ext:exit))' --warnings --without-pluto
 
 test-ecl:
-	cd tests; ecl --eval '(progn (load "test-pluto.lisp") (quit))'
+	cd tests; ecl --norc --eval '(progn (load "test-pluto.lisp") (quit))'
+
+test-clisp:
+	cd tests; clisp test-pluto.lisp
+
+test-abcl:
+	cd tests; abcl --noinit --eval '(progn (load "test-pluto.lisp") (exit))'
 
 doc:
 	pandoc --toc --toc-depth=4 -s -f markdown -t html5 -o ./docs/pluto-documentation.html ./tests/pluto-results.md

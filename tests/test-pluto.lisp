@@ -1,5 +1,5 @@
 
-(ql:quickload :pluto)
+(load "../pluto.lisp")
 (use-package :pluto)
 
 (load "def-test-doc.lisp")

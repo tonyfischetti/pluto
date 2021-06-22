@@ -5,106 +5,247 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>Pluto documentation</title>
-  <style type="text/css">
-      code{white-space: pre-wrap;}
-      span.smallcaps{font-variant: small-caps;}
-      span.underline{text-decoration: underline;}
-      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
-  <style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
-}
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(title);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-div.sourceCode
-  {  }
-@media screen {
-a.sourceLine::before { text-decoration: underline; }
-}
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
 </head>
 <body>
-<header>
+<header id="title-block-header">
 <h1 class="title">Pluto documentation</h1>
 </header>
-<nav id="TOC">
+<nav id="TOC" role="doc-toc">
 <ul>
 <li><a href="#about">about</a></li>
 <li><a href="#pluto-parameters">pluto parameters</a></li>
-<li><a href="#formatting">formatting</a><ul>
+<li><a href="#formatting">formatting</a>
+<ul>
 <li><a href="#fn">FN</a></li>
 <li><a href="#ft">FT</a></li>
 </ul></li>
 <li><a href="#ansi-colors-and-codes">ansi colors and codes</a></li>
-<li><a href="#string-operations">string operations</a><ul>
+<li><a href="#string-operations">string operations</a>
+<ul>
 <li><a href="#str">STR+</a></li>
 <li><a href="#str-join">STR-JOIN</a></li>
 <li><a href="#substr">SUBSTR</a></li>
 <li><a href="#string-char-list">STRING-&gt;CHAR-LIST</a></li>
 <li><a href="#split-string-lines">SPLIT-STRING-&gt;LINES</a></li>
 </ul></li>
-<li><a href="#some-essential-utilitiesmacros">some essential utilities/macros</a><ul>
+<li><a href="#some-essential-utilitiesmacros">some essential utilities/macros</a>
+<ul>
 <li><a href="#section">-&lt;&gt;</a></li>
 <li><a href="#interpose">INTERPOSE</a></li>
 <li><a href="#with-time">WITH-TIME</a></li>
 <li><a href="#time-for-humans">TIME-FOR-HUMANS</a></li>
 </ul></li>
-<li><a href="#other-abbreviations-and-shortcuts">other abbreviations and shortcuts</a><ul>
+<li><a href="#other-abbreviations-and-shortcuts">other abbreviations and shortcuts</a>
+<ul>
 <li><a href="#file-size">FILE-SIZE</a></li>
 </ul></li>
-<li><a href="#for-each-and-friends">for-each and friends</a><ul>
+<li><a href="#for-each-and-friends">for-each and friends</a>
+<ul>
 <li><a href="#for-each">FOR-EACH</a></li>
 <li><a href="#for-eachalist">FOR-EACH/ALIST</a></li>
 </ul></li>
@@ -123,7 +264,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Alias to (format nil …)<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb1"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb1-1" title="1">(FN <span class="st">&quot;~A ~A&quot;</span> <span class="st">&quot;hello&quot;</span> <span class="st">&quot;goodbye&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(FN <span class="st">&quot;~A ~A&quot;</span> <span class="st">&quot;hello&quot;</span> <span class="st">&quot;goodbye&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "hello goodbye"</pre>
 <p></small></p>
@@ -132,7 +273,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Alias to (format t …)<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb2"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb2-1" title="1">(FT <span class="st">&quot;~A ~A&quot;</span> <span class="st">&quot;hello&quot;</span> <span class="st">&quot;goodbye&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(FT <span class="st">&quot;~A ~A&quot;</span> <span class="st">&quot;hello&quot;</span> <span class="st">&quot;goodbye&quot;</span>)</span></code></pre></div>
 <small>
 <pre>>> "hello goodbye"</pre>
 <p></small></p>
@@ -146,11 +287,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Combine (using princ) an arbitrary number of args into one string<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb3"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb3-1" title="1">(STR+ <span class="st">&quot;belle&quot;</span> <span class="st">&quot;and&quot;</span> <span class="st">&quot;sebastian&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(STR+ <span class="st">&quot;belle&quot;</span> <span class="st">&quot;and&quot;</span> <span class="st">&quot;sebastian&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "belleandsebastian"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb4-1" title="1">(STR+ &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>) <span class="st">&quot; go&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(STR+ &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>) <span class="st">&quot; go&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "(1 2 3) go"</pre>
 <p></small></p>
@@ -159,7 +300,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Join STRINGS with DELIM.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb5"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb5-1" title="1">(STR-JOIN <span class="st">&quot;;&quot;</span> &#39;(<span class="st">&quot;one&quot;</span> <span class="st">&quot;two&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(STR-JOIN <span class="st">&quot;;&quot;</span> &#39;(<span class="st">&quot;one&quot;</span> <span class="st">&quot;two&quot;</span>))</span></code></pre></div>
 <small>
 <pre>=> "one;two"</pre>
 <p></small></p>
@@ -169,15 +310,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 where both can be negative, which means counting from the end.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb6"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb6-1" title="1">(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">0</span> <span class="dv">5</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">0</span> <span class="dv">5</span>)</span></code></pre></div>
 <small>
 <pre>=> "belle"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb7-1" title="1">(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">0</span> <span class="dv">-14</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">0</span> -<span class="dv">14</span>)</span></code></pre></div>
 <small>
 <pre>=> "belle"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb8-1" title="1">(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">10</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(SUBSTR <span class="st">&quot;belle and sebastian&quot;</span> <span class="dv">10</span>)</span></code></pre></div>
 <small>
 <pre>=> "sebastian"</pre>
 <p></small></p>
@@ -186,7 +327,7 @@ where both can be negative, which means counting from the end.<br />
 <p>Make a string a list of single character strings<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb9"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb9-1" title="1">(STRING-&gt;CHAR-LIST <span class="st">&quot;belle&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(STRING-&gt;CHAR-LIST <span class="st">&quot;belle&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> ("b" "e" "l" "l" "e")</pre>
 <p></small></p>
@@ -195,7 +336,7 @@ where both can be negative, which means counting from the end.<br />
 <p>Split a string with new lines into a list of strings (one for each line)<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb10"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb10-1" title="1">(SPLIT-STRING-&gt;LINES (FORMAT NIL <span class="st">&quot;this~%that~%and the other&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(SPLIT-STRING-&gt;LINES (FORMAT NIL <span class="st">&quot;this~%that~%and the other&quot;</span>))</span></code></pre></div>
 <small>
 <pre>=> ("this" "that" "and the other")</pre>
 <p></small></p>
@@ -207,7 +348,7 @@ where both can be negative, which means counting from the end.<br />
 Stolen from https://github.com/sjl/cl-losh/blob/master/src/control-flow.lisp<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb11"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb11-1" title="1">(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</span></code></pre></div>
 <small>
 <pre>=> 2.0</pre>
 <p></small></p>
@@ -216,7 +357,7 @@ Stolen from https://github.com/sjl/cl-losh/blob/master/src/control-flow.lisp<br 
 <p>Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb12"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb12-1" title="1">(INTERPOSE &#39;SEP `(A B C))</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(INTERPOSE &#39;SEP `(A B C))</span></code></pre></div>
 <small>
 <pre>=> (A SEP B SEP C)</pre>
 <p></small></p>
@@ -227,9 +368,9 @@ binds the seconds of execution time to TIME!. Then<br />
 all the other forms in the body are executed<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb13"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb13-1" title="1">(WITH-TIME</a>
-<a class="sourceLine" id="cb13-2" title="2">  (SLEEP <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb13-3" title="3">  (FORMAT NIL <span class="st">&quot;time elapsed: ~A&quot;</span> TIME!))</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(WITH-TIME</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  (SLEEP <span class="dv">1</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  (FORMAT NIL <span class="st">&quot;time elapsed: ~A&quot;</span> TIME!))</span></code></pre></div>
 <small>
 <pre>=> "time elapsed: 1"</pre>
 <p></small></p>
@@ -238,15 +379,15 @@ all the other forms in the body are executed<br />
 <p>Converts SECONDS into minutes, hours, or days (based on magnitude)<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb14"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb14-1" title="1">(TIME-FOR-HUMANS <span class="dv">4</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">4</span>)</span></code></pre></div>
 <small>
 <pre>=> "4 seconds"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb15-1" title="1">(TIME-FOR-HUMANS <span class="dv">4000</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">4000</span>)</span></code></pre></div>
 <small>
 <pre>=> "1.11 hours"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb16-1" title="1">(TIME-FOR-HUMANS <span class="dv">191000</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">191000</span>)</span></code></pre></div>
 <small>
 <pre>=> "2.21 days"</pre>
 <p></small></p>
@@ -258,11 +399,11 @@ all the other forms in the body are executed<br />
 <code>just-bytes</code> ensures that the size is only counted in bytes (returns integer) [default nil]<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb17"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb17-1" title="1">(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "17k"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb18-1" title="1">(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</span></code></pre></div>
 <small>
 <pre>=> 14433</pre>
 <p></small></p>
@@ -293,50 +434,50 @@ They are… for-each/line, for-each/list, for-each/hash, for-each/vector,<br />
 for-each/stream, and for-each/alist<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb19"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb19-1" title="1">(FOR-EACH/LIST &#39;(A B C)</a>
-<a class="sourceLine" id="cb19-2" title="2">  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "1 -> A;2 -> B;3 -> C;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb20-1" title="1">(FOR-EACH/LIST &#39;(A B C D E)</a>
-<a class="sourceLine" id="cb20-2" title="2">  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb20-3" title="3">      (BREAK!))</a>
-<a class="sourceLine" id="cb20-4" title="4">  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>      (BREAK!))</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "A;B;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb21-1" title="1">(FOR-EACH/LIST &#39;(A B C D E)</a>
-<a class="sourceLine" id="cb21-2" title="2">  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</a>
-<a class="sourceLine" id="cb21-3" title="3">      (CONTINUE!))</a>
-<a class="sourceLine" id="cb21-4" title="4">  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>      (CONTINUE!))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "A;B;D;E;"</pre>
 <p></small></p>
 <p>If the argument to <code>for-each</code> is a string and the file exists, <code>for-each/line</code> is dispatched. Otherwise, it is treated like a character vector</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb22-1" title="1">(FOR-EACH/LINE <span class="st">&quot;somebody.txt&quot;</span></a>
-<a class="sourceLine" id="cb22-2" title="2">  (WHEN (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>) (BREAK!))</a>
-<a class="sourceLine" id="cb22-3" title="3">  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LINE <span class="st">&quot;somebody.txt&quot;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  (WHEN (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>) (BREAK!))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "1 -> we gotta celebrate diversity;2 -> in the university;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb23-1" title="1">(FOR-EACH <span class="st">&quot;not-a-file.txt&quot;</span></a>
-<a class="sourceLine" id="cb23-2" title="2">  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH <span class="st">&quot;not-a-file.txt&quot;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "n;o;t;-;a;-;f;i;l;e;.;t;x;t;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb24-1" title="1">(LET ((TMP (MAKE-HASH-TABLE)))</a>
-<a class="sourceLine" id="cb24-2" title="2">  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</a>
-<a class="sourceLine" id="cb24-3" title="3">  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</a>
-<a class="sourceLine" id="cb24-4" title="4">  (FOR-EACH/HASH TMP</a>
-<a class="sourceLine" id="cb24-5" title="5">    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH/HASH TMP</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
 <small>
 <pre>>> "GREEN -> veridian;RED -> cadmium;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb25-1" title="1">(LET ((TMP (MAKE-HASH-TABLE)))</a>
-<a class="sourceLine" id="cb25-2" title="2">  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</a>
-<a class="sourceLine" id="cb25-3" title="3">  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</a>
-<a class="sourceLine" id="cb25-4" title="4">  (FOR-EACH TMP</a>
-<a class="sourceLine" id="cb25-5" title="5">    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH TMP</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
 <small>
 <pre>>> "GREEN -> veridian;RED -> cadmium;"</pre>
 <p></small></p>
@@ -347,9 +488,9 @@ but it has to be called explicitly (as <code>for-each/alist</code>) instead<br /
 of relying on <code>for-each</code>‘s ’dispatch’ mechanism.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb26"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb26-1" title="1">(LET ((TMP (LIST (CONS &#39;RED <span class="st">&quot;cadmium&quot;</span>) (CONS &#39;GREEN <span class="st">&quot;veridian&quot;</span>))))</a>
-<a class="sourceLine" id="cb26-2" title="2">  (FOR-EACH/ALIST TMP</a>
-<a class="sourceLine" id="cb26-3" title="3">    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</a></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (LIST (CONS &#39;RED <span class="st">&quot;cadmium&quot;</span>) (CONS &#39;GREEN <span class="st">&quot;veridian&quot;</span>))))</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH/ALIST TMP</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
 <small>
 <pre>>> "RED -> cadmium;GREEN -> veridian;"</pre>
 <p></small></p>
