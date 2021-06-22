@@ -450,8 +450,8 @@
   (let ((ret (gensym)))
     `(let ((*standard-output*   (make-string-output-stream))
            (*error-output*      (make-string-output-stream)))
-       (let ((ret (funcall ,@body)))
-         (values ret
+       (let ((,ret (funcall ,@body)))
+         (values ,ret
                  (get-output-stream-string *standard-output*)
                  (get-output-stream-string *error-output*))))))
 
@@ -467,8 +467,9 @@
   (format *error-output* "~A~A~A~%" (if red-p +red-bold+ "")
                                       (fn message)
                                     (if red-p +reset-terminal-color+ ""))
-  #+clisp (ext:exit status)
-  #+sbcl  (sb-ext:quit :unix-status status))
+  #+sbcl            (sb-ext:quit :unix-status status)
+  #+(or ecl clisp)  (ext:exit status)
+  #+abcl            (ext:exit :status status))
 
 (defmacro or-die ((message &key (errfun #'die)) &body body)
   "anaphoric macro that binds ERROR! to the error
@@ -1098,10 +1099,10 @@
 (defmacro zsh-simple (acommand)
   #+sbcl
   `(sb-ext:run-program *pluto-shell* `("-c" ,,acommand))
-  #+clisp
-  `(ext:run-program *pluto-shell* :arguments `("-c" ,,acommand))
   #+ecl
   `(ext:run-program *pluto-shell* `("-c" ,,acommand))
+  #+clisp
+  `(ext:run-program *pluto-shell* :arguments `("-c" ,,acommand))
   )
 
 #+(or sbcl ecl clisp)
