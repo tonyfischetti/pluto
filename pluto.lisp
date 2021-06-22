@@ -974,7 +974,7 @@
 ; ------------------------------------------------------- ;
 ; shell and zsh ----------------------------------------- ;
 
-; TODO: hacky workarounds for clisp
+; workarounds for clisp and abcl
 (defun %slurp-stream-lines (astream)
   (loop for this = (read-line astream nil)
         while this collect this))
@@ -1032,33 +1032,6 @@
                   (strip (get-output-stream-string errs))
                   retcode))))))
 
-#+ clisp
-(defun zsh (acommand &key (dry-run      nil)
-                          (err-fun      #'error)
-                          (echo         nil)
-                          (split        nil)
-                          (interactive  nil))
-  "Runs command `acommand` through the ZSH shell specified by the global *pluto-shell*
-   `dry-run` just prints the command (default nil)
-   `err-fun` takes a function that takes an error code and the STDERR output
-   `echo` will print the command before running it
-   `split` will separate the stdout by newlines and return a list (default: nil)
-   `interactive` will use the '-i' option to make the shell interactive (default: nil)"
-  (when (or echo dry-run)
-    (format t "$ ~A~%" acommand))
-  (unless dry-run
-    (let* ((arglist `(,(if interactive "-ic" "-c")
-                       ,(fn "~A;~A" acommand (if interactive "exit" "")))))
-      (or-die ((fn "error <~A> with shell command <~A>" error! acommand)
-               :errfun error)
-        (with-open-stream
-          (s (ext:run-program *pluto-shell*
-                              :arguments arglist
-                              :output :stream))
-          (if split
-            (%slurp-stream-lines s)
-            (%reconstruct-stream (%slurp-stream-lines s))))))))
-
 ; TODO: fill in doc string
 #+ecl
 (defun zsh (acommand &key (dry-run        nil)
@@ -1092,11 +1065,69 @@
                         (strip (get-output-stream-string errs))
                         retcode)))))))
 
-#+(or sbcl ecl clisp)
+#+ clisp
+(defun zsh (acommand &key (dry-run      nil)
+                          (err-fun      #'error)
+                          (echo         nil)
+                          (split        nil)
+                          (interactive  nil))
+  "Runs command `acommand` through the ZSH shell specified by the global *pluto-shell*
+   `dry-run` just prints the command (default nil)
+   `err-fun` takes a function that takes an error code and the STDERR output
+   `echo` will print the command before running it
+   `split` will separate the stdout by newlines and return a list (default: nil)
+   `interactive` will use the '-i' option to make the shell interactive (default: nil)"
+  (when (or echo dry-run)
+    (format t "$ ~A~%" acommand))
+  (unless dry-run
+    (let* ((arglist `(,(if interactive "-ic" "-c")
+                       ,(fn "~A;~A" acommand (if interactive "exit" "")))))
+      (or-die ((fn "error <~A> with shell command <~A>" error! acommand)
+               :errfun error)
+        (with-open-stream
+          (s (ext:run-program *pluto-shell*
+                              :arguments arglist
+                              :output :stream))
+          (if split
+            (%slurp-stream-lines s)
+            (%reconstruct-stream (%slurp-stream-lines s))))))))
+
+; TODO: write documentation
+#+abcl
+(defun zsh (acommand &key (dry-run        nil)
+                          (err-fun        #'(lambda (code stderr)
+                                              (error (format nil "~A (~A)" stderr code))))
+                          (echo           nil)
+                          (in             t)
+                          (return-string  t)
+                          (split          nil)
+                          (interactive    nil))
+  (when (or echo dry-run)
+    (format t "$ ~A~%" acommand))
+  (unless dry-run
+    (let* ((arglist     `(,(if interactive "-ic" "-c")
+                           ,(fn "~A;~A" acommand (if interactive "exit" ""))))
+           (theprocess
+             (system:run-program *pluto-shell* arglist :input in)))
+      (system:process-wait theprocess)
+      (let ((retcode (system:process-exit-code theprocess))
+            (outstream (system:process-output theprocess))
+            (errstream (system:process-error theprocess)))
+        (when (> retcode 0)
+          (funcall err-fun retcode "returns non 0 exit code"))
+        (when return-string
+          (values (if split
+                    (%slurp-stream-lines outstream)
+                    (%reconstruct-stream (%slurp-stream-lines outstream)))
+                  retcode))))))
+
+; TODO: have a not-implememted error
+
+#+(or sbcl ecl clisp abcl)
 (setf (fdefinition 'sh) #'zsh)
 
 ; TODO document
-(defmacro zsh-simple (acommand)
+(defmacro sh-simple (acommand)
   #+sbcl
   `(sb-ext:run-program *pluto-shell* `("-c" ,,acommand))
   #+ecl
