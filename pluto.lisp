@@ -1137,7 +1137,7 @@
   )
 
 #+(or sbcl ecl clisp)
-(abbr sh-simple zsh-simple)
+(abbr zsh-simple sh-simple)
 
 ; TODO: write documentation
 ; TODO: implementation dependent
