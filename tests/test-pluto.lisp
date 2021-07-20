@@ -93,9 +93,37 @@
   (equal test-return-value! '("this" "that" "and the other"))
   (split-string->lines (format nil "this~%that~%and the other")))
 
+
 ; --------------------------------------------------------------- ;
 
 (def-test/doc-section "some essential utilities/macros")
+
+(def-test/doc-test 'alambda
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! (list 10 9 8 7 6 5 4 3 2 1))
+  (funcall (alambda (x) (when (> x 0) (cons x (self! (- x 1))))) 10))
+
+(def-test/doc-test 'flatten
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(A B C D E))
+  (flatten `(a b (c d (e)))))
+
+(def-test/doc-test 'take
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `((a b) (c d e f)))
+  (multiple-value-bind (one two)
+    (take `(a b c d e f) 2)
+    (list one two)))
+
+(def-test/doc-test 'group
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `((a b) (c d) (e f)))
+  (group `(a b c d e f) 2))
+
 
 (def-test/doc-test '-<>
   `(markdown-able (test-able returns) (bench-able 5))
