@@ -146,6 +146,59 @@ fill this out
 ### some essential utilities/macros
 
 
+#### ALAMBDA
+
+> Anaphoric lambda. SELF! is the function\
+
+```{.commonlisp}
+(FUNCALL
+ (ALAMBDA (X)
+   (WHEN (> X 0) (CONS X (SELF! (- X 1)))))
+ 10)
+```
+
+<small><pre>=> (10 9 8 7 6 5 4 3 2 1)</pre></small>
+
+
+
+#### FLATTEN
+
+>  Flattens a list (possibly inefficiently)\
+
+```{.commonlisp}
+(FLATTEN `(A B (C D (E))))
+```
+
+<small><pre>=> (A B C D E)</pre></small>
+
+
+
+#### TAKE
+
+> Takes `n` from beginning of `alist` and returns that in a\
+>    list. It also returns the remainder of the list (use\
+>    `multiple-value-bind` with it\
+
+```{.commonlisp}
+(MULTIPLE-VALUE-BIND (ONE TWO) (TAKE `(A B C D E F) 2) (LIST ONE TWO))
+```
+
+<small><pre>=> ((A B) (C D E F))</pre></small>
+
+
+
+#### GROUP
+
+> Turn a (flat) list into a list of lists of length `n`\
+
+```{.commonlisp}
+(GROUP `(A B C D E F) 2)
+```
+
+<small><pre>=> ((A B) (C D) (E F))</pre></small>
+
+
+
 #### -<>
 
 > Threading macro (put <> where the argument should be)\

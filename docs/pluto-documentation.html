@@ -235,6 +235,10 @@
 </ul></li>
 <li><a href="#some-essential-utilitiesmacros">some essential utilities/macros</a>
 <ul>
+<li><a href="#alambda">ALAMBDA</a></li>
+<li><a href="#flatten">FLATTEN</a></li>
+<li><a href="#take">TAKE</a></li>
+<li><a href="#group">GROUP</a></li>
 <li><a href="#section">-&lt;&gt;</a></li>
 <li><a href="#interpose">INTERPOSE</a></li>
 <li><a href="#with-time">WITH-TIME</a></li>
@@ -342,13 +346,54 @@ where both can be negative, which means counting from the end.<br />
 <p></small></p>
 <hr />
 <h3 id="some-essential-utilitiesmacros">some essential utilities/macros</h3>
+<h4 id="alambda">ALAMBDA</h4>
+<blockquote>
+<p>Anaphoric lambda. SELF! is the function<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb11"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(FUNCALL</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> (ALAMBDA (X)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>   (WHEN (<span class="op">&gt;</span> X <span class="dv">0</span>) (CONS X (SELF! (<span class="op">-</span> X <span class="dv">1</span>)))))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a> <span class="dv">10</span>)</span></code></pre></div>
+<small>
+<pre>=> (10 9 8 7 6 5 4 3 2 1)</pre>
+<p></small></p>
+<h4 id="flatten">FLATTEN</h4>
+<blockquote>
+<p>Flattens a list (possibly inefficiently)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb12"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(FLATTEN `(A B (C D (E))))</span></code></pre></div>
+<small>
+<pre>=> (A B C D E)</pre>
+<p></small></p>
+<h4 id="take">TAKE</h4>
+<blockquote>
+<p>Takes <code>n</code> from beginning of <code>alist</code> and returns that in a<br />
+list. It also returns the remainder of the list (use<br />
+<code>multiple-value-bind</code> with it<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb13"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(MULTIPLE-VALUE-BIND (ONE TWO) (TAKE `(A B C D E F) <span class="dv">2</span>) (LIST ONE TWO))</span></code></pre></div>
+<small>
+<pre>=> ((A B) (C D E F))</pre>
+<p></small></p>
+<h4 id="group">GROUP</h4>
+<blockquote>
+<p>Turn a (flat) list into a list of lists of length <code>n</code><br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb14"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(GROUP `(A B C D E F) <span class="dv">2</span>)</span></code></pre></div>
+<small>
+<pre>=> ((A B) (C D) (E F))</pre>
+<p></small></p>
 <h4 id="section">-&lt;&gt;</h4>
 <blockquote>
 <p>Threading macro (put &lt;&gt; where the argument should be)<br />
 Stolen from https://github.com/sjl/cl-losh/blob/master/src/control-flow.lisp<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb11"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(-&lt;&gt; <span class="st">&quot;4&quot;</span> (PARSE-INTEGER &lt;&gt;) (SQRT &lt;&gt;))</span></code></pre></div>
 <small>
 <pre>=> 2.0</pre>
 <p></small></p>
@@ -357,7 +402,7 @@ Stolen from https://github.com/sjl/cl-losh/blob/master/src/control-flow.lisp<br 
 <p>Returns a sequence of the elements of SEQUENCE separated by SEPARATOR.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb12"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(INTERPOSE &#39;SEP `(A B C))</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(INTERPOSE &#39;SEP `(A B C))</span></code></pre></div>
 <small>
 <pre>=> (A SEP B SEP C)</pre>
 <p></small></p>
@@ -368,9 +413,9 @@ binds the seconds of execution time to TIME!. Then<br />
 all the other forms in the body are executed<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb13"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(WITH-TIME</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  (SLEEP <span class="dv">1</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  (FORMAT NIL <span class="st">&quot;time elapsed: ~A&quot;</span> TIME!))</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(WITH-TIME</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  (SLEEP <span class="dv">1</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  (FORMAT NIL <span class="st">&quot;time elapsed: ~A&quot;</span> TIME!))</span></code></pre></div>
 <small>
 <pre>=> "time elapsed: 1"</pre>
 <p></small></p>
@@ -379,15 +424,15 @@ all the other forms in the body are executed<br />
 <p>Converts SECONDS into minutes, hours, or days (based on magnitude)<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb14"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">4</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">4</span>)</span></code></pre></div>
 <small>
 <pre>=> "4 seconds"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">4000</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">4000</span>)</span></code></pre></div>
 <small>
 <pre>=> "1.11 hours"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">191000</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(TIME-FOR-HUMANS <span class="dv">191000</span>)</span></code></pre></div>
 <small>
 <pre>=> "2.21 days"</pre>
 <p></small></p>
@@ -399,11 +444,11 @@ all the other forms in the body are executed<br />
 <code>just-bytes</code> ensures that the size is only counted in bytes (returns integer) [default nil]<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb17"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "17k"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(FILE-SIZE <span class="st">&quot;interior-of-a-heart.txt&quot;</span> :JUST-BYTES T)</span></code></pre></div>
 <small>
 <pre>=> 14433</pre>
 <p></small></p>
@@ -434,50 +479,50 @@ They are… for-each/line, for-each/list, for-each/hash, for-each/vector,<br />
 for-each/stream, and for-each/alist<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb19"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "1 -> A;2 -> B;3 -> C;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>      (BREAK!))</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>      (BREAK!))</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "A;B;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>      (CONTINUE!))</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LIST &#39;(A B C D E)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  (IF (<span class="op">=</span> INDEX! <span class="dv">3</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>      (CONTINUE!))</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "A;B;D;E;"</pre>
 <p></small></p>
 <p>If the argument to <code>for-each</code> is a string and the file exists, <code>for-each/line</code> is dispatched. Otherwise, it is treated like a character vector</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LINE <span class="st">&quot;somebody.txt&quot;</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  (WHEN (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>) (BREAK!))</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH/LINE <span class="st">&quot;somebody.txt&quot;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  (WHEN (<span class="op">&gt;</span> INDEX! <span class="dv">2</span>) (BREAK!))</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> INDEX! VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "1 -> we gotta celebrate diversity;2 -> in the university;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH <span class="st">&quot;not-a-file.txt&quot;</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>(FOR-EACH <span class="st">&quot;not-a-file.txt&quot;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  (FORMAT T <span class="st">&quot;~A;&quot;</span> VALUE!))</span></code></pre></div>
 <small>
 <pre>>> "n;o;t;-;a;-;f;i;l;e;.;t;x;t;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH/HASH TMP</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH/HASH TMP</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
 <small>
 <pre>>> "GREEN -> veridian;RED -> cadmium;"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH TMP</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (MAKE-HASH-TABLE)))</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;GREEN TMP) <span class="st">&quot;veridian&quot;</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  (SETF (GETHASH &#39;RED TMP) <span class="st">&quot;cadmium&quot;</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH TMP</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
 <small>
 <pre>>> "GREEN -> veridian;RED -> cadmium;"</pre>
 <p></small></p>
@@ -488,9 +533,9 @@ but it has to be called explicitly (as <code>for-each/alist</code>) instead<br /
 of relying on <code>for-each</code>‘s ’dispatch’ mechanism.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb26"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (LIST (CONS &#39;RED <span class="st">&quot;cadmium&quot;</span>) (CONS &#39;GREEN <span class="st">&quot;veridian&quot;</span>))))</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH/ALIST TMP</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(LET ((TMP (LIST (CONS &#39;RED <span class="st">&quot;cadmium&quot;</span>) (CONS &#39;GREEN <span class="st">&quot;veridian&quot;</span>))))</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  (FOR-EACH/ALIST TMP</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    (FORMAT T <span class="st">&quot;~A -&gt; ~A;&quot;</span> KEY! VALUE!)))</span></code></pre></div>
 <small>
 <pre>>> "RED -> cadmium;GREEN -> veridian;"</pre>
 <p></small></p>
