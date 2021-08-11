@@ -50,6 +50,7 @@
     :make-pretty-time :get-current-time :with-time :time-for-humans :time!
 
     ; for-each and friends
+    :with-interactive-interrupt-handler
     :progress :break! :continue! :index! :value! :key! :for-each/line
     :for-each/list :for-each/hash :for-each/vector :for-each/stream
     :for-each/alist :for-each/call :for-each :forever
