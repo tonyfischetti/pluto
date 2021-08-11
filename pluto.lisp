@@ -40,6 +40,9 @@
     :delim :defparams :round-to :advise :alistp :with-hash-entry :entry!
     :if-hash-entry :if-not-hash-entry :capture-all-outputs
 
+    ; queries
+    :y-or-n-def
+
     ; error handling
     :die :or-die :or-do :die-if-null :error!
     ; reader macros
@@ -455,6 +458,40 @@
          (values ,ret
                  (get-output-stream-string *standard-output*)
                  (get-output-stream-string *error-output*))))))
+
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
+; Queries ------------------------------------------------;
+
+(defun yond-read-char (&key (default nil))
+  (clear-input *query-io*)
+  (let ((tmp (read-char *query-io*)))
+    (when (and default (char= tmp #\Newline))
+      (setq tmp default))
+    (clear-input *query-io*)
+    tmp))
+
+(defun yond-prompt (prompt &key (default nil))
+  (fresh-line *query-io*)
+  (format *query-io* "~A ~A " prompt
+          (if default
+            (cond ((or (char= default #\y) (char= default #\Y)) "[Y/n]")
+                  ((or (char= default #\N) (char= default #\n)) "[y/N]")
+                  (t "(y or n)"))
+            "(y or n)"))
+  (finish-output *query-io*))
+
+; TODO: document
+(defun y-or-n-def (prompt &key (default nil))
+  (if default
+    (loop (yond-prompt prompt :default default)
+      (case (yond-read-char :default default)
+        ((#\Y #\y) (return t))
+        ((#\N #\n) (return nil))
+        (t (format *query-io* "~&try again~%"))))
+    (y-or-n-p prompt)))
 
 ; ------------------------------------------------------- ;
 
