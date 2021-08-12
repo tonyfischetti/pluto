@@ -737,13 +737,14 @@
 ; TODO: implementation dependent
 (defmacro with-interactive-interrupt-handler (the-message &body body)
   `(handler-case
-     ,@body
-     (#+sbcl    sb-sys:interactive-interrupt
-      #+ecl     ext:interactive-interrupt
-      #+clisp   system::simple-interrupt-condition
-      #+ccl     ccl:interrupt-signal-condition
-      #+allegro	excl:interrupt-signal
-       () (die ,the-message))))
+     (progn
+       ,@body)
+       (#+sbcl    sb-sys:interactive-interrupt
+        #+ecl     ext:interactive-interrupt
+        #+clisp   system::simple-interrupt-condition
+        #+ccl     ccl:interrupt-signal-condition
+        #+allegro	excl:interrupt-signal
+         () (die ,the-message))))
 
 ; TODO: external format doesn't work on clisp
 (defmacro for-each/line (a-thing &body body)
