@@ -43,6 +43,9 @@
     ; queries
     :y-or-n-def
 
+    ; system
+    :sys/info
+
     ; error handling
     :die :or-die :or-do :die-if-null :error!
     ; reader macros
@@ -247,7 +250,7 @@
       (group zwei n (cons eins acc)))))
 
 (defun create-symbol (&rest args)
-  "Interns an UP-cased string as a symbol."
+  "Interns an string as a symbol."
   (values (intern (string-upcase (apply #'str+ args)))))
 
 (defun create-keyword (&rest args)
@@ -492,6 +495,35 @@
         ((#\N #\n) (return nil))
         (t (format *query-io* "~&try again~%"))))
     (y-or-n-p prompt)))
+
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
+; System -------------------------------------------------;
+
+; TODO: beef out
+; TODO: distro
+(defun sys/info ()
+  (let ((kernel         (zsh "uname -s"))
+        (os             (zsh "uname -o"))
+        (hostname       (zsh "hostname"))
+        (architecture   (zsh "uname -m")))
+    (let ((info
+            `((:kernel . ,(cond ((string= kernel "Linux")  :linux)
+                               ((string= kernel "Darwin") :darwin)
+                               (t                         :unknown)))
+              (:os . ,(cond ((string= os "GNU/Linux")  :gnu/linux)
+                           ((string= os "Darwin")     :darwin)
+                           ((string= os "Android")    :android)
+                           ((t                        :unknown))))
+              (:hostname . ,hostname)
+              (:architecture . ,(cond ((search "x86" architecture)   :x86)
+                                     ((search "arm" architecture)   :arm))))))
+      (when (eq (cdr (assoc :os info))  :gnu/linux)
+        (push `(:distro . ,(create-symbol (zsh "lsb_release -a 2> /dev/null | head -n 1 | awk '{ print $3 }'")))
+              info))
+      info)))
 
 ; ------------------------------------------------------- ;
 
