@@ -43,9 +43,6 @@
     ; queries
     :y-or-n-def
 
-    ; system
-    :sys/info
-
     ; error handling
     :die :or-die :or-do :die-if-null :error!
     ; reader macros
@@ -66,9 +63,13 @@
     :process-args!
 
     ; shell and zsh
-    :zsh :sh :zsh-simple :sh-simple :get-envvar :clean-screen
+    :zsh :sh :zsh-simple :sh-simple
+
+    ; system
+    :sys/info :get-envvar
 
     ; terminal things / terminal manipulation
+    :clear-screen
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
@@ -495,35 +496,6 @@
         ((#\N #\n) (return nil))
         (t (format *query-io* "~&try again~%"))))
     (y-or-n-p prompt)))
-
-; ------------------------------------------------------- ;
-
-
-; ------------------------------------------------------- ;
-; System -------------------------------------------------;
-
-; TODO: beef out
-; TODO: distro
-(defun sys/info ()
-  (let ((kernel         (zsh "uname -s"))
-        (os             (zsh "uname -o"))
-        (hostname       (zsh "hostname"))
-        (architecture   (zsh "uname -m")))
-    (let ((info
-            `((:kernel . ,(cond ((string= kernel "Linux")  :linux)
-                               ((string= kernel "Darwin") :darwin)
-                               (t                         :unknown)))
-              (:os . ,(cond ((string= os "GNU/Linux") :gnu/linux)
-                            ((string= os "Darwin")     :darwin)
-                            ((string= os "Android")    :android)
-                            ((t                        :unknown))))
-              (:hostname . ,hostname)
-              (:architecture . ,(cond ((search "x86" architecture)   :x86)
-                                      ((search "arm" architecture)   :arm))))))
-      (when (eq (cdr (assoc :os info))  :gnu/linux)
-        (push `(:distro . ,(create-keyword (zsh "lsb_release -a 2> /dev/null | head -n 1 | awk '{ print $3 }'")))
-              info))
-      info)))
 
 ; ------------------------------------------------------- ;
 
@@ -1210,6 +1182,35 @@
 #+(or sbcl ecl clisp)
 (abbr zsh-simple sh-simple)
 
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
+; system -------------------------------------------------;
+
+; TODO: beef out
+; TODO: distro
+(defun sys/info ()
+  (let ((kernel         (zsh "uname -s"))
+        (os             (zsh "uname -o"))
+        (hostname       (zsh "hostname"))
+        (architecture   (zsh "uname -m")))
+    (let ((info
+            `((:kernel . ,(cond ((string= kernel "Linux")  :linux)
+                               ((string= kernel "Darwin") :darwin)
+                               (t                         :unknown)))
+              (:os . ,(cond ((string= os "GNU/Linux") :gnu/linux)
+                            ((string= os "Darwin")     :darwin)
+                            ((string= os "Android")    :android)
+                            ((t                        :unknown))))
+              (:hostname . ,hostname)
+              (:architecture . ,(cond ((search "x86" architecture)   :x86)
+                                      ((search "arm" architecture)   :arm))))))
+      (when (eq (cdr (assoc :os info))  :gnu/linux)
+        (push `(:distro . ,(create-keyword (zsh "lsb_release -a 2> /dev/null | head -n 1 | awk '{ print $3 }'")))
+              info))
+      info)))
+
 ; TODO: write documentation
 ; TODO: implementation dependent
 ; TODO: SBCL DOESN't get columns
@@ -1227,6 +1228,12 @@
      #+lispworks (lispworks:environment-variable name)
      default))
 
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
+; terminal things / terminal manipulation --------------- ;
+
 ; :TODO: implementation dependent
 (defun clear-screen ()
   "A multi-implementation function to clear the terminal screen"
@@ -1236,12 +1243,6 @@
    #+ecl      (si:system "clear")
    #+clozure  (ccl:run-program "/bin/sh" (list "-c" "clear")
                                :input nil :output *standard-output*))
-
-; ------------------------------------------------------- ;
-
-
-; ------------------------------------------------------- ;
-; terminal things / terminal manipulation --------------- ;
 
 ; TODO: SBCL doesn't have the COLUMNS environment variable. fix it
 (defun get-terminal-columns ()
