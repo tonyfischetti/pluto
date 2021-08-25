@@ -3,7 +3,7 @@
   :description "A common lisp package that's out there"
   :author "Tony Fischetti <tony.fischetti@gmail.com>"
   :homepage "https://github.com/tonyfischetti/pluto"
-  :version "0.9.01"
+  :version "0.9.1"
   :license "GPL-3"
   :components ((:file "pluto")))
 

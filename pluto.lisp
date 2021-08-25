@@ -932,7 +932,8 @@
            (die "" :status 0))
          (defun process-args! (args)
            (setq args! args)
-           (unless (null args!)
+           (if (null args!)
+             (setq bare-args! (reverse bare-args!))
              (let ((current (car args!)))
                (cond
                  ((%ext-flag-match-p current)
@@ -943,7 +944,7 @@
                  ,@tmp
                  (t
                    (progn
-                     (setq bare-args! (reverse (cons current bare-args!)))
+                     (setq bare-args! (cons current bare-args!))
                      (process-args! (cdr args!)))))))))))))
 
 ;---------------------------------------------------------;
