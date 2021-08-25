@@ -73,6 +73,9 @@
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
+    ; filename operations
+    :remove-extension
+
     ; other abbreviations and shortcuts
     :λ :file-size
 
@@ -1394,6 +1397,18 @@
       (if (string= response "") nil response))))
 
 ;---------------------------------------------------------;
+
+
+; ------------------------------------------------------- ;
+; filename operations ----------------------------------- ;
+
+; TODO: document
+; TODO: mention that specific-extension must include "."
+(defun remove-extension (afilename &optional (specific-extension nil))
+  (substr afilename 0 (search (if specific-extension specific-extension ".")
+                              afilename :from-end t)))
+
+; ------------------------------------------------------- ;
 
 
 ; ------------------------------------------------------- ;
