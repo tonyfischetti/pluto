@@ -1405,8 +1405,9 @@
 ; TODO: document
 ; TODO: mention that specific-extension must include "."
 (defun remove-extension (afilename &optional (specific-extension nil))
-  (substr afilename 0 (search (if specific-extension specific-extension ".")
-                              afilename :from-end t)))
+  (let ((location (search (if specific-extension specific-extension ".")
+                          afilename :from-end t)))
+    (values (substr afilename 0 location) (substr afilename location))))
 
 ; ------------------------------------------------------- ;
 
