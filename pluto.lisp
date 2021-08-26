@@ -68,16 +68,16 @@
     ; system
     :sys/info :get-envvar
 
+    ; filename operations
+    :remove-extension :basename :ls :pwd :realpath :file-size
+
     ; terminal things / terminal manipulation
     :clear-screen
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
-    ; filename operations
-    :remove-extension
-
     ; other abbreviations and shortcuts
-    :λ :file-size
+    :λ
 
            ))
 
@@ -1192,6 +1192,8 @@
 ; ------------------------------------------------------- ;
 ; system -------------------------------------------------;
 
+; TODO: USE UIOP FOR THESE?!
+
 ; TODO: beef out
 ; TODO: distro
 (defun sys/info ()
@@ -1231,6 +1233,101 @@
      #+allegro (sys:getenv name)
      #+lispworks (lispworks:environment-variable name)
      default))
+
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
+; file/filename operations ------------------------------ ;
+
+; TODO: document
+; TODO: mention that specific-extension must include "."
+(defun remove-extension (afilename &optional (specific-extension nil))
+  (unless (probe-file apath)
+    (error (fn "path '~A' not found" apath)))
+  (let ((location (search (if specific-extension specific-extension ".")
+                          afilename :from-end t)))
+    (values (substr afilename 0 location) (substr afilename location))))
+
+; TODO: document
+; OS specific?!
+(defun basename (apath &optional (dir-separator "/"))
+  (unless (probe-file apath)
+    (error (fn "path '~A' not found" apath)))
+  (let ((location (+ 1 (search dir-separator apath :from-end t))))
+    (values (substr apath location) (substr apath 0 location))))
+
+(defun %ls-files (&key (dir "./") (a nil))
+  (-<> (str+ dir "/")
+       (uiop:directory-files <>)
+       (mapcar #'namestring <>)
+       (mapcar #'basename <>)
+       (remove-if
+         (if a (constantly nil) (lambda (x) (string= "." (substr x 0 1))))
+         <>)))
+
+(defun %ls-dirs (&key (dir "./") (a nil))
+  (-<> (str+ dir "/")
+       (uiop:subdirectories <>)
+       (mapcar #'namestring <>)
+       (mapcar (lambda (x) (substr x 0 -1)) <>)
+       (mapcar #'basename <>)
+       (remove-if
+         (if a (constantly nil) (lambda (x) (string= "." (substr x 0 1))))
+         <>)))
+
+(defun ls (&key (dir "./") (a nil) (type :all) (s #'string<))
+  "Uses uiop to portably list directory contents.
+   `dir` specifies directory to list contents of (default to current directory)
+   `a` (default false) also includes dot files
+   `type` either :all, :dir, or :file to list everything, only directories,
+          and only files, respectively (default :all)
+   `s` is a sorting predicate (default is #'string<). Use (constantly nil)
+       to turn off sort"
+  (unless (find-package :uiop)
+    (error "uiop not found"))
+  (unless (probe-file dir)
+    (error (fn "directory '~A' not found" dir)))
+  (sort (append (if (or (eq type :all) (eq type :dir))
+                  (%ls-dirs :dir dir :a a) nil)
+                (if (or (eq type :all) (eq type :file))
+                  (%ls-files :dir dir :a a) nil)) s))
+
+(defun pwd ()
+  (unless (find-package :uiop)
+    #+ecl (namestring (ext:getcwd))
+    #-ecl (error "uiop not found")
+    )
+  (namestring (uiop:getcwd)))
+
+(defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))
+  "Prints resolved path. Needs coreutils and :coreutils must be in *features*
+   `expand-symlinks` boolean (default t)
+   `relative-to` print resolved path relative to supplied path
+   `all-existing` requires that all the directories/files exist (default t)
+                  when false, all but the last component must exist.
+   All paths must be escaped (if escaping is needed)"
+  #-coreutils (error "requires GNU coreutils")
+  (let ((command (fn "realpath ~A ~A ~A ~A"
+                     (if expand-symlinks "" "-s")
+                     (if all-existing "-e" "")
+                     apath
+                     (if relative-to
+                       (fn "--relative-to=~A" (realpath relative-to)) ""))))
+    (zsh command :echo t)))
+
+(defun file-size (afile &key (just-bytes nil))
+  "Uses `du` to return just the size of the provided file.
+   `just-bytes` ensures that the size is only counted in bytes (returns integer)
+                [default nil]
+   REQUIRES THAT :coreutils is in *features* (and requires coreutils)"
+  #-coreutils (error "requires GNU coreutls")
+  (let ((result
+          (%remove-after-first-whitespace
+            (zsh (format nil "du ~A '~A'" (if just-bytes "-sb" "") afile)))))
+    (if just-bytes
+      (nth-value 0 (parse-integer result))
+      result)))
 
 ; ------------------------------------------------------- ;
 
@@ -1400,19 +1497,6 @@
 
 
 ; ------------------------------------------------------- ;
-; filename operations ----------------------------------- ;
-
-; TODO: document
-; TODO: mention that specific-extension must include "."
-(defun remove-extension (afilename &optional (specific-extension nil))
-  (let ((location (search (if specific-extension specific-extension ".")
-                          afilename :from-end t)))
-    (values (substr afilename 0 location) (substr afilename location))))
-
-; ------------------------------------------------------- ;
-
-
-; ------------------------------------------------------- ;
 ; other abbreviations and shortcuts --------------------- ;
 
 (defmacro λ (&body body)
@@ -1421,17 +1505,6 @@
 (defun %remove-after-first-whitespace (astring)
   (let ((pos1 (position-if (lambda (x) (member x *whitespaces*)) astring)))
     (substr astring 0 pos1)))
-
-; TODO: check if unix first
-(defun file-size (afile &key (just-bytes nil))
-  "Uses `du` to return just the size of the provided file.
-   `just-bytes` ensures that the size is only counted in bytes (returns integer) [default nil]"
-  (let ((result
-          (%remove-after-first-whitespace
-            (zsh (format nil "du ~A '~A'" (if just-bytes "-sb" "") afile)))))
-    (if just-bytes
-      (nth-value 0 (parse-integer result))
-      result)))
 
 ;---------------------------------------------------------;
 
