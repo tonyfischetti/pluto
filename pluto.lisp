@@ -1318,7 +1318,7 @@
                      apath
                      (if relative-to
                        (fn "--relative-to=~A" (realpath relative-to)) ""))))
-    (zsh command :echo t)))
+    (nth-value 0 (zsh command))))
 
 (defun file-size (afile &key (just-bytes nil))
   "Uses `du` to return just the size of the provided file.
