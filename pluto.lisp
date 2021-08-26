@@ -1296,12 +1296,13 @@
                 (if (or (eq type :all) (eq type :file))
                   (%ls-files :dir dir :a a) nil)) s))
 
+#+asdf3
 (defun pwd ()
-  (unless (find-package :uiop)
-    #+ecl (namestring (ext:getcwd))
-    #-ecl (error "uiop not found")
-    )
   (namestring (uiop:getcwd)))
+
+#+(and (not asdf3) ecl)
+(defun pwd ()
+  (namestring (ext:getcwd)))
 
 (defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))
   "Prints resolved path. Needs coreutils and :coreutils must be in *features*
