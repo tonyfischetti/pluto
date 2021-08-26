@@ -1257,6 +1257,7 @@
   (let ((location (+ 1 (search dir-separator apath :from-end t))))
     (values (substr apath location) (substr apath 0 location))))
 
+#+asdf3
 (defun %ls-files (&key (dir "./") (a nil))
   (-<> (str+ dir "/")
        (uiop:directory-files <>)
@@ -1266,6 +1267,7 @@
          (if a (constantly nil) (lambda (x) (string= "." (substr x 0 1))))
          <>)))
 
+#+asdf3
 (defun %ls-dirs (&key (dir "./") (a nil))
   (-<> (str+ dir "/")
        (uiop:subdirectories <>)
@@ -1276,6 +1278,7 @@
          (if a (constantly nil) (lambda (x) (string= "." (substr x 0 1))))
          <>)))
 
+#+asdf3
 (defun ls (&key (dir "./") (a nil) (type :all) (s #'string<))
   "Uses uiop to portably list directory contents.
    `dir` specifies directory to list contents of (default to current directory)
