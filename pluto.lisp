@@ -1243,8 +1243,8 @@
 ; TODO: document
 ; TODO: mention that specific-extension must include "."
 (defun remove-extension (afilename &optional (specific-extension nil))
-  (unless (probe-file apath)
-    (error (fn "path '~A' not found" apath)))
+  (unless (probe-file afilename)
+    (error (fn "path '~A' not found" afilename)))
   (let ((location (search (if specific-extension specific-extension ".")
                           afilename :from-end t)))
     (values (substr afilename 0 location) (substr afilename location))))
