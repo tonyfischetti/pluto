@@ -65,8 +65,11 @@
     ; shell and zsh
     :zsh :sh :zsh-simple :sh-simple
 
+    ; other abbreviations and shortcuts
+    :λ
+
     ; system
-    :sys/info :get-envvar
+    :hostname :sys/info :get-envvar
 
     ; filename operations
     :remove-extension :basename :ls :pwd :realpath :file-size
@@ -75,9 +78,6 @@
     :clear-screen
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
-
-    ; other abbreviations and shortcuts
-    :λ
 
            ))
 
@@ -1190,16 +1190,34 @@
 
 
 ; ------------------------------------------------------- ;
+; other abbreviations and shortcuts --------------------- ;
+
+(defmacro λ (&body body)
+  `(lambda ,@body))
+
+(defun %remove-after-first-whitespace (astring)
+  (let ((pos1 (position-if (lambda (x) (member x *whitespaces*)) astring)))
+    (substr astring 0 pos1)))
+
+;---------------------------------------------------------;
+
+
+; ------------------------------------------------------- ;
 ; system -------------------------------------------------;
 
 ; TODO: USE UIOP FOR THESE?!
+
+(defun hostname ()
+  #+clisp (%remove-after-first-whitespace (machine-instance))
+  #+(or abcl clasp clozure cmucl ecl genera
+        lispworks mcl mezzano mkcl sbcl scl xcl) (machine-instance))
 
 ; TODO: beef out
 ; TODO: distro
 (defun sys/info ()
   (let ((kernel         (zsh "uname -s"))
         (os             (zsh "uname -o"))
-        (hostname       (zsh "hostname"))
+        (hostname       (hostname))
         (architecture   (zsh "uname -m")))
     (let ((info
             `((:kernel . ,(cond ((string= kernel "Linux")  :linux)
@@ -1296,14 +1314,21 @@
                 (if (or (eq type :all) (eq type :file))
                   (%ls-files :dir dir :a a) nil)) s))
 
-#+asdf3
+#-clisp
 (defun pwd ()
-  (namestring (uiop:getcwd)))
+  (let ((tmp
+          #+(or abcl genera mezzano xcl) (truename *default-pathname-defaults*)
+          #+clisp (ext:default-directory)
+          #+(or clasp ecl) (ext:getcwd)
+          #+clozure (ccl:current-directory)
+          #+sbcl (sb-ext:parse-native-namestring (sb-unix:posix-getcwd/))))
+    (namestring tmp)))
 
-#+(and (not asdf3) ecl)
+#+clisp
 (defun pwd ()
-  (namestring (ext:getcwd)))
+  (namestring (ext:default-directory)))
 
+#+coreutils
 (defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))
   "Prints resolved path. Needs coreutils and :coreutils must be in *features*
    `expand-symlinks` boolean (default t)
@@ -1311,7 +1336,6 @@
    `all-existing` requires that all the directories/files exist (default t)
                   when false, all but the last component must exist.
    All paths must be escaped (if escaping is needed)"
-  #-coreutils (error "requires GNU coreutils")
   (let ((command (fn "realpath ~A ~A ~A ~A"
                      (if expand-symlinks "" "-s")
                      (if all-existing "-e" "")
@@ -1320,12 +1344,12 @@
                        (fn "--relative-to=~A" (realpath relative-to)) ""))))
     (nth-value 0 (zsh command))))
 
+#+coreutils
 (defun file-size (afile &key (just-bytes nil))
   "Uses `du` to return just the size of the provided file.
    `just-bytes` ensures that the size is only counted in bytes (returns integer)
                 [default nil]
    REQUIRES THAT :coreutils is in *features* (and requires coreutils)"
-  #-coreutils (error "requires GNU coreutls")
   (let ((result
           (%remove-after-first-whitespace
             (zsh (format nil "du ~A '~A'" (if just-bytes "-sb" "") afile)))))
@@ -1496,19 +1520,6 @@
                      (if sep (fn "-T '~A'" sep) "")
                      tmpvar) :echo nil)))
       (if (string= response "") nil response))))
-
-;---------------------------------------------------------;
-
-
-; ------------------------------------------------------- ;
-; other abbreviations and shortcuts --------------------- ;
-
-(defmacro λ (&body body)
-  `(lambda ,@body))
-
-(defun %remove-after-first-whitespace (astring)
-  (let ((pos1 (position-if (lambda (x) (member x *whitespaces*)) astring)))
-    (substr astring 0 pos1)))
 
 ;---------------------------------------------------------;
 
