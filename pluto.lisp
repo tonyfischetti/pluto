@@ -59,10 +59,6 @@
     :for-each/list :for-each/hash :for-each/vector :for-each/stream
     :for-each/alist :for-each/call :for-each :forever
 
-    ; command-line arguments
-    :cmdargs :def-cli-args :args! :bare-args! :+USAGE-TEXT!+ :print-usage!
-    :process-args!
-
     ; shell and zsh
     :zsh :sh :zsh-simple :sh-simple
 
@@ -74,6 +70,10 @@
 
     ; filename operations
     :remove-extension :basename :ls :pwd :realpath :file-size
+
+    ; command-line arguments
+    :program/script-name :cmdargs :def-cli-args :args! :bare-args!
+    :+USAGE-TEXT!+ :print-usage! :process-args!
 
     ; terminal things / terminal manipulation
     :clear-screen
@@ -893,77 +893,6 @@
 ;---------------------------------------------------------;
 
 
-;---------------------------------------------------------;
-; command line arguments ---------------------------------;
-
-; TODO: implementation dependent
-; TODO: get program name in clisp
-(defun cmdargs ()
-  "A multi-implementation function to return argv (program name is CAR)"
-  (or
-   #+sbcl sb-ext:*posix-argv*
-   #+ecl (ext:command-args)
-   #+clisp (cons "program_name" ext:*args*)
-   #+lispworks system:*line-arguments-list*
-   #+cmu extensions:*command-line-words*
-   nil))
-
-(defun %ext-flag-match-p (astring)
-  (let ((as-chars (coerce astring 'list)))
-    (and (char= (car as-chars) #\-)
-         (> (length as-chars) 2)
-         (every #'alpha-char-p (cdr as-chars)))))
-
-(defmacro def-cli-args (script-name after-name description &body body)
-  (let* ((switches       (mapcar #'second    body))
-         (longswitches   (mapcar #'third     body))
-         (descriptions   (mapcar #'fourth    body))
-         (flag-lines     (mapcar (lambda (x y z)
-                                   (format nil "  ~A, ~17A~A~%" x y z))
-                                 switches longswitches descriptions))
-         (tmp (mapcar (lambda (x)
-                        `((or
-                            (string= current ,(second x)) (string= current ,(third x)))
-                          (progn
-                            (or-die ((format nil
-                                             "Fatal error processing ~A flag (~A)~%~%~A"
-                                             ,(second x) error! +USAGE-TEXT!+))
-                              ,@(nthcdr 4 x)))))
-                      body)))
-  `(progn
-     (defparameter args!        nil)
-     (defparameter bare-args!   nil)
-     (defparameter +USAGE-TEXT!+ nil)
-     (macrolet ((assign-next-arg! (avar)
-       `(progn (setq ,avar (cadr args!)) (process-args! (cddr args!)))))
-       (or-die ("invalid arguments")
-         (setq +USAGE-TEXT!+
-           (format nil "Usage: ~A ~A~%~A~%~%~A"
-                   ,script-name ,after-name ,description
-                   (format nil "~{~A~}" (list ,@flag-lines))))
-         (defun print-usage! ()
-           (format t "~A" +USAGE-TEXT!+)
-           (die "" :status 0))
-         (defun process-args! (args)
-           (setq args! args)
-           (if (null args!)
-             (setq bare-args! (reverse bare-args!))
-             (let ((current (car args!)))
-               (cond
-                 ((%ext-flag-match-p current)
-                   (process-args! (append
-                                    (mapcar (lambda (x) (format nil "-~A" x))
-                                            (cdr (string->char-list current)))
-                                    (cdr args))))
-                 ,@tmp
-                 (t
-                   (progn
-                     (setq bare-args! (cons current bare-args!))
-                     (process-args! (cdr args!)))))))))))))
-
-;---------------------------------------------------------;
-
-
 ; ------------------------------------------------------- ;
 ; universal indexing operator syntax -------------------- ;
 
@@ -1369,6 +1298,86 @@
       result)))
 
 ; ------------------------------------------------------- ;
+
+
+;---------------------------------------------------------;
+; command line arguments ---------------------------------;
+
+; TODO: document
+; TODO: implementation-dependent? with the envvar thing?
+(defun program/script-name ()
+  (basename (if *load-truename*
+              (namestring *load-truename*)
+              (get-envvar "_"))))
+
+; TODO: implementation dependent
+; TODO: get program name in clisp
+(defun cmdargs ()
+  "A multi-implementation function to return argv (program name is CAR)"
+  (let ((tmp (or
+               #+sbcl sb-ext:*posix-argv*
+               #+ecl (ext:command-args)
+               #+clisp (cons "program_name" ext:*args*)
+               #+lispworks system:*line-arguments-list*
+               #+cmu extensions:*command-line-words*
+               nil
+               )))
+    (cons (program/script-name) (cdr tmp))))
+
+(defun %ext-flag-match-p (astring)
+  (let ((as-chars (coerce astring 'list)))
+    (and (char= (car as-chars) #\-)
+         (> (length as-chars) 2)
+         (every #'alpha-char-p (cdr as-chars)))))
+
+(defmacro def-cli-args (script-name after-name description &body body)
+  (let* ((switches       (mapcar #'second    body))
+         (longswitches   (mapcar #'third     body))
+         (descriptions   (mapcar #'fourth    body))
+         (flag-lines     (mapcar (lambda (x y z)
+                                   (format nil "  ~A, ~17A~A~%" x y z))
+                                 switches longswitches descriptions))
+         (tmp (mapcar (lambda (x)
+                        `((or
+                            (string= current ,(second x)) (string= current ,(third x)))
+                          (progn
+                            (or-die ((format nil
+                                             "Fatal error processing ~A flag (~A)~%~%~A"
+                                             ,(second x) error! +USAGE-TEXT!+))
+                              ,@(nthcdr 4 x)))))
+                      body)))
+  `(progn
+     (defparameter args!        nil)
+     (defparameter bare-args!   nil)
+     (defparameter +USAGE-TEXT!+ nil)
+     (macrolet ((assign-next-arg! (avar)
+       `(progn (setq ,avar (cadr args!)) (process-args! (cddr args!)))))
+       (or-die ("invalid arguments")
+         (setq +USAGE-TEXT!+
+           (format nil "Usage: ~A ~A~%~A~%~%~A"
+                   ,script-name ,after-name ,description
+                   (format nil "~{~A~}" (list ,@flag-lines))))
+         (defun print-usage! ()
+           (format t "~A" +USAGE-TEXT!+)
+           (die "" :status 0))
+         (defun process-args! (args)
+           (setq args! args)
+           (if (null args!)
+             (setq bare-args! (reverse bare-args!))
+             (let ((current (car args!)))
+               (cond
+                 ((%ext-flag-match-p current)
+                   (process-args! (append
+                                    (mapcar (lambda (x) (format nil "-~A" x))
+                                            (cdr (string->char-list current)))
+                                    (cdr args))))
+                 ,@tmp
+                 (t
+                   (progn
+                     (setq bare-args! (cons current bare-args!))
+                     (process-args! (cdr args!)))))))))))))
+
+;---------------------------------------------------------;
 
 
 ; ------------------------------------------------------- ;
