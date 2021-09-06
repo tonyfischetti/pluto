@@ -3,7 +3,7 @@
   :description "A companion to pluto (with external dependencies)"
   :author "Tony Fischetti <tony.fischetti@gmail.com>"
   :homepage "https://github.com/tonyfischetti/pluto"
-  :version "0.1.1"
+  :version "0.1.2"
   :license "GPL-3"
 
   ; TODO: do I really need all of these?
@@ -46,17 +46,12 @@
                ; https://common-lisp.net/project/cxml/
                :cxml
 
-               ;; !!!!
-               ;; everything below this doesn't work on clisp YET
-               ; fails:
-               ;        drakma (needs clisp to be compiled with CFFI requires
-               ;        CLISP compiled with dynamic FFI support.)
-               ; [package cffi-sys]
-               ; *** - CFFI requires CLISP compiled with dynamic FFI support.
+               ; foreign function interface
+               :cffi
 
                ; HTTP client of choice
                ; https://edicl.github.io/drakma/
-               ; :drakma
+               :drakma
                )
 
   :components ((:file "charon")))
