@@ -23,7 +23,8 @@
 
     ; libstyx
     :stat-filesize
-    :hail
+    :mv
+    :cp
 
     ))
 
@@ -69,7 +70,36 @@
 
 (cffi:use-foreign-library libstyx)
 
-(cffi:defcfun "stat_filesize" :int (theformat :string) &rest)
+; -------------------
+;; stat-filesize
+(cffi:defcfun "styx_stat_filesize" :int (afilename :string) &rest)
+
+; TODO: everything
+; TODO: check files, return values, etc...
+(defun stat_filesize (afilename)
+  (styx-stat-filesize afilename))
+
+
+; -------------------
+;; mv
+(cffi:defcfun "styx_mv" :int (old :string) (new :string) &rest)
+
+; TODO: everything
+; TODO: check files, return values, etc...
+(defun mv (old new)
+  (styx-mv old new))
+
+
+; -------------------
+;; cp
+(cffi:defcfun "styx_cp" :int (old :string) (new :string) &rest)
+
+; TODO: everything
+; TODO: check files, return values, etc...
+(defun cp (old new)
+  (styx-cp old new))
+; the return is the bytes (?)
+
 
 ;---------------------------------------------------------;
 

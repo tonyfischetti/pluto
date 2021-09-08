@@ -1,5 +1,5 @@
 .DS_Store
-styx/*.o
-styx/*.h
-styx/*.so
+*.o
+*.h
+*.so
 styx/demo.lisp
