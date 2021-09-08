@@ -23,8 +23,7 @@
 
     ; libstyx
     :stat-filesize
-    :mv
-    :cp
+    :md5
 
     ))
 
@@ -77,29 +76,38 @@
 ; TODO: everything
 ; TODO: check files, return values, etc...
 (defun stat-filesize (afilename)
-  (styx-stat-filesize afilename))
+  (styx-stat-filesize (realpath afilename)))
+
+
+; ; -------------------
+; ;; mv
+; (cffi:defcfun "styx_mv" :int (old :string) (new :string) &rest)
+;
+; ; TODO: everything
+; ; TODO: check files, return values, etc...
+; (defun mv (old new)
+;   (styx-mv (realpath old) new))
+
+
+; ; -------------------
+; ;; cp
+; (cffi:defcfun "styx_cp" :int (old :string) (new :string) &rest)
+;
+; ; TODO: everything
+; ; TODO: check files, return values, etc...
+; (defun cp (old new)
+;   (styx-cp (realpath old) new))
+; ; the return is the bytes (?)
 
 
 ; -------------------
-;; mv
-(cffi:defcfun "styx_mv" :int (old :string) (new :string) &rest)
+;; md5
+(cffi:defcfun "styx_md5" :string (afilename :string) &rest)
 
 ; TODO: everything
 ; TODO: check files, return values, etc...
-(defun mv (old new)
-  (styx-mv old new))
-
-
-; -------------------
-;; cp
-(cffi:defcfun "styx_cp" :int (old :string) (new :string) &rest)
-
-; TODO: everything
-; TODO: check files, return values, etc...
-(defun cp (old new)
-  (styx-cp old new))
-; the return is the bytes (?)
-
+(defun md5 (afilename)
+  (styx-md5 (realpath afilename)))
 
 ;---------------------------------------------------------;
 
