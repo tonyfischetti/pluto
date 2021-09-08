@@ -1276,6 +1276,8 @@
    `all-existing` requires that all the directories/files exist (default t)
                   when false, all but the last component must exist.
    All paths must be escaped (if escaping is needed)"
+  (unless (probe-file apath)
+    (error "no such file"))
   (let ((command (fn "realpath ~A ~A ~A ~A"
                      (if expand-symlinks "" "-s")
                      (if all-existing "-e" "")
