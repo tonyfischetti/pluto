@@ -76,7 +76,7 @@
 
 ; TODO: everything
 ; TODO: check files, return values, etc...
-(defun stat_filesize (afilename)
+(defun stat-filesize (afilename)
   (styx-stat-filesize afilename))
 
 
