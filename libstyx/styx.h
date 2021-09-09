@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <openssl/md5.h>
 
 int styx_stat_filesize(const char*);

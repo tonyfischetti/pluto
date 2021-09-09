@@ -71,12 +71,12 @@
 
 ; -------------------
 ;; stat-filesize
-(cffi:defcfun "styx_stat_filesize" :int (afilename :string) &rest)
+(cffi:defcfun "styx_stat_filesize" :uint64 (afilename :string) &rest)
 
 ; TODO: everything
 ; TODO: check files, return values, etc...
 (defun stat-filesize (afilename)
-  (styx-stat-filesize (realpath afilename)))
+  (styx-stat-filesize (realpath (pathname afilename))))
 
 
 ; ; -------------------
