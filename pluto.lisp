@@ -1205,7 +1205,9 @@
     (error (fn "path '~A' not found" afilename)))
   (let ((location (search (if specific-extension specific-extension ".")
                           afilename :from-end t)))
-    (values (substr afilename 0 location) (substr afilename location))))
+    (if location
+      (values (substr afilename 0 location) (substr afilename location))
+      (values afilename nil))))
 
 ; TODO: document
 ; OS specific?!
@@ -1286,6 +1288,7 @@
                        (fn "--relative-to=~A" (realpath relative-to)) ""))))
     (nth-value 0 (zsh command))))
 
+; TODO: escape thing!!!
 #+coreutils
 (defun file-size (afile &key (just-bytes nil))
   "Uses `du` to return just the size of the provided file.
@@ -1294,7 +1297,7 @@
    REQUIRES THAT :coreutils is in *features* (and requires coreutils)"
   (let ((result
           (%remove-after-first-whitespace
-            (zsh (format nil "du ~A '~A'" (if just-bytes "-sb" "") afile)))))
+            (zsh (format nil "du ~A ~A" (if just-bytes "-sb" "") afile)))))
     (if just-bytes
       (nth-value 0 (parse-integer result))
       result)))
