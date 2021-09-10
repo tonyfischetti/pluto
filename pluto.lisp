@@ -1270,7 +1270,7 @@
 (defun pwd ()
   (namestring (ext:default-directory)))
 
-#+coreutils
+; #+coreutils
 (defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))
   "Prints resolved path. Needs coreutils and :coreutils must be in *features*
    `expand-symlinks` boolean (default t)
@@ -1289,7 +1289,7 @@
     (nth-value 0 (zsh command))))
 
 ; TODO: escape thing!!!
-#+coreutils
+; #+coreutils
 (defun file-size (afile &key (just-bytes nil))
   "Uses `du` to return just the size of the provided file.
    `just-bytes` ensures that the size is only counted in bytes (returns integer)
