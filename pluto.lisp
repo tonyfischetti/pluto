@@ -1166,7 +1166,7 @@
               (:os . ,(cond ((string= os "GNU/Linux") :gnu/linux)
                             ((string= os "Darwin")     :darwin)
                             ((string= os "Android")    :android)
-                            ((t                        :unknown))))
+                            (t                        :unknown)))
               (:hostname . ,hostname)
               (:architecture . ,(cond ((search "x86" architecture)   :x86)
                                       ((search "arm" architecture)   :arm))))))
