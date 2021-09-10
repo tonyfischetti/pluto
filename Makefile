@@ -10,7 +10,7 @@ test-ecl:
 	cd tests; ecl --norc --eval '(progn (load "test-pluto.lisp") (quit))'
 
 test-clisp:
-	cd tests; clisp test-pluto.lisp
+	cd tests; clisp -x '(progn (load "test-pluto.lisp"))'
 
 test-abcl:
 	cd tests; abcl --noinit --eval '(progn (load "test-pluto.lisp") (exit))'

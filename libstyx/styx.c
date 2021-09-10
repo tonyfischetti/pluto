@@ -8,37 +8,48 @@
 
 
 
-off_t styx_stat_filesize(const char* afilename){
+off_t styx_stat_filesize(const char* afilename, int follow_symlinks){
 	struct stat st;
-	stat(afilename, &st);
+	if(follow_symlinks){
+		stat(afilename, &st);
+	}
+	else{
+		lstat(afilename, &st);
+	}
 	return st.st_size;
 }
 
-int styx_mv(const char *old, const char *new){
-	int ret;
-	ret = rename(old, new);
-	return ret;
+int styx_stat_is_symlink_p(const char* afilename){
+	struct stat st;
+	lstat(afilename, &st);
+	return S_ISLNK(st.st_mode);
 }
 
-int styx_cp(const char* source, const char* destination){
-	int input, output;
-	if ((input = open(source, O_RDONLY)) == -1){
-		return -1;
-	}
-	if ((output = creat(destination, 0660)) == -1){
-		close(input);
-		return -1;
-	}
-
-	off_t bytesCopied = 0;
-	struct stat fileinfo = {0};
-	fstat(input, &fileinfo);
-	int result = sendfile(output, input, &bytesCopied, fileinfo.st_size);
-
-	close(input);
-	close(output);
-	return result;
-}
+/* int styx_mv(const char *old, const char *new){ */
+/* 	int ret; */
+/* 	ret = rename(old, new); */
+/* 	return ret; */
+/* } */
+/*  */
+/* int styx_cp(const char* source, const char* destination){ */
+/* 	int input, output; */
+/* 	if ((input = open(source, O_RDONLY)) == -1){ */
+/* 		return -1; */
+/* 	} */
+/* 	if ((output = creat(destination, 0660)) == -1){ */
+/* 		close(input); */
+/* 		return -1; */
+/* 	} */
+/*  */
+/* 	off_t bytesCopied = 0; */
+/* 	struct stat fileinfo = {0}; */
+/* 	fstat(input, &fileinfo); */
+/* 	int result = sendfile(output, input, &bytesCopied, fileinfo.st_size); */
+/*  */
+/* 	close(input); */
+/* 	close(output); */
+/* 	return result; */
+/* } */
 
 const char* styx_md5(const char* afilename){
 	FILE *fh;

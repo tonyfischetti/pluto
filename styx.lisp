@@ -23,6 +23,7 @@
 
     ; libstyx
     :stat-filesize
+    :is-symlink-p
     :md5
 
     ))
@@ -71,12 +72,21 @@
 
 ; -------------------
 ;; stat-filesize
-(cffi:defcfun "styx_stat_filesize" :uint64 (afilename :string) &rest)
+(cffi:defcfun "styx_stat_filesize" :uint64 (afilename :string) (follow_symlinks :int) &rest)
 
 ; TODO: everything
 ; TODO: check files, return values, etc...
-(defun stat-filesize (afilename)
-  (styx-stat-filesize (realpath (pathname afilename))))
+(defun stat-filesize (afilename &key (follow-symlinks t))
+  (styx-stat-filesize afilename (if follow-symlinks 1 0)))
+
+; -------------------
+;; is-symlink-p
+(cffi:defcfun "styx_stat_is_symlink_p" :int (afilename :string) &rest)
+
+; TODO: everything
+; TODO: check files, return values, etc...
+(defun is-symlink-p (afilename)
+  (styx-stat-is-symlink-p afilename))
 
 
 ; ; -------------------
