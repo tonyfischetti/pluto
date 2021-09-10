@@ -72,21 +72,28 @@
 
 ; -------------------
 ;; stat-filesize
-(cffi:defcfun "styx_stat_filesize" :uint64 (afilename :string) (follow_symlinks :int) &rest)
+(cffi:defcfun "styx_stat_filesize" :int64 (afilename :string) (follow_symlinks :int) &rest)
 
 ; TODO: everything
-; TODO: check files, return values, etc...
+; TODO: check files
 (defun stat-filesize (afilename &key (follow-symlinks t))
-  (styx-stat-filesize afilename (if follow-symlinks 1 0)))
+  (let ((ret (styx-stat-filesize afilename (if follow-symlinks 1 0))))
+    (if (< ret 0)
+      (error "something went wrong")
+      ret)))
 
 ; -------------------
 ;; is-symlink-p
 (cffi:defcfun "styx_stat_is_symlink_p" :int (afilename :string) &rest)
 
 ; TODO: everything
-; TODO: check files, return values, etc...
+; TODO: check files
 (defun is-symlink-p (afilename)
-  (styx-stat-is-symlink-p afilename))
+  (let ((ret (styx-stat-is-symlink-p afilename)))
+    (if (< ret 0)
+      (error "something went wrong")
+      (if (= ret 0) nil t))))
+; if the namestring has a slash at the end, it doesn't work properly
 
 
 ; ; -------------------

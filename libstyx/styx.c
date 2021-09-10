@@ -9,19 +9,27 @@
 
 
 off_t styx_stat_filesize(const char* afilename, int follow_symlinks){
+	int ret;
 	struct stat st;
 	if(follow_symlinks){
-		stat(afilename, &st);
+		ret = stat(afilename, &st);
 	}
 	else{
-		lstat(afilename, &st);
+		ret = lstat(afilename, &st);
+	}
+	if(ret!=0){
+		return -1;
 	}
 	return st.st_size;
 }
 
 int styx_stat_is_symlink_p(const char* afilename){
+	int ret;
 	struct stat st;
-	lstat(afilename, &st);
+	ret = lstat(afilename, &st);
+	if(ret!=0){
+		return -1;
+	}
 	return S_ISLNK(st.st_mode);
 }
 
