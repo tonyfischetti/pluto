@@ -151,10 +151,7 @@ fill this out
 > Anaphoric lambda. SELF! is the function\
 
 ```{.commonlisp}
-(FUNCALL
- (ALAMBDA (X)
-   (WHEN (> X 0) (CONS X (SELF! (- X 1)))))
- 10)
+(FUNCALL (ALAMBDA (X) (WHEN (> X 0) (CONS X (SELF! (- X 1))))) 10)
 ```
 
 <small><pre>=> (10 9 8 7 6 5 4 3 2 1)</pre></small>
@@ -208,7 +205,7 @@ fill this out
 (-<> "4" (PARSE-INTEGER <>) (SQRT <>))
 ```
 
-<small><pre>=> 2.0</pre></small>
+<small><pre>=> 2</pre></small>
 
 
 
@@ -231,9 +228,7 @@ fill this out
 >    all the other forms in the body are executed\
 
 ```{.commonlisp}
-(WITH-TIME
-  (SLEEP 1)
-  (FORMAT NIL "time elapsed: ~A" TIME!))
+(WITH-TIME (SLEEP 1) (FORMAT NIL "time elapsed: ~A" TIME!))
 ```
 
 <small><pre>=> "time elapsed: 1"</pre></small>
@@ -276,7 +271,9 @@ fill this out
 #### FILE-SIZE
 
 > Uses `du` to return just the size of the provided file.\
->    `just-bytes` ensures that the size is only counted in bytes (returns integer) [default nil]\
+>    `just-bytes` ensures that the size is only counted in bytes (returns integer)\
+>                 [default nil]\
+>    REQUIRES THAT :coreutils is in *features* (and requires coreutils)\
 
 ```{.commonlisp}
 (FILE-SIZE "interior-of-a-heart.txt")
@@ -324,8 +321,7 @@ fill this out
 >   for-each/stream, and for-each/alist\
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C)
-  (FORMAT T "~A -> ~A;" INDEX! VALUE!))
+(FOR-EACH/LIST '(A B C) (FORMAT T "~A -> ~A;" INDEX! VALUE!))
 ```
 
 <small><pre>>> "1 -> A;2 -> B;3 -> C;"</pre></small>
@@ -333,10 +329,7 @@ fill this out
 
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C D E)
-  (IF (> INDEX! 2)
-      (BREAK!))
-  (FORMAT T "~A;" VALUE!))
+(FOR-EACH/LIST '(A B C D E) (IF (> INDEX! 2) (BREAK!)) (FORMAT T "~A;" VALUE!))
 ```
 
 <small><pre>>> "A;B;"</pre></small>
@@ -344,10 +337,7 @@ fill this out
 
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C D E)
-  (IF (= INDEX! 3)
-      (CONTINUE!))
-  (FORMAT T "~A;" VALUE!))
+(FOR-EACH/LIST '(A B C D E) (IF (= INDEX! 3) (CONTINUE!)) (FORMAT T "~A;" VALUE!))
 ```
 
 <small><pre>>> "A;B;D;E;"</pre></small>
@@ -358,9 +348,8 @@ If the argument to `for-each` is a string and the file exists,
   character vector
 
 ```{.commonlisp}
-(FOR-EACH/LINE "somebody.txt"
-  (WHEN (> INDEX! 2) (BREAK!))
-  (FORMAT T "~A -> ~A;" INDEX! VALUE!))
+(FOR-EACH/LINE "somebody.txt" (WHEN (> INDEX! 2) (BREAK!))
+ (FORMAT T "~A -> ~A;" INDEX! VALUE!))
 ```
 
 <small><pre>>> "1 -> we gotta celebrate diversity;2 -> in the university;"</pre></small>
@@ -368,8 +357,7 @@ If the argument to `for-each` is a string and the file exists,
 
 
 ```{.commonlisp}
-(FOR-EACH "not-a-file.txt"
-  (FORMAT T "~A;" VALUE!))
+(FOR-EACH "not-a-file.txt" (FORMAT T "~A;" VALUE!))
 ```
 
 <small><pre>>> "n;o;t;-;a;-;f;i;l;e;.;t;x;t;"</pre></small>
@@ -377,26 +365,20 @@ If the argument to `for-each` is a string and the file exists,
 
 
 ```{.commonlisp}
-(LET ((TMP (MAKE-HASH-TABLE)))
-  (SETF (GETHASH 'GREEN TMP) "veridian")
-  (SETF (GETHASH 'RED TMP) "cadmium")
-  (FOR-EACH/HASH TMP
-    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
+(LET ((TMP (MAKE-HASH-TABLE))) (SETF (GETHASH 'GREEN TMP) "veridian")
+ (SETF (GETHASH 'RED TMP) "cadmium") (FOR-EACH/HASH TMP (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
-<small><pre>>> "GREEN -> veridian;RED -> cadmium;"</pre></small>
+<small><pre>>> "RED -> cadmium;GREEN -> veridian;"</pre></small>
 
 
 
 ```{.commonlisp}
-(LET ((TMP (MAKE-HASH-TABLE)))
-  (SETF (GETHASH 'GREEN TMP) "veridian")
-  (SETF (GETHASH 'RED TMP) "cadmium")
-  (FOR-EACH TMP
-    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
+(LET ((TMP (MAKE-HASH-TABLE))) (SETF (GETHASH 'GREEN TMP) "veridian")
+ (SETF (GETHASH 'RED TMP) "cadmium") (FOR-EACH TMP (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
-<small><pre>>> "GREEN -> veridian;RED -> cadmium;"</pre></small>
+<small><pre>>> "RED -> cadmium;GREEN -> veridian;"</pre></small>
 
 
 
@@ -408,10 +390,48 @@ If the argument to `for-each` is a string and the file exists,
 
 ```{.commonlisp}
 (LET ((TMP (LIST (CONS 'RED "cadmium") (CONS 'GREEN "veridian"))))
-  (FOR-EACH/ALIST TMP
-    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
+ (FOR-EACH/ALIST TMP (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
 <small><pre>>> "RED -> cadmium;GREEN -> veridian;"</pre></small>
+
+
+
+-----
+
+### temporary charon tests
+
+
+#### PARSE-FLOAT
+
+> Similar to PARSE-INTEGER, but parses a floating point value and\
+>   returns the value as the specified TYPE (by default\
+>   *READ-DEFAULT-FLOAT-FORMAT*). The DECIMAL-CHARACTER (by default #.)\
+>   specifies the separator between the integer and decimal parts, and\
+>   the EXPONENT-CHARACTER (by default #e, case insensitive) specifies\
+>   the character before the exponent. Note that the exponent is only\
+>   parsed if RADIX is 10.\
+
+```{.commonlisp}
+(PARSE-FLOAT "5.4")
+```
+
+<small><pre>=> 5.4</pre></small>
+
+
+
+-----
+
+### temporary styx tests
+
+
+#### STAT-FILESIZE
+
+NIL
+```{.commonlisp}
+(STAT-FILESIZE "interior-of-a-heart.txt")
+```
+
+<small><pre>=> 14433</pre></small>
 
 

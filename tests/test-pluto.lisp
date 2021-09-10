@@ -169,7 +169,6 @@
 
 (def-test/doc-section "other abbreviations and shortcuts")
 
-; not markdown able or test able (as a test)
 (def-test/doc-test 'file-size
   `(markdown-able (test-able returns))
   'function
@@ -314,7 +313,37 @@
       (format t "~A -> ~A;" key! value!))))
 
 ; --------------------------------------------------------------- ;
+; --------------------------------------------------------------- ;
 
+#-clisp
+(load "~/quicklisp/setup.lisp")
+(ql:quickload :charon :silent t)
+(use-package :charon)
+
+(def-test/doc-section "temporary charon tests")
+
+(def-test/doc-test 'parse-float
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 5.4)
+  (parse-float "5.4"))
+
+; --------------------------------------------------------------- ;
+; --------------------------------------------------------------- ;
+
+(ql:quickload :styx :silent t)
+(use-package :styx)
+
+(def-test/doc-section "temporary styx tests")
+
+(def-test/doc-test 'stat-filesize
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 14433)
+  (stat-filesize "interior-of-a-heart.txt"))
+
+
+; --------------------------------------------------------------- ;
 
 (end-test/doc)
 
