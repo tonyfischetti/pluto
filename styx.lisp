@@ -94,7 +94,8 @@
       (error "something went wrong")
       (if (= ret 0) nil t))))
 ; if the namestring has a slash at the end, it doesn't work properly
-
+; so we need to check if it's a directory and then strip the trailing
+; slash
 
 ; ; -------------------
 ; ;; mv
@@ -124,7 +125,7 @@
 ; TODO: everything
 ; TODO: check files, return values, etc...
 (defun md5 (afilename)
-  (styx-md5 (realpath afilename)))
+  (styx-md5 afilename))
 
 ;---------------------------------------------------------;
 
