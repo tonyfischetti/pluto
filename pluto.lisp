@@ -680,13 +680,15 @@
    binds the seconds of execution time to TIME!. Then
    all the other forms in the body are executed"
   (let ((began      (gensym))
-        (ended      (gensym)))
+        (ended      (gensym))
+        (ret        (gensym)))
     `(let (,began ,ended time!)
        (setq ,began (get-universal-time))
-       ,(car aform)
+       (setq ,ret ,(car aform))
        (setq ,ended (get-universal-time))
        (setq time! (- ,ended ,began))
-       ,@(cdr aform))))
+       ,@(cdr aform)
+       ,ret)))
 
 (defun time-for-humans (seconds)
   "Converts SECONDS into minutes, hours, or days (based on magnitude)"
@@ -1547,5 +1549,4 @@
       (if (string= response "") nil response))))
 
 ;---------------------------------------------------------;
-
 
