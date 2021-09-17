@@ -30,8 +30,8 @@
 
     ; other abbriviations and shortcuts
     :alist->hash-table :hash-table->alist :hash-keys :parse-json
-    :parse-json-file :make-octet-vector :concat-octet-vector :parse-html
-    :$$
+    :hash-table->json :parse-json-file :make-octet-vector
+    :concat-octet-vector :parse-html :$$
 
     ; re-exports
     :parse-float
@@ -234,6 +234,12 @@
 (abbr hash-keys alexandria:hash-table-keys)
 (abbr parse-json yason:parse)
 (abbr export-json yason:encode)
+
+; TODO: document
+(defun hash-table->json (ahashtable)
+  (let ((s (make-string-output-stream)))
+    (yason:encode ahashtable s)
+    (get-output-stream-string s)))
 
 (defun parse-json-file (afile)
   (with-a-file afile :r
