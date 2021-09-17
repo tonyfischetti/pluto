@@ -80,7 +80,11 @@
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
-           ))
+    ;; file-related functions
+    :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
+    :walk-directory
+
+    ))
 
 (in-package :pluto)
 
@@ -1549,4 +1553,244 @@
       (if (string= response "") nil response))))
 
 ;---------------------------------------------------------;
+
+
+; ------------------------------------------------------- ;
+; file-related functions -------------------------------- ;
+
+;;;;;
+;;;;; STEALING FROM CL-FAD
+;;;;;
+
+; (defun inspect-pathname (apathname)
+;   (format *error-output* "received:              ~S~%" apathname)
+;   ; (format *error-output* "probe file:            ~S~%" (probe-file apathname))
+;   (format *error-output* "pathname device:       ~S~%" (pathname-device apathname))
+;   (format *error-output* "pathname host:         ~S~%" (pathname-host apathname))
+;   (format *error-output* "pathname version:      ~S~%" (pathname-version apathname))
+;   (format *error-output* "pathname directory:    ~S~%" (pathname-directory apathname))
+;   (format *error-output* "pathname name:         ~S~%" (pathname-name apathname))
+;   (format *error-output* "pathname type:         ~S~%" (pathname-type apathname))
+;   ; (format *error-output* "truename:              ~S~%" (truename apathname))
+;   ; (format *error-output* "namestring:            ~S~%" (namestring apathname))
+;   (format *error-output* "wild pathname?:        ~S~%" (wild-pathname-p apathname))
+;   ; (format *error-output* "directory:             ~S~%" (directory apathname))
+;   ; (format *error-output* "directory namestring   ~S~%" (directory-namestring apathname))
+;   ; (format *error-output* "file author:           ~S~%" (file-author apathname))
+;   ; (format *error-output* "file namestring:       ~S~%" (file-namestring apathname))
+;   ; (format *error-output* "file write date:       ~S~%" (file-write-date apathname))
+;   ; (format *error-output* "host namestring:       ~S~%" (host-namestring apathname))
+;   (format *error-output* "enough namestring:     ~S~%" (enough-namestring apathname)))
+
+
+(defun component-present-p (value)
+  "Helper function for DIRECTORY-PATHNAME-P which checks whether VALUE
+   is neither NIL nor the keyword :UNSPECIFIC."
+  (and value (not (eql value :unspecific))))
+
+(defun directory-pathname-p (pathspec)
+  "Returns NIL if PATHSPEC \(a pathname designator) does not designate
+   a directory, PATHSPEC otherwise.  It is irrelevant whether file or
+   directory designated by PATHSPEC does actually exist."
+  (and
+    (not (component-present-p (pathname-name pathspec)))
+    (not (component-present-p (pathname-type pathspec)))
+    pathspec))
+
+; to export (untested)
+(defun pathname-as-directory (pathspec)
+  "Converts the non-wild pathname designator PATHSPEC to directory
+  form."
+  (let ((pathname (pathname pathspec)))
+    (when (wild-pathname-p pathname)
+      (error "Can't reliably convert wild pathnames."))
+    (cond ((not (directory-pathname-p pathspec))
+           (make-pathname :directory (append (or (pathname-directory pathname)
+                                                 (list :relative))
+                                             (list (file-namestring pathname)))
+                          :name nil
+                          :type nil
+                          :defaults pathname))
+          (t pathname))))
+
+(defun directory-wildcard (dirname)
+  "Returns a wild pathname designator that designates all files within
+   the directory named by the non-wild pathname designator DIRNAME."
+  (when (wild-pathname-p dirname)
+    (error "Can only make wildcard directories from non-wildcard directories."))
+  (make-pathname :name #-:cormanlisp :wild #+:cormanlisp "*"
+                 :type #-(or :clisp :cormanlisp) :wild
+                       #+:clisp nil
+                       #+:cormanlisp "*"
+                 :defaults (pathname-as-directory dirname)))
+
+#+:clisp
+(defun clisp-subdirectories-wildcard (wildcard)
+  "Creates a wild pathname specifically for CLISP such that
+   sub-directories are returned by DIRECTORY."
+  (make-pathname :directory (append (pathname-directory wildcard)
+                                    (list :wild))
+                 :name nil
+                 :type nil
+                 :defaults wildcard))
+
+(defun pathname-as-file (pathspec)
+  "Converts the non-wild pathname designator PATHSPEC to file form."
+  (let ((pathname (pathname pathspec)))
+    (when (wild-pathname-p pathname)
+      (error "Can't reliably convert wild pathnames."))
+    (cond ((directory-pathname-p pathspec)
+           (let* ((directory (pathname-directory pathname))
+                  (name-and-type (pathname (first (last directory)))))
+             (make-pathname :directory (butlast directory)
+                            :name (pathname-name name-and-type)
+                            :type (pathname-type name-and-type)
+                            :defaults pathname)))
+          (t pathname))))
+
+; export
+; TODO: ignore dot file option, recursive
+(defun ls (dirname &key (follow-symlinks t))
+        "Returns a fresh list of pathnames corresponding to all files within
+         the directory named by the non-wild pathname designator DIRNAME.
+         The pathnames of sub-directories are returned in directory form -
+         see PATHNAME-AS-DIRECTORY.
+
+         If FOLLOW-SYMLINKS is true, then the returned list contains
+         truenames (symlinks will be resolved) which essentially means that it
+         might also return files from *outside* the directory.  This works on
+         all platforms.
+
+         When FOLLOW-SYMLINKS is NIL, it should return the actual directory
+         contents, which might include symlinks.  Currently this works on SBCL
+         and CCL."
+  (declare (ignorable follow-symlinks))
+  (when (wild-pathname-p dirname)
+    (error "Can only list concrete directory names."))
+  #-(or sbcl ccl)
+  (unless follow-symlinks
+    (error "implementation doesn't support _not_ following symlinks"))
+  #+(or :ecl :clasp)
+  (let ((dir (pathname-as-directory dirname)))
+    (concatenate 'list
+                 (directory (merge-pathnames (pathname "*/") dir))
+                 (directory (merge-pathnames (pathname "*.*") dir))))
+  #-(or :ecl :clasp)
+  (let ((wildcard (directory-wildcard dirname)))
+    #+:abcl (system::list-directory dirname)
+    #+:sbcl (directory wildcard :resolve-symlinks follow-symlinks)
+    #+(or :cmu :scl) (directory wildcard)
+    #+:lispworks (directory wildcard :link-transparency follow-symlinks)
+    #+(or :openmcl :digitool) (directory wildcard :directories t :follow-links follow-symlinks)
+    #+:allegro (directory wildcard :directories-are-files nil)
+    #+:clisp (nconc (directory wildcard :if-does-not-exist :keep)
+                    (directory (clisp-subdirectories-wildcard wildcard)))
+    #+:cormanlisp (nconc (directory wildcard)
+                         (cl::directory-subdirs dirname)))
+  #-(or :sbcl :cmu :scl :lispworks :openmcl :allegro :clisp :cormanlisp :ecl :abcl :digitool :clasp)
+  (error "LIST-DIRECTORY not implemented"))
+
+
+(defun file-or-directory-exists-p (pathspec)
+  "Checks whether the file named by the pathname designator PATHSPEC
+   exists and returns its truename if this is the case, NIL otherwise.
+   The truename is returned in `canonical' form, i.e. the truename of a
+   directory is returned as if by PATHNAME-AS-DIRECTORY."
+  ; #+ecl
+  ; (if (or
+  ;       (search "*" (namestring pathspec))
+  ;       (search "?" (namestring pathspec))
+  ;       (search "\\" (namestring pathspec)))
+  ;   (error "ecl doesn't support '?', '*', or '\\' in the path"))
+  #+(or :sbcl :lispworks :openmcl :ecl :digitool clasp) (probe-file pathspec)
+  #+:allegro (or (excl:probe-directory (pathname-as-directory pathspec))
+                 (probe-file pathspec))
+  #+(or :cmu :scl :abcl) (or (probe-file (pathname-as-directory pathspec))
+                             (probe-file pathspec))
+  #+:cormanlisp (or (and (ccl:directory-p pathspec)
+                         (pathname-as-directory pathspec))
+                    (probe-file pathspec))
+  #+:clisp (or
+             (ignore-errors
+                 (let ((directory-form (pathname-as-directory pathspec)))
+                   (when (ext:probe-directory directory-form)
+                     (truename directory-form))))
+               (ignore-errors
+                 (probe-file (pathname-as-file pathspec))))
+  #-(or :sbcl :cmu :scl :lispworks :openmcl :allegro :clisp :cormanlisp :ecl :abcl :digitool :clasp)
+  (error "FILE-EXISTS-P not implemented"))
+
+(defun directory-exists-p (pathspec)
+  "Checks whether the file named by the pathname designator PATHSPEC
+   exists and if it is a directory.  Returns its truename if this is the
+   case, NIL otherwise.  The truename is returned in directory form as if
+   by PATHNAME-AS-DIRECTORY."
+  #+:allegro
+  (and (excl:probe-directory pathspec)
+       (pathname-as-directory (truename pathspec)))
+  #+:lispworks
+  (and (lw:file-directory-p pathspec)
+       (pathname-as-directory (truename pathspec)))
+  #-(or :allegro :lispworks)
+  (let ((result (file-or-directory-exists-p pathspec)))
+    (and result
+         (directory-pathname-p result)
+         result)))
+
+(defun file-exists-p (pathspec)
+  (let ((tmp (file-or-directory-exists-p pathspec)))
+    (and tmp (not (directory-exists-p pathspec)))))
+
+; TODO: same options as ls? check symlink ability
+; TODO: test if input is actually a directory
+(defun walk-directory (dirname fn &key directories
+                                       (if-does-not-exist :error)
+                                       (test (constantly t))
+                                       (follow-symlinks t))
+  "Recursively applies the function FN to all files within the
+   directory named by the non-wild pathname designator DIRNAME and all of
+   its sub-directories.  FN will only be applied to files for which the
+   function TEST returns a true value.  If DIRECTORIES is not NIL, FN and
+   TEST are applied to directories as well.  If DIRECTORIES
+   is :DEPTH-FIRST, FN will be applied to the directory's contents first.
+   If DIRECTORIES is :BREADTH-FIRST and TEST returns NIL, the directory's
+   content will be skipped. IF-DOES-NOT-EXIST must be one of :ERROR
+   or :IGNORE where :ERROR means that an error will be signaled if the
+   directory DIRNAME does not exist.  If FOLLOW-SYMLINKS is T, then your
+   callback will receive truenames.  Otherwise you should get the actual
+   directory contents, which might include symlinks.  This might not be
+   supported on all platforms.  See LS."
+  (labels ((walk (name)
+             (cond
+               ((directory-pathname-p name)
+                ;; the code is written in a slightly awkward way for
+                ;; backward compatibility
+                (cond ((not directories)
+                       (dolist (file (ls name :follow-symlinks follow-symlinks))
+                         (walk file)))
+                      ((eql directories :breadth-first)
+                       (when (funcall test name)
+                         (funcall fn name)
+                         (dolist (file (ls name :follow-symlinks follow-symlinks))
+                           (walk file))))
+                      ;; :DEPTH-FIRST is implicit
+                      (t (dolist (file (ls name :follow-symlinks follow-symlinks))
+                           (walk file))
+                         (when (funcall test name)
+                           (funcall fn name)))))
+               ((funcall test name)
+                (funcall fn name)))))
+    (let ((pathname-as-directory (pathname-as-directory dirname)))
+      (case if-does-not-exist
+        ((:error)
+         (cond ((not (file-or-directory-exists-p pathname-as-directory))
+                (error "File ~S does not exist."
+                       pathname-as-directory))
+               (t (walk pathname-as-directory))))
+        ((:ignore)
+         (when (file-or-directory-exists-p pathname-as-directory)
+           (walk pathname-as-directory)))
+        (otherwise
+         (error "IF-DOES-NOT-EXIST must be one of :ERROR or :IGNORE."))))
+    (values)))
 
