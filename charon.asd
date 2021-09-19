@@ -50,8 +50,8 @@
                :cffi
 
                ; HTTP client of choice
-               ; https://edicl.github.io/drakma/
-               :drakma
+               ; https://github.com/fukamachi/dexador
+               :dexador
                )
 
   :components ((:file "charon")))

@@ -25,8 +25,8 @@
     :with-loading
 
     ; HTML/XML stuff
-    :request :parse-xml :parse-xml-file :xpath :xpath-compile
-    :use-xml-namespace :xpath-string
+    :request/get :request/post :parse-xml :parse-xml-file :xpath
+    :xpath-compile :use-xml-namespace :xpath-string
 
     ; other abbriviations and shortcuts
     :alist->hash-table :hash-table->alist :hash-keys :parse-json
@@ -190,8 +190,11 @@
 ; ------------------------------------------------------- ;
 ; HTML/XML stuff ---------------------------------------- ;
 
-(defmacro request (&rest everything)
-  `(drakma:http-request ,@everything))
+(defmacro request/get (&rest everything)
+  `(dexador:get ,@everything))
+
+(defmacro request/post (&rest everything)
+  `(dexador:get ,@everything))
 
 (defun parse-xml (astring)
   (cxml:parse astring (cxml-dom:make-dom-builder)))
