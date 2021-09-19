@@ -194,7 +194,7 @@
   `(dexador:get ,@everything))
 
 (defmacro request/post (&rest everything)
-  `(dexador:get ,@everything))
+  `(dexador:post ,@everything))
 
 (defun parse-xml (astring)
   (cxml:parse astring (cxml-dom:make-dom-builder)))
