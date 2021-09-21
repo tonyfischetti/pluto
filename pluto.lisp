@@ -1650,7 +1650,7 @@
 
 ; export
 ; TODO: ignore dot file option, recursive
-(defun ls (dirname &key (follow-symlinks t))
+(defun ls (&optional (dirname "./")  (follow-symlinks t))
         "Returns a fresh list of pathnames corresponding to all files within
          the directory named by the non-wild pathname designator DIRNAME.
          The pathnames of sub-directories are returned in directory form -
@@ -1766,15 +1766,15 @@
                 ;; the code is written in a slightly awkward way for
                 ;; backward compatibility
                 (cond ((not directories)
-                       (dolist (file (ls name :follow-symlinks follow-symlinks))
+                       (dolist (file (ls name follow-symlinks))
                          (walk file)))
                       ((eql directories :breadth-first)
                        (when (funcall test name)
                          (funcall fn name)
-                         (dolist (file (ls name :follow-symlinks follow-symlinks))
+                         (dolist (file (ls name follow-symlinks))
                            (walk file))))
                       ;; :DEPTH-FIRST is implicit
-                      (t (dolist (file (ls name :follow-symlinks follow-symlinks))
+                      (t (dolist (file (ls name follow-symlinks))
                            (walk file))
                          (when (funcall test name)
                            (funcall fn name)))))
