@@ -3,3 +3,4 @@
 *.so
 libstyx/demo.lisp
 tmp.lisp
+tmp2.lisp

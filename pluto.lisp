@@ -860,6 +860,7 @@
   "A super-duper imperative looping construct.
    It takes either
      a filename string    (to be treated as a file and goes line by line)
+     a pathname           (goes line by line)
      a hash-table
      a vector
      a list
@@ -886,6 +887,7 @@
         (t
           (progn
             (etypecase ,tmp
+              (pathname       (for-each/line      ,tmp      ,@body))
               (hash-table     (for-each/hash      ,tmp      ,@body))
               (vector         (for-each/vector    ,tmp      ,@body))
               (list           (for-each/list      ,tmp      ,@body))
