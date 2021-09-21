@@ -77,6 +77,8 @@
 ; TODO: everything
 ; TODO: check files
 (defun stat-filesize (afilename &key (follow-symlinks t))
+  (when (pathnamep afilename)
+    (setq afilename (escape-namestring/c (namestring afilename))))
   (let ((ret (styx-stat-filesize afilename (if follow-symlinks 1 0))))
     (if (< ret 0)
       (error "something went wrong")
@@ -89,6 +91,8 @@
 ; TODO: everything
 ; TODO: check files
 (defun is-symlink-p (afilename)
+  (when (pathnamep afilename)
+    (setq afilename (escape-namestring/c (namestring afilename))))
   (let ((ret (styx-stat-is-symlink-p afilename)))
     (if (< ret 0)
       (error "something went wrong")
@@ -125,6 +129,8 @@
 ; TODO: everything
 ; TODO: check files, return values, etc...
 (defun md5 (afilename)
+  (when (pathnamep afilename)
+    (setq afilename (escape-namestring/c (namestring afilename))))
   (styx-md5 afilename))
 
 ;---------------------------------------------------------;
