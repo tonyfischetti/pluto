@@ -84,7 +84,7 @@
     ;; file-related functions
     :inspect-pathname   ; TODO: TMP!!
     :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
-    :walk-directory :file-find
+    :walk-directory :file-find :-path
 
     ))
 
@@ -1598,7 +1598,7 @@
           (t pathname))))
 
 ; export
-; TODO: ignore dot file option, recursive
+; TODO: ignore dot file option
 (defun ls (&optional (dirname "./")  (follow-symlinks t))
         "Returns a fresh list of pathnames corresponding to all files within
          the directory named by the non-wild pathname designator DIRNAME.
@@ -1750,4 +1750,10 @@
                     :directories :depth-first
                     :test test)
     (reverse to-return)))
+
+; TODO: mention that it always FOLLOWS SYMLINKS
+(defun -path (pathone pathtwo)
+  (enough-namestring (probe-file pathone) (directory-exists-p  pathtwo)))
+
+; ------------------------------------------------------- ;
 
