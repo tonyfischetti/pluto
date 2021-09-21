@@ -68,8 +68,6 @@
     ; system
     :hostname :sys/info :get-envvar
 
-    ; filename operations
-    :remove-extension :basename :ls :pwd :realpath :file-size
 
     ; command-line arguments
     :program/script-name :cmdargs :def-cli-args :args! :bare-args!
@@ -80,7 +78,11 @@
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
+    ; filename operations
+    :remove-extension :basename :pwd :realpath :file-size
+
     ;; file-related functions
+    :inspect-pathname   ; TODO: TMP!!
     :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
     :walk-directory :file-find
 
@@ -1201,114 +1203,6 @@
 ; ------------------------------------------------------- ;
 
 
-; ------------------------------------------------------- ;
-; file/filename operations ------------------------------ ;
-
-; TODO: document
-; TODO: mention that specific-extension must include "."
-(defun remove-extension (afilename &optional (specific-extension nil))
-  (unless (probe-file afilename)
-    (error (fn "path '~A' not found" afilename)))
-  (let ((location (search (if specific-extension specific-extension ".")
-                          afilename :from-end t)))
-    (if location
-      (values (substr afilename 0 location) (substr afilename location))
-      (values afilename nil))))
-
-; TODO: document
-; OS specific?!
-(defun basename (apath &optional (dir-separator "/"))
-  (unless (probe-file apath)
-    (error (fn "path '~A' not found" apath)))
-  (let ((location (+ 1 (search dir-separator apath :from-end t))))
-    (values (substr apath location) (substr apath 0 location))))
-
-#+asdf3
-(defun %ls-files (&key (dir "./") (a nil))
-  (-<> (str+ dir "/")
-       (uiop:directory-files <>)
-       (mapcar #'namestring <>)
-       (mapcar #'basename <>)
-       (remove-if
-         (if a (constantly nil) (lambda (x) (string= "." (substr x 0 1))))
-         <>)))
-
-#+asdf3
-(defun %ls-dirs (&key (dir "./") (a nil))
-  (-<> (str+ dir "/")
-       (uiop:subdirectories <>)
-       (mapcar #'namestring <>)
-       (mapcar (lambda (x) (substr x 0 -1)) <>)
-       (mapcar #'basename <>)
-       (remove-if
-         (if a (constantly nil) (lambda (x) (string= "." (substr x 0 1))))
-         <>)))
-
-#+asdf3
-(defun ls (&key (dir "./") (a nil) (type :all) (s #'string<))
-  "Uses uiop to portably list directory contents.
-   `dir` specifies directory to list contents of (default to current directory)
-   `a` (default false) also includes dot files
-   `type` either :all, :dir, or :file to list everything, only directories,
-          and only files, respectively (default :all)
-   `s` is a sorting predicate (default is #'string<). Use (constantly nil)
-       to turn off sort"
-  (unless (find-package :uiop)
-    (error "uiop not found"))
-  (unless (probe-file dir)
-    (error (fn "directory '~A' not found" dir)))
-  (sort (append (if (or (eq type :all) (eq type :dir))
-                  (%ls-dirs :dir dir :a a) nil)
-                (if (or (eq type :all) (eq type :file))
-                  (%ls-files :dir dir :a a) nil)) s))
-
-#-clisp
-(defun pwd ()
-  (let ((tmp
-          #+(or abcl genera mezzano xcl) (truename *default-pathname-defaults*)
-          #+clisp (ext:default-directory)
-          #+(or clasp ecl) (ext:getcwd)
-          #+clozure (ccl:current-directory)
-          #+sbcl (sb-ext:parse-native-namestring (sb-unix:posix-getcwd/))))
-    (namestring tmp)))
-
-#+clisp
-(defun pwd ()
-  (namestring (ext:default-directory)))
-
-; #+coreutils
-(defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))
-  "Prints resolved path. Needs coreutils and :coreutils must be in *features*
-   `expand-symlinks` boolean (default t)
-   `relative-to` print resolved path relative to supplied path
-   `all-existing` requires that all the directories/files exist (default t)
-                  when false, all but the last component must exist.
-   All paths must be escaped (if escaping is needed)"
-  (unless (probe-file apath)
-    (error "no such file"))
-  (let ((command (fn "realpath ~A ~A ~A ~A"
-                     (if expand-symlinks "" "-s")
-                     (if all-existing "-e" "")
-                     apath
-                     (if relative-to
-                       (fn "--relative-to=~A" (realpath relative-to)) ""))))
-    (nth-value 0 (zsh command))))
-
-; TODO: escape thing!!!
-; #+coreutils
-(defun file-size (afile &key (just-bytes nil))
-  "Uses `du` to return just the size of the provided file.
-   `just-bytes` ensures that the size is only counted in bytes (returns integer)
-                [default nil]
-   REQUIRES THAT :coreutils is in *features* (and requires coreutils)"
-  (let ((result
-          (%remove-after-first-whitespace
-            (zsh (format nil "du ~A ~A" (if just-bytes "-sb" "") afile)))))
-    (if just-bytes
-      (nth-value 0 (parse-integer result))
-      result)))
-
-; ------------------------------------------------------- ;
 
 
 ;---------------------------------------------------------;
@@ -1556,31 +1450,86 @@
 
 
 ; ------------------------------------------------------- ;
+; file/filename/directory operations -------------------- ;
+
+; TODO: document
+(defun basename (apath)
+  (file-namestring apath))
+
+#-clisp
+(defun pwd ()
+  (let ((tmp
+          #+(or abcl genera mezzano xcl) (truename *default-pathname-defaults*)
+          #+clisp (ext:default-directory)
+          #+(or clasp ecl) (ext:getcwd)
+          #+clozure (ccl:current-directory)
+          #+sbcl (sb-ext:parse-native-namestring (sb-unix:posix-getcwd/))))
+    (namestring tmp)))
+
+#+clisp
+(defun pwd ()
+  (namestring (ext:default-directory)))
+
+; #+coreutils
+(defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))
+  "Prints resolved path. Needs coreutils and :coreutils must be in *features*
+   `expand-symlinks` boolean (default t)
+   `relative-to` print resolved path relative to supplied path
+   `all-existing` requires that all the directories/files exist (default t)
+                  when false, all but the last component must exist.
+   All paths must be escaped (if escaping is needed)"
+  (unless (probe-file apath)
+    (error "no such file"))
+  (let ((command (fn "realpath ~A ~A ~A ~A"
+                     (if expand-symlinks "" "-s")
+                     (if all-existing "-e" "")
+                     apath
+                     (if relative-to
+                       (fn "--relative-to=~A" (realpath relative-to)) ""))))
+    (nth-value 0 (zsh command))))
+
+; TODO: escape thing!!!
+; #+coreutils
+(defun file-size (afile &key (just-bytes nil))
+  "Uses `du` to return just the size of the provided file.
+   `just-bytes` ensures that the size is only counted in bytes (returns integer)
+                [default nil]
+   REQUIRES THAT :coreutils is in *features* (and requires coreutils)"
+  (let ((result
+          (%remove-after-first-whitespace
+            (zsh (format nil "du ~A ~A" (if just-bytes "-sb" "") afile)))))
+    (if just-bytes
+      (nth-value 0 (parse-integer result))
+      result)))
+
+; ------------------------------------------------------- ;
+
+; ------------------------------------------------------- ;
 ; file-related functions -------------------------------- ;
 
 ;;;;;
 ;;;;; STEALING FROM CL-FAD
 ;;;;;
 
-; (defun inspect-pathname (apathname)
-;   (format *error-output* "received:              ~S~%" apathname)
-;   ; (format *error-output* "probe file:            ~S~%" (probe-file apathname))
-;   (format *error-output* "pathname device:       ~S~%" (pathname-device apathname))
-;   (format *error-output* "pathname host:         ~S~%" (pathname-host apathname))
-;   (format *error-output* "pathname version:      ~S~%" (pathname-version apathname))
-;   (format *error-output* "pathname directory:    ~S~%" (pathname-directory apathname))
-;   (format *error-output* "pathname name:         ~S~%" (pathname-name apathname))
-;   (format *error-output* "pathname type:         ~S~%" (pathname-type apathname))
-;   ; (format *error-output* "truename:              ~S~%" (truename apathname))
-;   ; (format *error-output* "namestring:            ~S~%" (namestring apathname))
-;   (format *error-output* "wild pathname?:        ~S~%" (wild-pathname-p apathname))
-;   ; (format *error-output* "directory:             ~S~%" (directory apathname))
-;   ; (format *error-output* "directory namestring   ~S~%" (directory-namestring apathname))
-;   ; (format *error-output* "file author:           ~S~%" (file-author apathname))
-;   ; (format *error-output* "file namestring:       ~S~%" (file-namestring apathname))
-;   ; (format *error-output* "file write date:       ~S~%" (file-write-date apathname))
-;   ; (format *error-output* "host namestring:       ~S~%" (host-namestring apathname))
-;   (format *error-output* "enough namestring:     ~S~%" (enough-namestring apathname)))
+(defun inspect-pathname (apathname)
+  (format *error-output* "received:              ~S~%" apathname)
+  ; (format *error-output* "probe file:            ~S~%" (probe-file apathname))
+  (format *error-output* "pathname device:       ~S~%" (pathname-device apathname))
+  (format *error-output* "pathname host:         ~S~%" (pathname-host apathname))
+  (format *error-output* "pathname version:      ~S~%" (pathname-version apathname))
+  (format *error-output* "pathname directory:    ~S~%" (pathname-directory apathname))
+  (format *error-output* "pathname name:         ~S~%" (pathname-name apathname))
+  (format *error-output* "pathname type:         ~S~%" (pathname-type apathname))
+  (format *error-output* "truename:              ~S~%" (truename apathname))
+  (format *error-output* "namestring:            ~S~%" (namestring apathname))
+  (format *error-output* "wild pathname?:        ~S~%" (wild-pathname-p apathname))
+  (format *error-output* "directory:             ~S~%" (directory apathname))
+  (format *error-output* "directory namestring   ~S~%" (directory-namestring apathname))
+  (format *error-output* "file author:           ~S~%" (file-author apathname))
+  (format *error-output* "file namestring:       ~S~%" (file-namestring apathname))
+  (format *error-output* "file write date:       ~S~%" (file-write-date apathname))
+  (format *error-output* "host namestring:       ~S~%" (host-namestring apathname))
+  (format *error-output* "enough namestring:     ~S~%" (enough-namestring apathname)))
 
 
 (defun component-present-p (value)
