@@ -82,7 +82,7 @@
 
     ;; file-related functions
     :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
-    :walk-directory
+    :walk-directory :file-find
 
     ))
 
@@ -1793,4 +1793,12 @@
         (otherwise
          (error "IF-DOES-NOT-EXIST must be one of :ERROR or :IGNORE."))))
     (values)))
+
+; TODO: document
+(defun file-find (apathname &key (the-type nil) (test (constantly t)))
+  (let (to-return)
+    (walk-directory apathname #'(lambda (x) (push x to-return))
+                    :directories :depth-first
+                    :test test)
+    (reverse to-return)))
 
