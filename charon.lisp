@@ -13,7 +13,9 @@
 
 
 (defpackage :charon
+  ; (:use :common-lisp)
   (:use :common-lisp :pluto)
+  ; (:shadowing-import-from #:pluto #:realpath)
   (:import-from :parse-float :parse-float)
   (:export
     ; regular expressions / cl-ppcre wrappers
@@ -38,6 +40,9 @@
 
     ; filename/namestring escaping
     :escape-namestring/shell :escape-namestring/c
+
+    ; ; rework of improve-able pluto functions
+    ; :realpath
 
     ))
 
@@ -302,7 +307,14 @@
 
 ; ------------------------------------------------------- ;
 
+; ------------------------------------------------------- ;
+; rework of improve-able pluto functions ---------------- ;
 
+; ; TODO: document
+; (defun realpath (s)
+;   (ft "in charon~%"))
+
+; ------------------------------------------------------- ;
 
 
 ; ;---------------------------------------------------------;

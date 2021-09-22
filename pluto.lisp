@@ -84,7 +84,7 @@
     ;; file-related functions
     :inspect-pathname   ; TODO: TMP!!
     :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
-    :walk-directory :file-find :-path
+    :walk-directory :file-find :-path :size-for-humans
 
     ))
 
@@ -1756,6 +1756,27 @@
 ; TODO: mention that it always FOLLOWS SYMLINKS
 (defun -path (pathone pathtwo)
   (enough-namestring (probe-file pathone) (directory-exists-p  pathtwo)))
+
+(defparameter %%ylimit (expt 2 80))
+(defparameter %%zlimit (expt 2 70))
+(defparameter %%elimit (expt 2 60))
+(defparameter %%plimit (expt 2 50))
+(defparameter %%tlimit (expt 2 40))
+(defparameter %%glimit (expt 2 30))
+(defparameter %%mlimit (expt 2 20))
+(defparameter %%klimit (expt 2 10))
+
+(defun size-for-humans (asize) ; have block size?
+  (cond
+    ((> asize %%ylimit)     (fn "~1$Y" (/ asize %%ylimit)))
+    ((> asize %%zlimit)     (fn "~1$Z" (/ asize %%zlimit)))
+    ((> asize %%elimit)     (fn "~1$E" (/ asize %%elimit)))
+    ((> asize %%plimit)     (fn "~1$P" (/ asize %%plimit)))
+    ((> asize %%tlimit)     (fn "~1$T" (/ asize %%tlimit)))
+    ((> asize %%glimit)     (fn "~1$G" (/ asize %%glimit)))
+    ((> asize %%mlimit)     (fn "~AM" (round (/ asize %%mlimit))))
+    ((> asize %%klimit)     (fn "~AK" (round (/ asize %%klimit))))
+    (t                      (fn "~A" asize))))
 
 ; ------------------------------------------------------- ;
 

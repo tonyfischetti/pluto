@@ -15,6 +15,7 @@
 
 (defpackage :styx
   (:use :common-lisp :pluto :charon)
+  (:shadowing-import-from #:pluto #:file-size)
   (:export
 
     ; systemd
@@ -25,6 +26,9 @@
     :stat-filesize
     :is-symlink-p
     :md5
+
+    ; rework of improve-able pluto functions
+    :file-size
 
     ))
 
@@ -135,3 +139,14 @@
 
 ;---------------------------------------------------------;
 
+
+;---------------------------------------------------------;
+; rework of improve-able pluto functions ---------------- ;
+
+; TODO: document
+(defun file-size (afile &key (just-bytes nil))
+  (if just-bytes
+    (stat-filesize afile)
+    (size-for-humans (stat-filesize afile))))
+
+;---------------------------------------------------------;
