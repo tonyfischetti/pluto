@@ -25,7 +25,15 @@
     ; libstyx
     :stat-filesize
     :is-symlink-p
-    :md5
+    :md5/string
+    :md5/file
+    :sha256/string
+    :sha256/hexstring
+    :sha256/file
+    :sha512/string
+    :sha512/file
+    :ripemd160/string
+    :ripemd160/hexstring
 
     ; rework of improve-able pluto functions
     :file-size
@@ -105,37 +113,71 @@
 ; so we need to check if it's a directory and then strip the trailing
 ; slash
 
-; ; -------------------
-; ;; mv
-; (cffi:defcfun "styx_mv" :int (old :string) (new :string) &rest)
-;
-; ; TODO: everything
-; ; TODO: check files, return values, etc...
-; (defun mv (old new)
-;   (styx-mv (realpath old) new))
-
-
-; ; -------------------
-; ;; cp
-; (cffi:defcfun "styx_cp" :int (old :string) (new :string) &rest)
-;
-; ; TODO: everything
-; ; TODO: check files, return values, etc...
-; (defun cp (old new)
-;   (styx-cp (realpath old) new))
-; ; the return is the bytes (?)
-
 
 ; -------------------
 ;; md5
-(cffi:defcfun "styx_md5" :string (afilename :string) &rest)
+(cffi:defcfun "styx_md5_string" :string (astring :string) &rest)
+(cffi:defcfun "styx_md5_file" :string (afilename :string) &rest)
 
 ; TODO: everything
 ; TODO: check files, return values, etc...
-(defun md5 (afilename)
+(defun md5/string (astring)
+  (styx-md5-string astring))
+
+(defun md5/file (afilename)
   (when (pathnamep afilename)
     (setq afilename (escape-namestring/c (namestring afilename))))
-  (styx-md5 afilename))
+  (styx-md5-file afilename))
+
+
+; -------------------
+;; sha256
+(cffi:defcfun "styx_sha256_string" :string (astring :string) &rest)
+(cffi:defcfun "styx_sha256_hexstring" :string (astring :string) &rest)
+(cffi:defcfun "styx_sha256_file" :string (afilename :string) &rest)
+
+; TODO: everything
+; TODO: check files, return values, etc...
+(defun sha256/string (astring)
+  (styx-sha256-string astring))
+
+(defun sha256/hexstring (astring)
+  (styx-sha256-hexstring astring))
+
+(defun sha256/file (afilename)
+  (when (pathnamep afilename)
+    (setq afilename (escape-namestring/c (namestring afilename))))
+  (styx-sha256-file afilename))
+
+
+; -------------------
+;; sha512
+(cffi:defcfun "styx_sha512_string" :string (astring :string) &rest)
+(cffi:defcfun "styx_sha512_file" :string (afilename :string) &rest)
+
+; TODO: everything
+; TODO: check files, return values, etc...
+(defun sha512/string (astring)
+  (styx-sha512-string astring))
+
+(defun sha512/file (afilename)
+  (when (pathnamep afilename)
+    (setq afilename (escape-namestring/c (namestring afilename))))
+  (styx-sha512-file afilename))
+
+
+; -------------------
+;; ripemd160
+(cffi:defcfun "styx_ripemd160_string" :string (astring :string) &rest)
+(cffi:defcfun "styx_ripemd160_hexstring" :string (astring :string) &rest)
+
+; TODO: everything
+; TODO: check files, return values, etc...
+(defun ripemd160/string (astring)
+  (styx-ripemd160-string astring))
+
+(defun ripemd160/hexstring (astring)
+  (styx-ripemd160-hexstring astring))
 
 ;---------------------------------------------------------;
 
