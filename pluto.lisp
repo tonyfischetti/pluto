@@ -79,7 +79,7 @@
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
     ; filename operations
-    :remove-extension :basename :pwd :realpath :file-size
+    :basename :pwd :realpath :file-size
 
     ;; file-related functions
     :inspect-pathname   ; TODO: TMP!!
