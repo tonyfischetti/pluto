@@ -80,9 +80,9 @@
 
     ; file/filename/directory operations
     :basename :pwd :realpath :size-for-humans :file-size
-    :inspect-pathname
-    :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
-    :walk-directory :file-find :-path
+    :inspect-pathname :ls :directory-exists-p :file-exists-p
+    :file-or-directory-exists-p :walk-directory :file-find :-path :+path
+    :absolute->relative :change-extension
 
     ))
 
@@ -1771,6 +1771,10 @@
   (when (eq :RELATIVE (car (pathname-directory apath)))
     (error "pathname is not absolute"))
   (-path apath (if root root (pwd))))
+
+(defun change-extension (apath new-extension)
+  (make-pathname :type new-extension
+                 :defaults apath))
 
 ; ------------------------------------------------------- ;
 
