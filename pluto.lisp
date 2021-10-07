@@ -1757,12 +1757,15 @@
     (values)))
 
 ; TODO: document
-(defun file-find (apathname &key (the-type nil) (test (constantly t)))
+(defun file-find (apathname &key (test (constantly t)) (ext nil))
   (let (to-return)
     (walk-directory apathname #'(lambda (x) (push x to-return))
                     :directories :depth-first
                     :test test)
-    (reverse to-return)))
+    (setq to-return (reverse to-return))
+    (if ext
+      (remove-if-not (lambda (x) (string= (pathname-type x) ext)) to-return)
+      to-return)))
 
 ; TODO: mention that it always FOLLOWS SYMLINKS
 (defun -path (pathone pathtwo)
