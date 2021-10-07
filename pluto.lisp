@@ -1479,9 +1479,9 @@
     ((> asize %%klimit)     (fn "~AK" (round (/ asize %%klimit))))
     (t                      (fn "~A" asize))))
 
-(defun file-size (afilename &key (human t))
+(defun file-size (afilename &key (human nil))
   (with-open-file (s afilename :element-type '(unsigned-byte 8))
-    (file-length s)))
+    (if human (size-for-humans (file-length s)) (file-length s))))
 
 #-clisp
 (defun pwd ()

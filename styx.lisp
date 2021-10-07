@@ -15,7 +15,7 @@
 
 (defpackage :styx
   (:use :common-lisp :pluto :charon)
-  (:shadowing-import-from #:pluto #:file-size)
+  ; (:shadowing-import-from #:pluto #:file-size)
   (:export
 
     ; systemd
