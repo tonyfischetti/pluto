@@ -79,12 +79,12 @@
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
     ; filename operations
-    :basename :pwd :realpath :file-size
+    :basename :pwd :realpath :size-for-humans :file-size
 
     ;; file-related functions
     :inspect-pathname   ; TODO: TMP!!
     :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
-    :walk-directory :file-find :-path :size-for-humans
+    :walk-directory :file-find :-path
 
     ))
 
@@ -1458,6 +1458,31 @@
 (defun basename (apath)
   (file-namestring apath))
 
+(defparameter %%ylimit (expt 2 80))
+(defparameter %%zlimit (expt 2 70))
+(defparameter %%elimit (expt 2 60))
+(defparameter %%plimit (expt 2 50))
+(defparameter %%tlimit (expt 2 40))
+(defparameter %%glimit (expt 2 30))
+(defparameter %%mlimit (expt 2 20))
+(defparameter %%klimit (expt 2 10))
+
+(defun size-for-humans (asize) ; have block size?
+  (cond
+    ((> asize %%ylimit)     (fn "~1$Y" (/ asize %%ylimit)))
+    ((> asize %%zlimit)     (fn "~1$Z" (/ asize %%zlimit)))
+    ((> asize %%elimit)     (fn "~1$E" (/ asize %%elimit)))
+    ((> asize %%plimit)     (fn "~1$P" (/ asize %%plimit)))
+    ((> asize %%tlimit)     (fn "~1$T" (/ asize %%tlimit)))
+    ((> asize %%glimit)     (fn "~1$G" (/ asize %%glimit)))
+    ((> asize %%mlimit)     (fn "~AM" (round (/ asize %%mlimit))))
+    ((> asize %%klimit)     (fn "~AK" (round (/ asize %%klimit))))
+    (t                      (fn "~A" asize))))
+
+(defun file-size (afilename &key (human t))
+  (with-open-file (s afilename :element-type '(unsigned-byte 8))
+    (file-length s)))
+
 #-clisp
 (defun pwd ()
   (let ((tmp
@@ -1489,20 +1514,6 @@
                      (if relative-to
                        (fn "--relative-to=~A" (realpath relative-to)) ""))))
     (nth-value 0 (zsh command))))
-
-; TODO: escape thing!!!
-; #+coreutils
-(defun file-size (afile &key (just-bytes nil))
-  "Uses `du` to return just the size of the provided file.
-   `just-bytes` ensures that the size is only counted in bytes (returns integer)
-                [default nil]
-   REQUIRES THAT :coreutils is in *features* (and requires coreutils)"
-  (let ((result
-          (%remove-after-first-whitespace
-            (zsh (format nil "du ~A ~A" (if just-bytes "-sb" "") afile)))))
-    (if just-bytes
-      (nth-value 0 (parse-integer result))
-      result)))
 
 ; ------------------------------------------------------- ;
 
@@ -1755,28 +1766,9 @@
 
 ; TODO: mention that it always FOLLOWS SYMLINKS
 (defun -path (pathone pathtwo)
-  (enough-namestring (probe-file pathone) (directory-exists-p  pathtwo)))
+  (pathname (enough-namestring (probe-file pathone)
+                               (directory-exists-p  pathtwo))))
 
-(defparameter %%ylimit (expt 2 80))
-(defparameter %%zlimit (expt 2 70))
-(defparameter %%elimit (expt 2 60))
-(defparameter %%plimit (expt 2 50))
-(defparameter %%tlimit (expt 2 40))
-(defparameter %%glimit (expt 2 30))
-(defparameter %%mlimit (expt 2 20))
-(defparameter %%klimit (expt 2 10))
-
-(defun size-for-humans (asize) ; have block size?
-  (cond
-    ((> asize %%ylimit)     (fn "~1$Y" (/ asize %%ylimit)))
-    ((> asize %%zlimit)     (fn "~1$Z" (/ asize %%zlimit)))
-    ((> asize %%elimit)     (fn "~1$E" (/ asize %%elimit)))
-    ((> asize %%plimit)     (fn "~1$P" (/ asize %%plimit)))
-    ((> asize %%tlimit)     (fn "~1$T" (/ asize %%tlimit)))
-    ((> asize %%glimit)     (fn "~1$G" (/ asize %%glimit)))
-    ((> asize %%mlimit)     (fn "~AM" (round (/ asize %%mlimit))))
-    ((> asize %%klimit)     (fn "~AK" (round (/ asize %%klimit))))
-    (t                      (fn "~A" asize))))
 
 ; ------------------------------------------------------- ;
 

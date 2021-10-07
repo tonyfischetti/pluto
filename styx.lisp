@@ -35,9 +35,6 @@
     :ripemd160/string
     :ripemd160/hexstring
 
-    ; rework of improve-able pluto functions
-    :file-size
-
     ))
 
 (use-package :pluto)
@@ -181,14 +178,3 @@
 
 ;---------------------------------------------------------;
 
-
-;---------------------------------------------------------;
-; rework of improve-able pluto functions ---------------- ;
-
-; TODO: document
-(defun file-size (afile &key (just-bytes nil))
-  (if just-bytes
-    (stat-filesize afile)
-    (size-for-humans (stat-filesize afile))))
-
-;---------------------------------------------------------;
