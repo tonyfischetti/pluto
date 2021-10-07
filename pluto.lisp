@@ -78,11 +78,9 @@
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
     :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
 
-    ; filename operations
+    ; file/filename/directory operations
     :basename :pwd :realpath :size-for-humans :file-size
-
-    ;; file-related functions
-    :inspect-pathname   ; TODO: TMP!!
+    :inspect-pathname
     :ls :directory-exists-p :file-exists-p :file-or-directory-exists-p
     :walk-directory :file-find :-path
 
@@ -1515,15 +1513,6 @@
                        (fn "--relative-to=~A" (realpath relative-to)) ""))))
     (nth-value 0 (zsh command))))
 
-; ------------------------------------------------------- ;
-
-; ------------------------------------------------------- ;
-; file-related functions -------------------------------- ;
-
-;;;;;
-;;;;; STEALING FROM CL-FAD
-;;;;;
-
 (defun inspect-pathname (apathname)
   (format *error-output* "received:              ~S~%" apathname)
   ; (format *error-output* "probe file:            ~S~%" (probe-file apathname))
@@ -1544,6 +1533,9 @@
   (format *error-output* "host namestring:       ~S~%" (host-namestring apathname))
   (format *error-output* "enough namestring:     ~S~%" (enough-namestring apathname)))
 
+;;;;;
+;;;;; STEALING FROM CL-FAD
+;;;;;
 
 (defun component-present-p (value)
   "Helper function for DIRECTORY-PATHNAME-P which checks whether VALUE
@@ -1772,6 +1764,13 @@
   (pathname (enough-namestring (probe-file pathone)
                                (directory-exists-p  pathtwo))))
 
+(defun +path (pathone pathtwo)
+  (merge-pathnames pathtwo (directory-exists-p pathone)))
+
+(defun absolute->relative (apath &optional root)
+  (when (eq :RELATIVE (car (pathname-directory apath)))
+    (error "pathname is not absolute"))
+  (-path apath (if root root (pwd))))
 
 ; ------------------------------------------------------- ;
 
