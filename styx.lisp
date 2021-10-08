@@ -20,7 +20,7 @@
 
     ; systemd
     :*sd-log-priority*
-    :sd-journal
+    #+linux :sd-journal
 
     ; libstyx
     :stat-filesize
@@ -50,13 +50,17 @@
 
 (defparameter *sd-log-priority* 4)
 
+#+linux
 (cffi:define-foreign-library libsystemd
   (t (:default "libsystemd")))
 
+#+linux
 (cffi:use-foreign-library libsystemd)
 
+#+linux
 (cffi:defcfun "sd_journal_send" :int (theformat :string) &rest)
 
+#+linux
 (defun sd-journal (message &key (priority *sd-log-priority*)
                                 (identifier nil))
   (unless identifier
