@@ -81,8 +81,8 @@
     ; file/filename/directory operations
     :basename :pwd :realpath :size-for-humans :file-size
     :inspect-pathname :ls :directory-exists-p :file-exists-p
-    :file-or-directory-exists-p :walk-directory :file-find :-path :+path
-    :absolute->relative :change-extension
+    :file-or-directory-exists-p :walk-directory :-path :+path
+    :absolute->relative :change-extension :file-find
 
     ))
 
@@ -1748,16 +1748,6 @@
          (error "IF-DOES-NOT-EXIST must be one of :ERROR or :IGNORE."))))
     (values)))
 
-; TODO: document
-(defun file-find (apathname &key (test (constantly t)) (ext nil))
-  (let (to-return)
-    (walk-directory apathname #'(lambda (x) (push x to-return))
-                    :directories :depth-first
-                    :test test)
-    (setq to-return (reverse to-return))
-    (if ext
-      (remove-if-not (lambda (x) (string= (pathname-type x) ext)) to-return)
-      to-return)))
 
 ; TODO: mention that it always FOLLOWS SYMLINKS
 (defun -path (pathone pathtwo)
@@ -1775,6 +1765,37 @@
 (defun change-extension (apath new-extension)
   (make-pathname :type new-extension
                  :defaults apath))
+
+; TODO: document
+(defun file-find (apathname &key (type nil) (test (constantly t)) (ext nil)
+                            (regex nil) (inv-regex nil) (full t))
+  "ext implies type file
+   regex is for full path if full is t (default)"
+  (let (to-return)
+    (walk-directory apathname #'(lambda (x) (push x to-return))
+                    :directories :depth-first
+                    :test test)
+    (setf { to-return 0 } (probe-file { to-return 0 }))
+    (unless full (setq to-return (mapcar #'absolute->relative to-return)))
+    (setq to-return (reverse to-return))
+    (when ext (setq type :file))
+    (when type
+      (setq to-return
+            (cond ((eq type :file) (remove-if-not #'file-exists-p to-return))
+                  ((eq type :dir)  (remove-if-not #'directory-exists-p to-return)))))
+    (when ext
+      (setq to-return (remove-if-not
+                        (lambda (x) (string= (pathname-type x) ext))
+                        to-return)))
+    (when regex
+      (setq to-return (remove-if-not
+                        (lambda (x) (~m (namestring x) regex))
+                        to-return)))
+    (when inv-regex
+      (setq to-return (remove-if
+                        (lambda (x) (~m (namestring x) inv-regex))
+                        to-return)))
+    to-return))
 
 ; ------------------------------------------------------- ;
 
