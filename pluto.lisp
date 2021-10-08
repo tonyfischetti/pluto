@@ -1775,7 +1775,7 @@
     (walk-directory apathname #'(lambda (x) (push x to-return))
                     :directories :depth-first
                     :test test)
-    (setf { to-return 0 } (probe-file { to-return 0 }))
+    (setf (car to-return) (probe-file (car to-return)))
     (unless full (setq to-return (mapcar #'absolute->relative to-return)))
     (setq to-return (reverse to-return))
     (when ext (setq type :file))
