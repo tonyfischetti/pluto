@@ -32,14 +32,14 @@
 
     ; string operations
     :str+ :str-join :substr :string->char-list :split-string->lines
+    :repeat-string
 
     ; some essential utilities/macros
     :with-gensyms :mac :nil! :alambda :self! :abbr :flatten :take :group
     :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :it!
     :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :interpose
     :delim :defparams :round-to :advise :alistp :with-hash-entry :entry!
-    :if-hash-entry :if-not-hash-entry :capture-all-outputs :with-temp-file
-    :tempfile!
+    :if-hash-entry :if-not-hash-entry :capture-all-outputs :display-table
 
     ; queries
     :y-or-n-def
@@ -200,6 +200,10 @@
   (with-input-from-string (s astring)
     (loop for value = (read-line s nil)
           while value collect value)))
+
+; TODO: document
+(defun repeat-string (str times)
+  (fn "~{~A~}" (loop for i from 1 to times collect str)))
 
 ; ------------------------------------------------------- ;
 
@@ -472,14 +476,16 @@
                  (get-output-stream-string *error-output*))))))
 
 ; TODO: document
-; change rm to something else
-#+coreutils
-(defmacro with-temp-file (&body body)
-  `(let ((tempfile! (zsh "mktemp")))
-     (unwind-protect
-       (progn
-         ,@body)
-         (zsh (fn "rm ~A" tempfile!)))))
+(defun display-table (header data width)
+  (let ((num-cols (length header)))
+    (ft (fn "~~{|~~{~~~AA|~~}~~%~~}" width)
+        `(,(loop for i from 1 to num-cols collect (repeat-string "-" width))))
+    (ft (fn "~~{|~~{ ~~~AA|~~}~~%~~}" (- width 1)) `(,header))
+    (ft (fn "~~{|~~{~~~AA|~~}~~%~~}" width)
+        `(,(loop for i from 1 to num-cols collect (repeat-string "-" width))))
+    (ft (fn "~~{|~~{ ~~~AA|~~}~~%~~}" (- width 1)) data)
+    (ft (fn "~~{|~~{~~~AA|~~}~~%~~}" width)
+        `(,(loop for i from 1 to num-cols collect (repeat-string "-" width))))))
 
 ; ------------------------------------------------------- ;
 
