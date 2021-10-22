@@ -39,7 +39,8 @@
     :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :it!
     :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :interpose
     :delim :defparams :round-to :advise :alistp :with-hash-entry :entry!
-    :if-hash-entry :if-not-hash-entry :capture-all-outputs :display-table
+    :if-hash-entry :if-not-hash-entry :capture-all-outputs with-temp-file
+    :tempfile! :display-table
 
     ; queries
     :y-or-n-def
@@ -474,6 +475,13 @@
          (values ,ret
                  (get-output-stream-string *standard-output*)
                  (get-output-stream-string *error-output*))))))
+#+coreutils
+(defmacro with-temp-file (&body body)
+  `(let ((tempfile! (zsh "mktemp")))
+     (unwind-protect
+       (progn
+         ,@body)
+         (zsh (fn "rm ~A" tempfile!)))))
 
 ; TODO: document
 (defun display-table (header data width)

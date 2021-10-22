@@ -308,11 +308,36 @@
 ; ------------------------------------------------------- ;
 
 ; ------------------------------------------------------- ;
-; rework of improve-able pluto functions ---------------- ;
+; some clippings that'll be helpful for reference ------- ;
 
-; ; TODO: document
-; (defun realpath (s)
-;   (ft "in charon~%"))
+; (defun dec->hex (something)
+;   (fn "~X" something))
+;
+; (defun hex->dec (something)
+;   (parse-integer something :radix 16))
+;
+; ; needs babel and ironclad
+;
+; (defun string->octets (something)
+;   (babel:string-to-octets something))
+;
+; (defun octets->string (something)
+;   (babel:octets-to-string something))
+;
+; (defun octets->hex (something)
+;   (ironclad:byte-array-to-hex-string something))
+;
+; (defun hex->octets (something)
+;   (ironclad:hex-string-to-byte-array something))
+;
+; (defun octets->int (something)
+;   (ironclad:octets-to-integer something))
+;
+; (defun int->octets (something)
+;   (ironclad:integer-to-octets something))
+;
+; (defun string->octets->integer (something)
+;   (-<> something (string->octets <>) (octets->integer <>)))
 
 ; ------------------------------------------------------- ;
 
