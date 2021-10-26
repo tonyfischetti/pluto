@@ -40,6 +40,7 @@
 
     ; filename/namestring escaping
     :escape-namestring/shell :escape-namestring/c
+    :pathname->shell :pathname->c
 
     ; ; rework of improve-able pluto functions
     ; :realpath
@@ -304,6 +305,12 @@
 (defun escape-namestring/c (afilename)
   (-<> afilename
        (~ra <> •\\\\\*• •*•) (~ra <> •\\\\\\\[• •[•) (~ra <> •\\\\\\• "")))
+
+(defun pathname->shell (apath)
+  (escape-namestring/shell (namestring apath)))
+
+(defun pathname->c (apath)
+  (escape-namestring/c (namestring apath)))
 
 ; ------------------------------------------------------- ;
 

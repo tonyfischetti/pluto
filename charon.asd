@@ -8,9 +8,6 @@
 
   ; TODO: do I really need all of these?
   :depends-on (
-               ; of course
-               :pluto
-
                ; the venerable alexadria
                ; https://gitlab.common-lisp.net/alexandria/alexandria
                :alexandria
@@ -52,6 +49,9 @@
                ; HTTP client of choice
                ; https://github.com/fukamachi/dexador
                :dexador
+
+               ; of course
+               :pluto
                )
 
   :components ((:file "charon")))
