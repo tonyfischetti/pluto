@@ -39,7 +39,7 @@
     :create-symbol :create-keyword :walk-replace-sexp :-<> :<> :aif :it!
     :slurp :slurp-lines :barf :debug-these :with-a-file :stream! :interpose
     :delim :defparams :round-to :advise :alistp :with-hash-entry :entry!
-    :if-hash-entry :if-not-hash-entry :capture-all-outputs with-temp-file
+    :if-hash-entry :if-not-hash-entry :capture-all-outputs :with-temp-file
     :tempfile! :display-table
 
     ; queries
@@ -467,6 +467,7 @@
 (set-macro-character #\• #'|•-reader|)
 
 ; TODO: document
+; TODO: TAKES A FUNCTION
 (defmacro capture-all-outputs (&body body)
   (let ((ret (gensym)))
     `(let ((*standard-output*   (make-string-output-stream))
@@ -475,6 +476,7 @@
          (values ,ret
                  (get-output-stream-string *standard-output*)
                  (get-output-stream-string *error-output*))))))
+
 #+coreutils
 (defmacro with-temp-file (&body body)
   `(let ((tempfile! (zsh "mktemp")))
