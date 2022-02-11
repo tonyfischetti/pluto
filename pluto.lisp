@@ -1354,11 +1354,11 @@
         (ansi-up-line     where)
         (ansi-clear-line  where)
         (ansi-left-all    where))
-      (format where (yellow "~&|~A~A| ~$%~A"
-              (make-string filled :initial-element #\=)
-              (make-string (max 0 (- width filled)) :initial-element #\Space)
+      (format where (yellow "~& ◖~A~A ◗  ~$% ~A"
+              (make-string filled :initial-element #\▬)
+              (make-string (max 0 (- width filled)) :initial-element #\▭)
               (float (* 100 perc-done))
-              (if out-of (fn "~C~A/~A" #\Tab index limit) "")))
+              (if out-of (fn " [~A/~A]" index limit) "")))
       (force-output where))))
 
 (defun loading-forever ()
