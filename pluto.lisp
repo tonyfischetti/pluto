@@ -69,7 +69,6 @@
     ; system
     :hostname :sys/info :get-envvar
 
-
     ; command-line arguments
     :program/script-name :cmdargs :def-cli-args :args! :bare-args!
     :+USAGE-TEXT!+ :print-usage! :process-args!
@@ -1559,7 +1558,7 @@
   (and value (not (eql value :unspecific))))
 
 (defun directory-pathname-p (pathspec)
-  "Returns NIL if PATHSPEC \(a pathname designator) does not designate
+  "Returns NIL if PATHSPEC (a pathname designator) does not designate
    a directory, PATHSPEC otherwise.  It is irrelevant whether file or
    directory designated by PATHSPEC does actually exist."
   (and
