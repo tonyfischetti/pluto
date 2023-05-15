@@ -12,7 +12,7 @@
 off_t styx_stat_filesize(const char*, int);
 int styx_stat_is_symlink_p(const char*);
 
-char* styx_hexstringtobyyes(const char*);
+char* styx_hexstringtobytes(const char*);
 
 char* styx_md5_data(const char*, long);
 const char* styx_md5_string(const char*);
