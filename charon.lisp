@@ -22,6 +22,7 @@
     :re-compile :str-split :str-replace :str-replace-all :str-detect
     :str-subset :str-extract :str-scan-to-strings :str-trim :~m :~r
     :~ra :~s :~f :~c :~e
+    :str-normalize
 
     ; terminal things / terminal manipulation
     :with-loading
@@ -128,6 +129,14 @@
 (defmacro ~e (&rest everything)
   "Alias to str-extract"
   `(str-extract ,@everything))
+
+(defun str-normalize (astring &key (form :nfd))
+  (let ((code-points
+          (cond ((eq form :nfd)  (cl-unicode:normalization-form-d astring))
+                ((eq form :nfkd) (cl-unicode:normalization-form-k-d astring))
+                ((eq form :nfc)  (cl-unicode:normalization-form-c astring))
+                ((eq form :nfkc) (cl-unicode:normalization-form-k-c astring)))))
+    (map 'string #'code-char code-points)))
 
 ; ------------------------------------------------------- ;
 

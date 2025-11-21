@@ -16,6 +16,9 @@
                ; https://edicl.github.io/cl-ppcre/
                :cl-ppcre
 
+               ; https://edicl.github.io/cl-unicode/
+               :cl-unicode
+
                ; https://github.com/soemraws/parse-float
                :parse-float
 
