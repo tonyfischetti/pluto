@@ -31,7 +31,7 @@
     :magenta :red :yellow :green :cyan :blue :grey
 
     ; string operations
-    :str+ :str-join :substr :string->char-list :split-string->lines
+    :str+ :str-join :str-sub :string->char-list :split-string->lines
     :repeat-string
 
     ; some essential utilities/macros
@@ -100,7 +100,8 @@
 (defparameter *pluto-curly-test*       #'equal)
 ; TODO: implementation dependent
 (defparameter *pluto-external-format*  #+clisp CHARSET:UTF-8 #-clisp :UTF-8)
-(defparameter *pluto-shell*            "/usr/local/bin/zsh")
+#+:linux  (defparameter *pluto-shell*            "/usr/local/bin/zsh")
+#+:darwin (defparameter *pluto-shell*            "/opt/homebrew/bin/zsh")
 
 (defvar *unix-epoch-difference*
   (encode-universal-time 0 0 0 1 1 1970 0))
@@ -181,7 +182,7 @@
   (format nil (format nil "~~{~~A~~^~A~~}" delim) strings))
 
 ; TODO: did I take this from somewhere
-(defun substr (string start &optional end)
+(defun str-sub (string start &optional end)
   "Efficient substring of STRING from START to END (optional),
   where both can be negative, which means counting from the end."
   (let ((len (length string)))
@@ -993,7 +994,7 @@
   (let ((s (make-string-output-stream)))
     (for-each/list lines
       (format s "~A~%" value!))
-    (substr (get-output-stream-string s) 0 -1)))
+    (str-sub (get-output-stream-string s) 0 -1)))
 
 ; TODO: a whole bunch
 ; TODO: implementation dependent
@@ -1160,7 +1161,7 @@
 
 (defun %remove-after-first-whitespace (astring)
   (let ((pos1 (position-if (lambda (x) (member x *whitespaces*)) astring)))
-    (substr astring 0 pos1)))
+    (str-sub astring 0 pos1)))
 
 ;---------------------------------------------------------;
 
