@@ -617,6 +617,37 @@
   (string= test-stdout! (fn "$ echo hi~%"))
   (zsh "echo hi" :dry-run t))
 
+(def-test/doc-test 'q/sh
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "it's got $pecial \"chars\" & `stuff`")
+  (sh (fn "echo -n ~A" (q/sh "it's got $pecial \"chars\" & `stuff`"))))
+
+  ; newlines survive the round-trip too
+  (def-test/doc-test 'q/sh
+    `((test-able returns))
+    'function
+    (string= test-return-value! (fn "two~%lines"))
+    (sh (fn "echo -n ~A" (q/sh (fn "two~%lines")))))
+
+  ; pathnames get princ-ed
+  (def-test/doc-test 'q/sh
+    `((test-able returns))
+    'function
+    (string= test-return-value! "/tmp/has spaces/file.txt")
+    (sh (fn "echo -n ~A" (q/sh #P"/tmp/has spaces/file.txt"))))
+
+  ; the full point: shell-side file operations on nasty filenames
+  (def-test/doc-test 'q/sh
+    `((test-able returns))
+    'function
+    (string= test-return-value! "content")
+    (let ((nasty "tmp it's a $file name.txt"))
+      (sh (fn "echo -n content > ~A" (q/sh nasty)))
+      (let ((res (slurp nasty)))
+        (sh (fn "rm ~A" (q/sh nasty)))
+        res)))
+
   ; a command with a non-zero exit code should signal
   ; (with the code in the condition)
   (def-test/doc-test 'zsh

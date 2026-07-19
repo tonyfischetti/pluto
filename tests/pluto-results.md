@@ -693,6 +693,22 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 
 
 
+#### Q/SH
+
+> Quotes THING (which gets princ-ed) so that it's safe to\
+>    interpolate into a shell command: wraps it in single quotes\
+>    and escapes any embedded single quotes. One rule; covers\
+>    spaces, globs, `$`, backticks, newlines, etc.\
+>    e.g. (sh (fn "cat ~A" (q/sh afilename)))\
+
+```{.commonlisp}
+(SH (FN "echo -n ~A" (Q/SH "it's got $pecial \"chars\" & `stuff`")))
+```
+
+<small><pre>=> "it's got $pecial \"chars\" & `stuff`"</pre></small>
+
+
+
 -----
 
 ### file/filename/directory operations

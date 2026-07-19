@@ -59,7 +59,7 @@
     :for-each/alist :for-each/call :for-each :forever
 
     ; shell and zsh
-    :zsh :sh :zsh-simple :sh-simple
+    :zsh :sh :zsh-simple :sh-simple :q/sh
 
     ; other abbreviations and shortcuts
     :λ
@@ -1070,6 +1070,20 @@
 #+(or sbcl ecl)
 (abbr zsh-simple sh-simple)
 
+(defun q/sh (thing)
+  "Quotes THING (which gets princ-ed) so that it's safe to
+   interpolate into a shell command: wraps it in single quotes
+   and escapes any embedded single quotes. One rule; covers
+   spaces, globs, `$`, backticks, newlines, etc.
+   e.g. (sh (fn \"cat ~A\" (q/sh afilename)))"
+  (with-output-to-string (out)
+    (write-char #\' out)
+    (loop for ch across (fn "~A" thing)
+          do (if (char= ch #\')
+               (write-string "'\\''" out)
+               (write-char ch out)))
+    (write-char #\' out)))
+
 ; ------------------------------------------------------- ;
 
 
@@ -1345,17 +1359,17 @@
    `sep` if not nil, it will allow the user to select multiple choices (with
          't') and this string will separate them all"
   (let ((tmpvar   (fn "tmp~A"   (get-unix-time)))
-        (xchoice  (fn "'~A'"    (str-join "'\\n'" choices)))
+        (xchoice  (q/sh (str-join (string #\Newline) choices)))
         (xmode    (case mode
                     (:columns   "-c")
                     (:table     "-t")
                     (:lines     "-l")
                     (otherwise  ""))))
     (let ((response
-            (sh (fn "~A=$(echo -e \"~A\" | smenu ~A -n~A ~A ~A); echo $~A"
+            (sh (fn "~A=$(echo ~A | smenu ~A -n~A ~A ~A); echo $~A"
                      tmpvar xchoice (if num-p "-N" "")
                      limit xmode
-                     (if sep (fn "-T '~A'" sep) "")
+                     (if sep (fn "-T ~A" (q/sh sep)) "")
                      tmpvar) :echo nil)))
       (if (string= response "") nil response))))
 
