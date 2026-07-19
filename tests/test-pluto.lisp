@@ -145,7 +145,7 @@
   (string= test-return-value! "time elapsed: 1")
   (with-time
     (sleep 1)
-    (format nil "time elapsed: ~A" time!)))
+    (format nil "time elapsed: ~A" (round time!))))
 
 (def-test/doc-test 'time-for-humans
   `((test-able returns) markdown-able)

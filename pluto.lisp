@@ -698,15 +698,17 @@
 
 (defmacro with-time (&body aform)
   "Anaphoric macro that executes the car of the body and
-   binds the seconds of execution time to TIME!. Then
-   all the other forms in the body are executed"
+   binds the seconds of execution time (as a float, with
+   sub-second resolution) to TIME!. Then all the other
+   forms in the body are executed"
   (let ((began      (gensym))
         (ended      (gensym)))
     `(let (,began ,ended time!)
-       (setq ,began (get-universal-time))
+       (setq ,began (get-internal-real-time))
        ,(car aform)
-       (setq ,ended (get-universal-time))
-       (setq time! (- ,ended ,began))
+       (setq ,ended (get-internal-real-time))
+       (setq time! (float (/ (- ,ended ,began)
+                             internal-time-units-per-second)))
        ,@(cdr aform))))
 
 (defun time-for-humans (seconds)

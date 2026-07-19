@@ -227,13 +227,14 @@ fill this out
 #### WITH-TIME
 
 > Anaphoric macro that executes the car of the body and\
->    binds the seconds of execution time to TIME!. Then\
->    all the other forms in the body are executed\
+>    binds the seconds of execution time (as a float, with\
+>    sub-second resolution) to TIME!. Then all the other\
+>    forms in the body are executed\
 
 ```{.commonlisp}
 (WITH-TIME
   (SLEEP 1)
-  (FORMAT NIL "time elapsed: ~A" TIME!))
+  (FORMAT NIL "time elapsed: ~A" (ROUND TIME!)))
 ```
 
 <small><pre>=> "time elapsed: 1"</pre></small>
