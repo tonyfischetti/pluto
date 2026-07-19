@@ -625,6 +625,31 @@
     (and test-error! (search "42" (fn "~A" test-error!)))
     (zsh "exit 42"))
 
+  ; regression: non-interactive commands used to get a spurious ";"
+  ; appended (which broke commands ending in "&")
+  (def-test/doc-test 'sh
+    `((test-able returns))
+    'function
+    (and (null test-error!) (string= test-return-value! ""))
+    (sh "true &"))
+
+  ; a shell killed by a signal should still trigger the error path
+  (def-test/doc-test 'sh
+    `((test-able returns))
+    'function
+    (and test-error! t)
+    (sh "kill -KILL $$"))
+
+  ; regression: with a non-signaling err-fun, stderr used to be
+  ; consumed by the error path and returned as ""
+  (def-test/doc-test 'sh
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("" "oops" 3))
+    (multiple-value-list
+      (sh "echo -n oops >&2; exit 3"
+          :err-fun (lambda (c e) (declare (ignore c e)) nil))))
+
 ; system stuff (test-able only: results are machine-dependent)
 
   (def-test/doc-test 'hostname

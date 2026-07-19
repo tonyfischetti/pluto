@@ -964,7 +964,12 @@
 ; ------------------------------------------------------- ;
 ; shell and zsh ----------------------------------------- ;
 
-; TODO: a whole bunch
+(defun %strip-trailing-newline (astring)
+  (if (and (> (length astring) 0)
+           (char= #\Newline (char astring (- (length astring) 1))))
+    (subseq astring 0 (- (length astring) 1))
+    astring))
+
 #+sbcl
 (defun sh (acommand &key (dry-run        nil)
                          (err-fun        #'(lambda (code stderr)
@@ -984,65 +989,71 @@
    `return-string` t returns the output string. nil inherits stdout (default t)
    `split` will separate the stdout by newlines and return a list (default: nil)
    `interactive` will use the '-i' option to make the shell interactive (default: nil)"
-  (flet ((strip (astring)
-    (if (and (> (length astring) 0)
-             (char= #\Newline (char astring (- (length astring) 1))))
-      (subseq astring 0 (- (length astring) 1))
-      astring)))
-    (when (or echo dry-run)
-      (format t "$ ~A~%" acommand))
-    (unless dry-run
-      (let* ((arglist     `(,(if interactive "-ic" "-c")
-                             ,(fn "~A;~A" acommand (if interactive "exit" ""))))
-             (outs        (if return-string (make-string-output-stream) t))
-             (errs        (make-string-output-stream))
-             (theprocess
-               (sb-ext:run-program *pluto-shell* arglist
-                                   :input in :output outs :error errs
-                                   :external-format enc))
-             (retcode
-               (sb-ext:process-exit-code theprocess)))
-        (when (> retcode 0)
-          (funcall err-fun retcode (strip (get-output-stream-string errs))))
+  (when (or echo dry-run)
+    (format t "$ ~A~%" acommand))
+  (unless dry-run
+    (let* ((arglist     (if interactive
+                          `("-ic" ,(fn "~A;exit" acommand))
+                          `("-c"  ,acommand)))
+           (outs        (if return-string (make-string-output-stream) t))
+           (errs        (make-string-output-stream))
+           (theprocess
+             (sb-ext:run-program *pluto-shell* arglist
+                                 :input in :output outs :error errs
+                                 :external-format enc))
+           (retcode
+             (sb-ext:process-exit-code theprocess)))
+      (let ((errstr (%strip-trailing-newline (get-output-stream-string errs))))
+        (unless (eql 0 retcode)
+          (funcall err-fun retcode errstr))
         (when return-string
           (values (if split
                     (split-string->lines (get-output-stream-string outs))
-                    (strip (get-output-stream-string outs)))
-                  (strip (get-output-stream-string errs))
+                    (%strip-trailing-newline (get-output-stream-string outs)))
+                  errstr
                   retcode))))))
 
-; TODO: fill in doc string
 #+ecl
 (defun sh (acommand &key (dry-run        nil)
                          (err-fun        #'(lambda (code stderr)
                                              (error (format nil "~A (~A)" stderr code))))
                          (echo           nil)
+                         (enc            *pluto-external-format*)
+                         (in             t)
                          (return-string  t)
                          (split          nil)
-                         (interactive  nil))
-  (flet ((strip (astring)
-    (if (and (> (length astring) 0)
-             (char= #\Newline (char astring (- (length astring) 1))))
-      (subseq astring 0 (- (length astring) 1))
-      astring)))
-    (when (or echo dry-run)
-      (format t "$ ~A~%" acommand))
-    (unless dry-run
-      (let* ((arglist     `(,(if interactive "-ic" "-c")
-                             ,(fn "~A;~A" acommand (if interactive "exit" ""))))
-             (outs        (if return-string (make-string-output-stream) t))
-             (errs        (make-string-output-stream)))
-        (multiple-value-bind (procstream retcode process)
-              (ext:run-program *pluto-shell* arglist
-                               :output outs :error errs)
-              (ext:external-process-wait process)
-              (when (> retcode 0)
-                (funcall err-fun retcode (strip (get-output-stream-string errs))))
+                         (interactive    nil))
+  "Runs command `acommand` through the shell specified by the global *pluto-shell*
+   `dry-run` just prints the command (default nil)
+   `err-fun` takes a function that takes an error code and the STDERR output
+   `echo` will print the command before running it
+   `enc` takes a format (default is *pluto-external-format* [which is :UTF-8 by default])
+   `in` t is inherited STDIN. nil is /dev/null. (default t)
+   `return-string` t returns the output string. nil inherits stdout (default t)
+   `split` will separate the stdout by newlines and return a list (default: nil)
+   `interactive` will use the '-i' option to make the shell interactive (default: nil)"
+  (when (or echo dry-run)
+    (format t "$ ~A~%" acommand))
+  (unless dry-run
+    (let* ((arglist     (if interactive
+                          `("-ic" ,(fn "~A;exit" acommand))
+                          `("-c"  ,acommand)))
+           (outs        (if return-string (make-string-output-stream) t))
+           (errs        (make-string-output-stream)))
+      (multiple-value-bind (procstream retcode process)
+            (ext:run-program *pluto-shell* arglist
+                             :input in :output outs :error errs
+                             :external-format enc)
+            (declare (ignore procstream))
+            (ext:external-process-wait process)
+            (let ((errstr (%strip-trailing-newline (get-output-stream-string errs))))
+              (unless (eql 0 retcode)
+                (funcall err-fun retcode errstr))
               (when return-string
                 (values (if split
                           (split-string->lines (get-output-stream-string outs))
-                          (strip (get-output-stream-string outs)))
-                        (strip (get-output-stream-string errs))
+                          (%strip-trailing-newline (get-output-stream-string outs)))
+                        errstr
                         retcode)))))))
 
 #+(or sbcl ecl)
