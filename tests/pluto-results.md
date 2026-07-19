@@ -141,6 +141,17 @@ fill this out
 
 
 
+#### REPEAT-STRING
+
+Repeats a string TIMES times
+```{.commonlisp}
+(REPEAT-STRING "ab" 3)
+```
+
+<small><pre>=> "ababab"</pre></small>
+
+
+
 -----
 
 ### some essential utilities/macros
@@ -564,9 +575,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G1093 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G1093
-      #:G1093
+(LET ((#:G1101 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G1101
+      #:G1101
       42))
 ```
 
@@ -627,6 +638,124 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 ```
 
 <small><pre>=> #(1 99 3)</pre></small>
+
+
+
+-----
+
+### shell and zsh
+
+
+#### ZSH
+
+> Runs command `acommand` through the shell specified by the global *pluto-shell*\
+>    `dry-run` just prints the command (default nil)\
+>    `err-fun` takes a function that takes an error code and the STDERR output\
+>    `echo` will print the command before running it\
+>    `enc` takes a format (default is *pluto-external-format* [which is :UTF-8 by default])\
+>    `in` t is inherited STDIN. nil is /dev/null. (default t)\
+>    `return-string` t returns the output string. nil inherits stdout (default t)\
+>    `split` will separate the stdout by newlines and return a list (default: nil)\
+>    `interactive` will use the '-i' option to make the shell interactive (default: nil)\
+
+```{.commonlisp}
+(ZSH "echo hello")
+```
+
+<small><pre>=> "hello"</pre></small>
+
+
+
+```{.commonlisp}
+(MULTIPLE-VALUE-BIND (OUT ERR CODE)
+    (ZSH "echo out; echo err >&2")
+  (LIST OUT ERR CODE))
+```
+
+<small><pre>=> ("out" "err" 0)</pre></small>
+
+
+
+```{.commonlisp}
+(ZSH "seq 3" :SPLIT T)
+```
+
+<small><pre>=> ("1" "2" "3")</pre></small>
+
+
+
+```{.commonlisp}
+(ZSH "echo hi" :DRY-RUN T)
+```
+
+<small><pre>>> "$ echo hi
+"</pre></small>
+
+
+
+-----
+
+### file/filename/directory operations
+
+
+#### BASENAME
+
+Returns the filename portion of a path
+```{.commonlisp}
+(BASENAME "/foo/bar/baz.txt")
+```
+
+<small><pre>=> "baz.txt"</pre></small>
+
+
+
+#### CHANGE-EXTENSION
+
+Returns a pathname with the file extension changed
+```{.commonlisp}
+(CHANGE-EXTENSION "/foo/bar/baz.txt" "md")
+```
+
+<small><pre>=> #P"/foo/bar/baz.md"</pre></small>
+
+
+
+#### SIZE-FOR-HUMANS
+
+Formats a byte count for human consumption
+```{.commonlisp}
+(SIZE-FOR-HUMANS (* 3 (EXPT 2 20)))
+```
+
+<small><pre>=> "3M"</pre></small>
+
+
+
+```{.commonlisp}
+(SIZE-FOR-HUMANS (EXPT 2 31))
+```
+
+<small><pre>=> "2.0G"</pre></small>
+
+
+
+#### FILE-EXISTS-P
+
+FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
+```{.commonlisp}
+(LIST
+ (IF (FILE-EXISTS-P "somebody.txt")
+     T
+     NIL)
+ (IF (DIRECTORY-EXISTS-P "wayward files")
+     T
+     NIL)
+ (IF (FILE-EXISTS-P "no-such-file.txt")
+     T
+     NIL))
+```
+
+<small><pre>=> (T T NIL)</pre></small>
 
 
 

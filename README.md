@@ -2,3 +2,6 @@
 
 
 A common lisp package that's out there
+
+Supported implementations: SBCL (primary) and ECL.
+Anything else may work, but only by accident.

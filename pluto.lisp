@@ -10,8 +10,6 @@
 ;;                                                            ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#+clisp (unuse-package :ext)
-
 (defpackage :pluto
   (:use :common-lisp)
   (:export
@@ -90,6 +88,9 @@
 
 (pushnew :pluto *features*)
 
+#-(or sbcl ecl)
+(warn "pluto is only developed and tested on SBCL and ECL")
+
 
 ;---------------------------------------------------------;
 ; pluto parameters ---------------------------------------;
@@ -98,8 +99,7 @@
 (defparameter *pluto-log-level*        2)
 (defparameter *pluto-log-file*         "pluto-log.out")
 (defparameter *pluto-curly-test*       #'equal)
-; TODO: implementation dependent
-(defparameter *pluto-external-format*  #+clisp CHARSET:UTF-8 #-clisp :UTF-8)
+(defparameter *pluto-external-format*  :UTF-8)
 #+:linux  (defparameter *pluto-shell*            "/usr/local/bin/zsh")
 #+:darwin (defparameter *pluto-shell*            "/opt/homebrew/bin/zsh")
 
@@ -552,15 +552,13 @@
 ;---------------------------------------------------------;
 ; Error handling -----------------------------------------;
 
-; TODO: implementation specific
 (defun die (message &key (status 1) (red-p t))
   "Prints MESSAGE to *ERROR-OUTPUT* and quits with a STATUS (default 1)"
   (format *error-output* "~A~A~A~%" (if red-p +red-bold+ "")
                                       (fn message)
                                     (if red-p +reset-terminal-color+ ""))
-  #+sbcl            (sb-ext:quit :unix-status status)
-  #+(or ecl clisp)  (ext:exit status)
-  #+abcl            (ext:exit :status status))
+  #+sbcl  (sb-ext:quit :unix-status status)
+  #+ecl   (ext:exit status))
 
 (defmacro or-die ((message &key (errfun #'die)) &body body)
   "anaphoric macro that binds ERROR! to the error
@@ -717,19 +715,14 @@
    It's short for `(return-from this-pass!"
   `(return-from this-pass!))
 
-; TODO: implementation dependent
 (defmacro with-interactive-interrupt-handler (the-message &body body)
   `(handler-case
      (progn
        ,@body)
        (#+sbcl    sb-sys:interactive-interrupt
         #+ecl     ext:interactive-interrupt
-        #+clisp   system::simple-interrupt-condition
-        #+ccl     ccl:interrupt-signal-condition
-        #+allegro	excl:interrupt-signal
          () (die ,the-message))))
 
-; TODO: external format doesn't work on clisp
 (defmacro for-each/line (a-thing &body body)
   "(see documentation for `for-each`)"
   (let ((resolved-fn            (gensym))
@@ -960,19 +953,7 @@
 ; ------------------------------------------------------- ;
 ; shell and zsh ----------------------------------------- ;
 
-; workarounds for clisp and abcl
-(defun %slurp-stream-lines (astream)
-  (loop for this = (read-line astream nil)
-        while this collect this))
-
-(defun %reconstruct-stream (lines)
-  (let ((s (make-string-output-stream)))
-    (for-each/list lines
-      (format s "~A~%" value!))
-    (str-sub (get-output-stream-string s) 0 -1)))
-
 ; TODO: a whole bunch
-; TODO: implementation dependent
 #+sbcl
 (defun zsh (acommand &key (dry-run        nil)
                           (err-fun        #'(lambda (code stderr)
@@ -1053,65 +1034,7 @@
                         (strip (get-output-stream-string errs))
                         retcode)))))))
 
-#+ clisp
-(defun zsh (acommand &key (dry-run      nil)
-                          (err-fun      #'error)
-                          (echo         nil)
-                          (split        nil)
-                          (interactive  nil))
-  "Runs command `acommand` through the ZSH shell specified by the global *pluto-shell*
-   `dry-run` just prints the command (default nil)
-   `err-fun` takes a function that takes an error code and the STDERR output
-   `echo` will print the command before running it
-   `split` will separate the stdout by newlines and return a list (default: nil)
-   `interactive` will use the '-i' option to make the shell interactive (default: nil)"
-  (when (or echo dry-run)
-    (format t "$ ~A~%" acommand))
-  (unless dry-run
-    (let* ((arglist `(,(if interactive "-ic" "-c")
-                       ,(fn "~A;~A" acommand (if interactive "exit" "")))))
-      (or-die ((fn "error <~A> with shell command <~A>" error! acommand)
-               :errfun error)
-        (with-open-stream
-          (s (ext:run-program *pluto-shell*
-                              :arguments arglist
-                              :output :stream))
-          (if split
-            (%slurp-stream-lines s)
-            (%reconstruct-stream (%slurp-stream-lines s))))))))
-
-; TODO: write documentation
-#+abcl
-(defun zsh (acommand &key (dry-run        nil)
-                          (err-fun        #'(lambda (code stderr)
-                                              (error (format nil "~A (~A)" stderr code))))
-                          (echo           nil)
-                          (in             t)
-                          (return-string  t)
-                          (split          nil)
-                          (interactive    nil))
-  (when (or echo dry-run)
-    (format t "$ ~A~%" acommand))
-  (unless dry-run
-    (let* ((arglist     `(,(if interactive "-ic" "-c")
-                           ,(fn "~A;~A" acommand (if interactive "exit" ""))))
-           (theprocess
-             (system:run-program *pluto-shell* arglist :input in)))
-      (system:process-wait theprocess)
-      (let ((retcode (system:process-exit-code theprocess))
-            (outstream (system:process-output theprocess))
-            (errstream (system:process-error theprocess)))
-        (when (> retcode 0)
-          (funcall err-fun retcode "returns non 0 exit code"))
-        (when return-string
-          (values (if split
-                    (%slurp-stream-lines outstream)
-                    (%reconstruct-stream (%slurp-stream-lines outstream)))
-                  retcode))))))
-
-; TODO: have a not-implememted error
-
-#+(or sbcl ecl clisp abcl)
+#+(or sbcl ecl)
 (setf (fdefinition 'sh) #'zsh)
 
 ; TODO document
@@ -1120,11 +1043,9 @@
   `(sb-ext:run-program *pluto-shell* `("-c" ,,acommand))
   #+ecl
   `(ext:run-program *pluto-shell* `("-c" ,,acommand))
-  #+clisp
-  `(ext:run-program *pluto-shell* :arguments `("-c" ,,acommand))
   )
 
-#+(or sbcl ecl clisp)
+#+(or sbcl ecl)
 (abbr zsh-simple sh-simple)
 
 ; ------------------------------------------------------- ;
@@ -1136,10 +1057,6 @@
 (defmacro λ (&body body)
   `(lambda ,@body))
 
-(defun %remove-after-first-whitespace (astring)
-  (let ((pos1 (position-if (lambda (x) (member x *whitespaces*)) astring)))
-    (str-sub astring 0 pos1)))
-
 ;---------------------------------------------------------;
 
 
@@ -1149,9 +1066,7 @@
 ; TODO: USE UIOP FOR THESE?!
 
 (defun hostname ()
-  #+clisp (%remove-after-first-whitespace (machine-instance))
-  #+(or abcl clasp clozure cmucl ecl genera
-        lispworks mcl mezzano mkcl sbcl scl xcl) (machine-instance))
+  (machine-instance))
 
 ; TODO: beef out
 ; TODO: distro
@@ -1177,21 +1092,13 @@
       info)))
 
 ; TODO: write documentation
-; TODO: implementation dependent
 ; TODO: SBCL DOESN't get columns
 ; TODO: https://stackoverflow.com/questions/44236376/how-do-i-get-the-list-of-all-environment-variables-available-in-a-lisp-process
 (defun get-envvar (name &optional default)
-    #+cmu
-    (let ((x (assoc name ext:*environment-list*
-                    :test #'string=)))
-      (if x (cdr x) default))
-    #-cmu
-    (or
-     #+sbcl (sb-ext:posix-getenv name)
-     #+(or abcl clasp clisp ecl xcl) (ext:getenv name)
-     #+allegro (sys:getenv name)
-     #+lispworks (lispworks:environment-variable name)
-     default))
+  (or
+    #+sbcl (sb-ext:posix-getenv name)
+    #+ecl  (ext:getenv name)
+    default))
 
 ; ------------------------------------------------------- ;
 
@@ -1208,16 +1115,11 @@
               (namestring *load-truename*)
               (get-envvar "_"))))
 
-; TODO: implementation dependent
-; TODO: get program name in clisp
 (defun cmdargs ()
-  "A multi-implementation function to return argv (program name is CAR)"
+  "Returns argv (program name is CAR)"
   (let ((tmp (or
                #+sbcl sb-ext:*posix-argv*
                #+ecl (ext:command-args)
-               #+clisp (cons "program_name" ext:*args*)
-               #+lispworks system:*line-arguments-list*
-               #+cmu extensions:*command-line-words*
                nil
                )))
     (cons (program/script-name) (cdr tmp))))
@@ -1281,15 +1183,11 @@
 ; ------------------------------------------------------- ;
 ; terminal things / terminal manipulation --------------- ;
 
-; :TODO: implementation dependent
 (defun clear-screen ()
-  "A multi-implementation function to clear the terminal screen"
-   #+sbcl     (sb-ext:run-program "/bin/sh" (list "-c" "clear")
-                                  :input nil :output *standard-output*)
-   #+clisp    (ext:shell "clear")
-   #+ecl      (si:system "clear")
-   #+clozure  (ccl:run-program "/bin/sh" (list "-c" "clear")
-                               :input nil :output *standard-output*))
+  "Clears the terminal screen"
+   #+sbcl  (sb-ext:run-program "/bin/sh" (list "-c" "clear")
+                               :input nil :output *standard-output*)
+   #+ecl   (si:system "clear"))
 
 ; TODO: SBCL doesn't have the COLUMNS environment variable. fix it
 (defun get-terminal-columns ()
@@ -1474,19 +1372,11 @@
   (with-open-file (s afilename :element-type '(unsigned-byte 8))
     (if human (size-for-humans (file-length s)) (file-length s))))
 
-#-clisp
 (defun pwd ()
   (let ((tmp
-          #+(or abcl genera mezzano xcl) (truename *default-pathname-defaults*)
-          #+clisp (ext:default-directory)
-          #+(or clasp ecl) (ext:getcwd)
-          #+clozure (ccl:current-directory)
+          #+ecl  (ext:getcwd)
           #+sbcl (sb-ext:parse-native-namestring (sb-unix:posix-getcwd/))))
     (namestring tmp)))
-
-#+clisp
-(defun pwd ()
-  (namestring (ext:default-directory)))
 
 ; #+coreutils
 (defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))

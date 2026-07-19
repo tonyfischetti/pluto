@@ -41,6 +41,13 @@
 
 (def-raw-markdown "fill this out")
 
+  (def-test/doc-test 'green
+    `((test-able returns))
+    'function
+    (and (search "hi" test-return-value!)
+         (search (string #\ESC) test-return-value!))
+    (green "hi"))
+
 ; --------------------------------------------------------------- ;
 
 (def-test/doc-section "string operations")
@@ -92,6 +99,24 @@
   'function
   (equal test-return-value! '("this" "that" "and the other"))
   (split-string->lines (format nil "this~%that~%and the other")))
+
+  (def-test/doc-test 'str-sub
+    `((test-able returns))
+    'function
+    (string= test-return-value! "lle")
+    (str-sub "belle" -3))
+
+  (def-test/doc-test 'str-join
+    `((test-able returns))
+    'function
+    (string= test-return-value! "")
+    (str-join ";" nil))
+
+(def-test/doc-test 'repeat-string
+  `(markdown-able (test-able returns))
+  "Repeats a string TIMES times"
+  (string= test-return-value! "ababab")
+  (repeat-string "ab" 3))
 
 
 ; --------------------------------------------------------------- ;
@@ -552,6 +577,149 @@
   (let ((tmp (vector 1 2 3)))
     (setf { tmp 1 } 99)
     tmp))
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "shell and zsh")
+
+(def-test/doc-test 'zsh
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "hello")
+  (zsh "echo hello"))
+
+(def-test/doc-test 'zsh
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("out" "err" 0))
+  (multiple-value-bind (out err code)
+    (zsh "echo out; echo err >&2")
+    (list out err code)))
+
+(def-test/doc-test 'zsh
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("1" "2" "3"))
+  (zsh "seq 3" :split t))
+
+(def-test/doc-test 'zsh
+  `(markdown-able (test-able stdout))
+  'function
+  (string= test-stdout! (fn "$ echo hi~%"))
+  (zsh "echo hi" :dry-run t))
+
+  ; a command with a non-zero exit code should signal
+  ; (with the code in the condition)
+  (def-test/doc-test 'zsh
+    `((test-able returns))
+    'function
+    (and test-error! (search "42" (fn "~A" test-error!)))
+    (zsh "exit 42"))
+
+; system stuff (test-able only: results are machine-dependent)
+
+  (def-test/doc-test 'hostname
+    `((test-able returns))
+    'function
+    (and (stringp test-return-value!)
+         (> (length test-return-value!) 0))
+    (hostname))
+
+  (def-test/doc-test 'get-envvar
+    `((test-able returns))
+    'function
+    (search "/" test-return-value!)
+    (get-envvar "HOME"))
+
+  (def-test/doc-test 'get-envvar
+    `((test-able returns))
+    'function
+    (string= test-return-value! "the-default")
+    (get-envvar "SURELY_THIS_ENVVAR_DOES_NOT_EXIST" "the-default"))
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "file/filename/directory operations")
+
+(def-test/doc-test 'basename
+  `(markdown-able (test-able returns))
+  "Returns the filename portion of a path"
+  (string= test-return-value! "baz.txt")
+  (basename "/foo/bar/baz.txt"))
+
+(def-test/doc-test 'change-extension
+  `(markdown-able (test-able returns))
+  "Returns a pathname with the file extension changed"
+  (string= (namestring test-return-value!) "/foo/bar/baz.md")
+  (change-extension "/foo/bar/baz.txt" "md"))
+
+(def-test/doc-test 'size-for-humans
+  `(markdown-able (test-able returns))
+  "Formats a byte count for human consumption"
+  (string= test-return-value! "3M")
+  (size-for-humans (* 3 (expt 2 20))))
+
+(def-test/doc-test 'size-for-humans
+  `(markdown-able (test-able returns))
+  ""
+  (string= test-return-value! "2.0G")
+  (size-for-humans (expt 2 31)))
+
+(def-test/doc-test 'file-exists-p
+  `(markdown-able (test-able returns))
+  "FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL"
+  (equal test-return-value! `(t t nil))
+  (list (if (file-exists-p "somebody.txt") t nil)
+        (if (directory-exists-p "wayward files") t nil)
+        (if (file-exists-p "no-such-file.txt") t nil)))
+
+  (def-test/doc-test 'file-size
+    `((test-able returns))
+    'function
+    (= test-return-value! 5)
+    (let ((tmpf "tmp-file-size.txt"))
+      (barf tmpf "12345" :overwrite t)
+      (let ((s (file-size tmpf)))
+        (delete-file tmpf)
+        s)))
+
+  (def-test/doc-test 'pwd
+    `((test-able returns))
+    'function
+    (search "tests" test-return-value!)
+    (pwd))
+
+  (def-test/doc-test 'ls
+    `((test-able returns))
+    'function
+    (and (listp test-return-value!)
+         (member "somebody.txt" test-return-value!
+                 :key #'file-namestring :test #'string=)
+         t)
+    (ls "./"))
+
+  (def-test/doc-test 'file-find
+    `((test-able returns))
+    'function
+    (= (length test-return-value!) 2)
+    (progn
+      (zsh "mkdir -p tmp-walk/sub && touch tmp-walk/a.txt tmp-walk/sub/b.txt tmp-walk/c.md")
+      (let ((found (file-find "tmp-walk" :ext "txt")))
+        (zsh "rm -rf tmp-walk")
+        found)))
+
+  (def-test/doc-test '-path
+    `((test-able returns))
+    'function
+    (string= (namestring test-return-value!) "somebody.txt")
+    (-path "somebody.txt" "./"))
+
+  (def-test/doc-test '+path
+    `((test-able returns))
+    'function
+    (and (search "tests" (namestring test-return-value!))
+         (search "foo.txt" (namestring test-return-value!)))
+    (+path "./" "foo.txt"))
 
 ; --------------------------------------------------------------- ;
 
