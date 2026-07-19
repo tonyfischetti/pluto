@@ -9,6 +9,7 @@
 (defparameter test-return-value! nil)
 (defparameter test-stdout! nil)
 (defparameter test-stderr! nil)
+(defparameter test-error! nil)
 
 
 
@@ -138,16 +139,42 @@
   (ft (yellow "testing section: ~A~%" { test 'section })))
 
 (defmethod run-test ((test test/doc-test))
-  (multiple-value-bind (test-return-value! test-stdout! test-stderr!)
-    (capture-all-outputs { test 'code-closure })
-    (let ((test-result (funcall { test 'test-closure })))
-      (if test-result
-        (progn
-          (ft (green "passed: ~A~%" { test 'the-function }))
-          (setf { test 'pass-p } t)
-          (setf { test 'output }
-                `(,test-return-value! ,test-stdout! ,test-stderr!)))
-        (ft (red "failed: ~A~%" { test 'the-function }))))))
+  (let ((outs       (make-string-output-stream))
+        (errs       (make-string-output-stream))
+        (returned   nil)
+        (condition  nil))
+    ; if the code signals, that's captured in `condition` (and the
+    ; test fails) rather than crashing the whole suite. this also
+    ; lets a test _assert_ that its code errors (via `test-error!`)
+    (handler-case
+      (let ((*standard-output*   outs)
+            (*error-output*      errs))
+        (setq returned (funcall { test 'code-closure })))
+      (error (e) (setq condition e)))
+    (let ((test-return-value!   returned)
+          (test-stdout!         (get-output-stream-string outs))
+          (test-stderr!         (get-output-stream-string errs))
+          (test-error!          condition))
+      (let ((test-result
+              (handler-case (funcall { test 'test-closure })
+                (error (e)
+                  (ft (red "error in the test expression itself for ~A: ~A~%"
+                           { test 'the-function } e))
+                  nil))))
+        (if test-result
+          (progn
+            (ft (green "passed: ~A~%" { test 'the-function }))
+            (setf { test 'pass-p } t)
+            (setf { test 'output }
+                  `(,test-return-value! ,test-stdout! ,test-stderr!)))
+          (progn
+            (ft (red "failed: ~A (test #~A)~%" { test 'the-function }
+                                               { test 'test-number }))
+            (ft (red "    returned:  ~S~%" test-return-value!))
+            (ft (red "    stdout:    ~S~%" test-stdout!))
+            (ft (red "    stderr:    ~S~%" test-stderr!))
+            (when test-error!
+              (ft (red "    signalled: ~A~%" test-error!)))))))))
 
 (defmethod passed-p ((test test/doc-element)) t)
 (defmethod passed-p ((test test/doc-test))
@@ -157,7 +184,15 @@
 
 (defun run-tests ()
   (mapcar #'run-test /all-test-docs/)
-  (every #'passed-p /all-test-docs/))
+  (let ((failures (remove-if #'passed-p /all-test-docs/)))
+    (if failures
+      (progn
+        (ft (red "~%~A test(s) failed:~%" (length failures)))
+        (for-each/list failures
+          (ft (red "  #~A ~A~%" { value! 'test-number }
+                                { value! 'the-function })))
+        nil)
+      t)))
 
 ;; -----------------------------------
 
