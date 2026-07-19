@@ -654,7 +654,7 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 >    `echo` will print the command before running it\
 >    `enc` takes a format (default is *pluto-external-format* [which is :UTF-8 by default])\
 >    `in` t is inherited STDIN. nil is /dev/null. (default t)\
->    `return-string` t returns the output string. nil inherits stdout (default t)\
+>    `return-string` t returns the output string. nil inherits stdout and stderr (default t)\
 >    `split` will separate the stdout by newlines and return a list (default: nil)\
 >    `interactive` will use the '-i' option to make the shell interactive (default: nil)\
 

@@ -986,7 +986,7 @@
    `echo` will print the command before running it
    `enc` takes a format (default is *pluto-external-format* [which is :UTF-8 by default])
    `in` t is inherited STDIN. nil is /dev/null. (default t)
-   `return-string` t returns the output string. nil inherits stdout (default t)
+   `return-string` t returns the output string. nil inherits stdout and stderr (default t)
    `split` will separate the stdout by newlines and return a list (default: nil)
    `interactive` will use the '-i' option to make the shell interactive (default: nil)"
   (when (or echo dry-run)
@@ -996,14 +996,16 @@
                           `("-ic" ,(fn "~A;exit" acommand))
                           `("-c"  ,acommand)))
            (outs        (if return-string (make-string-output-stream) t))
-           (errs        (make-string-output-stream))
+           (errs        (if return-string (make-string-output-stream) t))
            (theprocess
              (sb-ext:run-program *pluto-shell* arglist
                                  :input in :output outs :error errs
                                  :external-format enc))
            (retcode
              (sb-ext:process-exit-code theprocess)))
-      (let ((errstr (%strip-trailing-newline (get-output-stream-string errs))))
+      (let ((errstr (if return-string
+                      (%strip-trailing-newline (get-output-stream-string errs))
+                      "")))
         (unless (eql 0 retcode)
           (funcall err-fun retcode errstr))
         (when return-string
@@ -1029,7 +1031,7 @@
    `echo` will print the command before running it
    `enc` takes a format (default is *pluto-external-format* [which is :UTF-8 by default])
    `in` t is inherited STDIN. nil is /dev/null. (default t)
-   `return-string` t returns the output string. nil inherits stdout (default t)
+   `return-string` t returns the output string. nil inherits stdout and stderr (default t)
    `split` will separate the stdout by newlines and return a list (default: nil)
    `interactive` will use the '-i' option to make the shell interactive (default: nil)"
   (when (or echo dry-run)
@@ -1039,14 +1041,16 @@
                           `("-ic" ,(fn "~A;exit" acommand))
                           `("-c"  ,acommand)))
            (outs        (if return-string (make-string-output-stream) t))
-           (errs        (make-string-output-stream)))
+           (errs        (if return-string (make-string-output-stream) t)))
       (multiple-value-bind (procstream retcode process)
             (ext:run-program *pluto-shell* arglist
                              :input in :output outs :error errs
                              :external-format enc)
             (declare (ignore procstream))
             (ext:external-process-wait process)
-            (let ((errstr (%strip-trailing-newline (get-output-stream-string errs))))
+            (let ((errstr (if return-string
+                            (%strip-trailing-newline (get-output-stream-string errs))
+                            "")))
               (unless (eql 0 retcode)
                 (funcall err-fun retcode errstr))
               (when return-string
