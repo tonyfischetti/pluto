@@ -797,3 +797,27 @@ FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
 <small><pre>=> 5.4</pre></small>
 
 
+
+#### Q/RE
+
+> Quote, i.e. prefix with #\\, all non-word characters in STRING.\
+
+```{.commonlisp}
+(LIST (STR-DETECT "price: 3x50" "3.50")
+      (STR-DETECT "price: 3x50" (Q/RE "3.50")))
+```
+
+<small><pre>=> (T NIL)</pre></small>
+
+
+
+#### Q/URI
+
+NIL
+```{.commonlisp}
+(Q/URI "café & bar?q=1")
+```
+
+<small><pre>=> "caf%C3%A9%20%26%20bar%3Fq%3D1"</pre></small>
+
+

@@ -23,6 +23,7 @@
     :str-subset :str-extract :str-scan-to-strings :str-trim :~m :~r
     :~ra :~s :~f :~c :~e
     :str-normalize
+    :q/re
 
     ; terminal things / terminal manipulation
     :with-loading
@@ -30,6 +31,7 @@
     ; HTML/XML stuff
     :request/get :request/post :parse-xml :parse-xml-file :xpath
     :xpath-compile :use-xml-namespace :xpath-string
+    :q/uri
 
     ; other abbriviations and shortcuts
     :alist->hash-table :hash-table->alist :hash-keys :parse-json
@@ -130,6 +132,9 @@
   "Alias to str-extract"
   `(str-extract ,@everything))
 
+; quotes a string so it can be used _literally_ inside a regex
+(abbr q/re cl-ppcre:quote-meta-chars)
+
 (defun str-normalize (astring &key (form :nfd))
   (let ((code-points
           (cond ((eq form :nfd)  (cl-unicode:normalization-form-d astring))
@@ -207,6 +212,9 @@
 
 ; ------------------------------------------------------- ;
 ; HTML/XML stuff ---------------------------------------- ;
+
+; percent-encodes a string for safe inclusion in a URL
+(abbr q/uri quri:url-encode)
 
 (defmacro request/get (&rest everything)
   `(dexador:get ,@everything))

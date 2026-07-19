@@ -53,6 +53,10 @@
                ; https://github.com/fukamachi/dexador
                :dexador
 
+               ; URI library (already a dexador dependency,
+               ; declared because q/uri uses it directly)
+               :quri
+
                ; of course
                :pluto
                )

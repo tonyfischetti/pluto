@@ -830,6 +830,26 @@
   (= test-return-value! 5.4)
   (parse-float "5.4"))
 
+; without q/re, the dot matches anything; with it, only a literal dot
+(def-test/doc-test 'q/re
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(t nil))
+  (list (str-detect "price: 3x50" "3.50")
+        (str-detect "price: 3x50" (q/re "3.50"))))
+
+  (def-test/doc-test 'q/re
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (str-detect "costs $3.50 (about)" (q/re "$3.50 (about)")))
+
+(def-test/doc-test 'q/uri
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "caf%C3%A9%20%26%20bar%3Fq%3D1")
+  (q/uri "café & bar?q=1"))
+
 ; --------------------------------------------------------------- ;
 ; --------------------------------------------------------------- ;
 
