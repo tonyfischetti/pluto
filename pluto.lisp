@@ -712,10 +712,10 @@
 (defun time-for-humans (seconds)
   "Converts SECONDS into minutes, hours, or days (based on magnitude)"
   (cond
-    ((> seconds 86400)        (format nil "~$ days" (/ seconds 86400)))
-    ((> seconds 3600)         (format nil "~$ hours" (/ seconds 3600)))
-    ((> seconds 60)           (format nil "~$ minutes" (/ seconds 60)))
-    ((< seconds 60)           (format nil "~A seconds" seconds))))
+    ((>= seconds 86400)       (format nil "~$ days" (/ seconds 86400)))
+    ((>= seconds 3600)        (format nil "~$ hours" (/ seconds 3600)))
+    ((>= seconds 60)          (format nil "~$ minutes" (/ seconds 60)))
+    (t                        (format nil "~A seconds" seconds))))
 
 ;---------------------------------------------------------;
 
