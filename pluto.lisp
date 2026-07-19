@@ -237,8 +237,22 @@
      #'self!))
 
 (defmacro abbr (short long)
-  `(defmacro ,short (&rest everything)
-     `(,',long ,@everything)))
+  "Defines SHORT as an abbreviation for LONG.
+   If LONG names a macro, SHORT becomes a macro, too.
+   If LONG names a function, SHORT becomes a bona-fide
+   function alias (so it can be FUNCALLed, MAPCARed, etc.).
+   Note that SHORT is bound to LONG's definition at the
+   time ABBR runs; redefining LONG later won't change SHORT"
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (cond
+       ((macro-function ',long)
+         (setf (macro-function ',short) (macro-function ',long)))
+       ((fboundp ',long)
+         (setf (fdefinition ',short) (fdefinition ',long)))
+       (t
+         (error "can't abbreviate ~A: it names neither a macro nor a function"
+                ',long)))
+     ',short))
 
 (defun flatten (alist)
   " Flattens a list (possibly inefficiently)"
