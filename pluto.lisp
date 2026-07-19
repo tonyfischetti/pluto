@@ -700,15 +700,13 @@
    binds the seconds of execution time to TIME!. Then
    all the other forms in the body are executed"
   (let ((began      (gensym))
-        (ended      (gensym))
-        (ret        (gensym)))
+        (ended      (gensym)))
     `(let (,began ,ended time!)
        (setq ,began (get-universal-time))
-       (setq ,ret ,(car aform))
+       ,(car aform)
        (setq ,ended (get-universal-time))
        (setq time! (- ,ended ,began))
-       ,@(cdr aform)
-       ,ret)))
+       ,@(cdr aform))))
 
 (defun time-for-humans (seconds)
   "Converts SECONDS into minutes, hours, or days (based on magnitude)"

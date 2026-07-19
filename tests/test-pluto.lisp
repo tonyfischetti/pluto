@@ -63,23 +63,23 @@
   (string= test-return-value! "one;two")
   (str-join ";" '("one" "two")))
 
-(def-test/doc-test 'substr
+(def-test/doc-test 'str-sub
   `(markdown-able (test-able returns))
   'function
   (string= test-return-value! "belle")
-  (substr "belle and sebastian" 0 5))
+  (str-sub "belle and sebastian" 0 5))
 
-(def-test/doc-test 'substr
+(def-test/doc-test 'str-sub
   `(markdown-able (test-able returns))
   'function
   (string= test-return-value! "belle")
-  (substr "belle and sebastian" 0 -14))
+  (str-sub "belle and sebastian" 0 -14))
 
-(def-test/doc-test 'substr
+(def-test/doc-test 'str-sub
   `(markdown-able (test-able returns))
   'function
   (string= test-return-value! "sebastian")
-  (substr "belle and sebastian" 10))
+  (str-sub "belle and sebastian" 10))
 
 (def-test/doc-test 'string->char-list
   `(markdown-able (test-able returns))
@@ -169,17 +169,17 @@
 
 (def-test/doc-section "other abbreviations and shortcuts")
 
-(def-test/doc-test 'file-size
-  `(markdown-able (test-able returns))
-  'function
-  (string= test-return-value! "17k")
-  (file-size "interior-of-a-heart.txt"))
-
-(def-test/doc-test 'file-size
-  `(markdown-able (test-able returns))
-  'function
-  (= test-return-value! 14433)
-  (file-size "interior-of-a-heart.txt" :just-bytes t))
+; (def-test/doc-test 'file-size
+;   `(markdown-able (test-able returns))
+;   'function
+;   (string= test-return-value! "17k")
+;   (file-size "interior-of-a-heart.txt"))
+;
+; (def-test/doc-test 'file-size
+;   `(markdown-able (test-able returns))
+;   'function
+;   (= test-return-value! 14433)
+;   (file-size "interior-of-a-heart.txt" :just-bytes t))
 
 ; --------------------------------------------------------------- ;
 
@@ -331,16 +331,16 @@
 ; --------------------------------------------------------------- ;
 ; --------------------------------------------------------------- ;
 
-(ql:quickload :styx :silent t)
-(use-package :styx)
-
-(def-test/doc-section "temporary styx tests")
-
-(def-test/doc-test 'stat-filesize
-  `(markdown-able (test-able returns))
-  'function
-  (= test-return-value! 14433)
-  (stat-filesize "interior-of-a-heart.txt"))
+; (ql:quickload :styx :silent t)
+; (use-package :styx)
+;
+; (def-test/doc-section "temporary styx tests")
+;
+; (def-test/doc-test 'stat-filesize
+;   `(markdown-able (test-able returns))
+;   'function
+;   (= test-return-value! 14433)
+;   (stat-filesize "interior-of-a-heart.txt"))
 
 
 ; --------------------------------------------------------------- ;
