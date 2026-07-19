@@ -1017,9 +1017,10 @@
    `split` will separate the stdout by newlines and return a list (default: nil)
    `interactive` will use the '-i' option to make the shell interactive (default: nil)"
   (flet ((strip (astring)
-    (if (string= "" astring)
-      astring
-      (subseq astring 0 (- (length astring) 1)))))
+    (if (and (> (length astring) 0)
+             (char= #\Newline (char astring (- (length astring) 1))))
+      (subseq astring 0 (- (length astring) 1))
+      astring)))
     (when (or echo dry-run)
       (format t "$ ~A~%" acommand))
     (unless dry-run
@@ -1052,9 +1053,10 @@
                           (split          nil)
                           (interactive  nil))
   (flet ((strip (astring)
-    (if (string= "" astring)
-      astring
-      (subseq astring 0 (- (length astring) 1)))))
+    (if (and (> (length astring) 0)
+             (char= #\Newline (char astring (- (length astring) 1))))
+      (subseq astring 0 (- (length astring) 1))
+      astring)))
     (when (or echo dry-run)
       (format t "$ ~A~%" acommand))
     (unless dry-run
