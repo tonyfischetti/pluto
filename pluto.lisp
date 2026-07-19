@@ -571,10 +571,11 @@
 
 (defmacro die-if-null (avar &rest therest)
   "Macro to check if any of the supplied arguments are null"
-  (let ((whole (cons avar therest)))
-    `(loop for i in ',whole
-           do (unless (eval i)
-                (die (format nil "Fatal error: ~A is null" i))))))
+  `(progn
+     ,@(mapcar (lambda (v)
+                 `(unless ,v
+                    (die (format nil "Fatal error: ~A is null" ',v))))
+               (cons avar therest))))
 
 (defun ignore-the-errors-wrapper (stream char arg)
   (declare (ignore char))
@@ -589,10 +590,9 @@
    otherwise, pass it on"
   (declare (ignore char))
   (let ((sexp (read stream t)))
-    `(progn
-       (aif (eval ',sexp)
-            it!
-            (error "its null")))))
+    `(aif ,sexp
+          it!
+          (error "its null"))))
 
 (set-macro-character #\Ø #'|ensure-not-null|)
 
