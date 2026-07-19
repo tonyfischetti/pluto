@@ -14,16 +14,32 @@
 
 
 ;; -----------------------------------
+;; trait mixins
+;;
+;; capabilities are mixin classes; whether an element can be
+;; tested/rendered/benched is decided by CLOS dispatch, not
+;; by checking a list of traits
+
+(defclass markdown-able () ())
+
+(defclass test-able ()
+  ((output-type :initarg :output-type :initform nil)))
+
+(defclass bench-able ()
+  ((bench-times :initarg :bench-times :initform 1)))
+
+;; -----------------------------------
 ;; classes
 
 (defclass test/doc-element ()
-  ((traits :initarg :traits)
-   (section :initarg :section :initform /test-section/)
+  ((section :initarg :section :initform /test-section/)
    (doc :initarg :doc :initform "")))
 
-(defclass test/doc-title (test/doc-element) ())
+(defclass test/doc-title (markdown-able test/doc-element) ())
 
-(defclass test/doc-section (test/doc-element) ())
+(defclass test/doc-section (markdown-able test/doc-element) ())
+
+(defclass raw-markdown (markdown-able test/doc-element) ())
 
 (defclass test/doc-test (test/doc-element)
   ((test-number :initform (incf /test-counter/))
@@ -35,14 +51,40 @@
    output))
 
 ;; -----------------------------------
+;; programmatic mixin combination (the MOP bit)
+;;
+;; each test's class is synthesized at runtime from the mixins
+;; it asks for: e.g. (markdown-able (test-able returns)) yields
+;; the class MARKDOWN-ABLE+TEST-ABLE+TEST/DOC-TEST
+;; (mixins precede the base class so their methods win)
 
-(defun has-trait (element atrait)
-  (assoc atrait { element 'traits }))
+(defun %mixed-class (base mixins)
+  (if (null mixins)
+    (find-class base)
+    (let ((supers (append mixins (list base))))
+      (#+sbcl sb-mop:ensure-class
+       #+ecl  clos:ensure-class
+        (create-symbol (str-join "+" (mapcar #'symbol-name supers)))
+        :direct-superclasses supers))))
 
-(defun output-type (element)
-  (aif (assoc 'test-able { element 'traits })
-    (cadr it!)
-    nil))
+(defun %parse-traits (traits)
+  "Traits like (markdown-able (test-able returns) (bench-able 5))
+   become (values (markdown-able test-able bench-able)
+                  (:output-type returns :bench-times 5))"
+  (let ((mixins    nil)
+        (initargs  nil))
+    (dolist (tr traits)
+      (let ((name (if (listp tr) (car tr) tr))
+            (val  (if (listp tr) (cadr tr) nil)))
+        (push name mixins)
+        (when val
+          (cond ((eq name 'test-able)
+                  (setq initargs (list* :output-type val initargs)))
+                ((eq name 'bench-able)
+                  (setq initargs (list* :bench-times val initargs)))))))
+    (values (nreverse mixins) initargs)))
+
+;; -----------------------------------
 
 (defun process-docstring (astring)
   (when (not (null astring))
@@ -57,9 +99,7 @@
 (defun start-test/doc (&key title)
   (setq /all-test-docs/ nil)
   (setq /test-counter/ 0)
-  (push (make-instance 'test/doc-title
-                       :section title
-                       :traits `((markdown-able t)))
+  (push (make-instance 'test/doc-title :section title)
     /all-test-docs/))
 
 (defun end-test/doc ()
@@ -70,44 +110,35 @@
 ;; "constructors"
 (defun def-test/doc-title (title)
   (push
-    (make-instance 'test/doc-title :doc title
-                                    :traits '((markdown-able t)))
+    (make-instance 'test/doc-title :doc title)
     /all-test-docs/))
 
 (defun def-test/doc-section (section-name)
   (setq /test-section/ section-name)
   (push
-    (make-instance 'test/doc-section :traits '((markdown-able t)))
+    (make-instance 'test/doc-section)
     /all-test-docs/))
 
 (defmacro def-test/doc-test (&body body)
   (destructuring-bind (the-function traits doc test &rest code) body
-    (let ((thetraits (gensym))
-          (newone    (gensym)))
-      `(let*
-         ((,thetraits nil)
-          (,newone (make-instance 'test/doc-test
-                                  :the-function ,the-function
-                                  :doc (if (symbolp ,doc)
-                                         (process-docstring
-                                           (documentation ,the-function ,doc))
-                                         ,doc)
-                                  :test-closure (lambda () ,test)
-                                  :raw-code (quote ,code)
-                                  :code-closure (lambda () ,@code))))
-         (setf ,thetraits (mapcar
-                            (lambda (x)
-                              (if (listp x) x (list x t)))
-                            ,traits))
-         ; TODO: the following fails in ecl and clisp
-         ; (setf { ,newone 'traits } ,thetraits)
-         (setf (slot-value ,newone 'traits) ,thetraits)
-         (push ,newone /all-test-docs/)))))
+    (with-gensyms (mixins initargs)
+      `(multiple-value-bind (,mixins ,initargs) (%parse-traits ,traits)
+         (push
+           (apply #'make-instance (%mixed-class 'test/doc-test ,mixins)
+                  :the-function ,the-function
+                  :doc (if (symbolp ,doc)
+                         (process-docstring
+                           (documentation ,the-function ,doc))
+                         ,doc)
+                  :test-closure (lambda () ,test)
+                  :raw-code (quote ,code)
+                  :code-closure (lambda () ,@code)
+                  ,initargs)
+           /all-test-docs/)))))
 
 (defmacro def-raw-markdown (astring)
   `(push
-     (make-instance 'test/doc-element :doc ,astring
-                    :traits `((markdown-able t)))
+     (make-instance 'raw-markdown :doc ,astring)
      /all-test-docs/))
 
 ;; -----------------------------------
@@ -117,28 +148,28 @@
 ;; -----------------------------------
 ;; testing
 
-; TODO: implement
-(defmethod run-test :around ((test test/doc-test))
-  (if (has-trait test 'test-able)
-    (aif (has-trait test 'bench-able)
-      (progn
-        (ft (magenta "benchmarking: ~S ~A times~%"
-                     { test 'the-function }
-                     (cadr it!)))
-        (call-next-method))
-      (call-next-method))
-    (ft (grey "skipping test of ~S~%" { test 'the-function }))))
-
-(defmethod run-test ((test test/doc-element))
+(defmethod run-test ((el test/doc-element))
   t)
 
-(defmethod run-test ((test test/doc-title))
-  (ft (cyan "beginning tests for ~A~%" { test 'section })))
+(defmethod run-test ((el test/doc-title))
+  (ft (cyan "beginning tests for ~A~%" { el 'section })))
 
-(defmethod run-test ((test test/doc-section))
-  (ft (yellow "testing section: ~A~%" { test 'section })))
+(defmethod run-test ((el test/doc-section))
+  (ft (yellow "testing section: ~A~%" { el 'section })))
 
+; a test that isn't TEST-ABLE gets this method (the TEST-ABLE
+; mixin precedes TEST/DOC-TEST in the class precedence list)
 (defmethod run-test ((test test/doc-test))
+  (ft (grey "skipping test of ~S~%" { test 'the-function })))
+
+; TODO: actually run it BENCH-TIMES times
+(defmethod run-test :around ((test bench-able))
+  (ft (magenta "benchmarking: ~S ~A times~%"
+               { test 'the-function }
+               { test 'bench-times }))
+  (call-next-method))
+
+(defmethod run-test ((test test-able))
   (let ((outs       (make-string-output-stream))
         (errs       (make-string-output-stream))
         (returned   nil)
@@ -176,11 +207,9 @@
             (when test-error!
               (ft (red "    signalled: ~A~%" test-error!)))))))))
 
-(defmethod passed-p ((test test/doc-element)) t)
-(defmethod passed-p ((test test/doc-test))
-  (if (has-trait test 'test-able)
-    { test 'pass-p }
-    t))
+(defmethod passed-p ((el test/doc-element)) t)
+(defmethod passed-p ((test test-able))
+  { test 'pass-p })
 
 (defun run-tests ()
   (mapcar #'run-test /all-test-docs/)
@@ -199,25 +228,32 @@
 
 ;; -----------------------------------
 ;; markdown
+;;
+;; TO-MARKDOWN dispatches on MARKDOWN-ABLE (anything else renders
+;; as nothing); RENDER-MD does the structural rendering per class
 
 (defgeneric to-markdown (test/doc-element &optional stream))
 
-(defmethod to-markdown :around ((test test/doc-element) &optional (stream t))
+(defmethod to-markdown ((el test/doc-element) &optional stream)
   (declare (ignore stream))
-  (when (has-trait test 'markdown-able)
-    (call-next-method)))
+  nil)
 
-(defmethod to-markdown ((test test/doc-element) &optional (stream t))
-  (format stream "~A~%" { test 'doc }))
+(defmethod to-markdown ((el markdown-able) &optional (stream t))
+  (render-md el stream))
 
-(defmethod to-markdown ((test test/doc-title) &optional (stream t))
+(defgeneric render-md (el stream))
+
+(defmethod render-md ((el test/doc-element) stream)
+  (format stream "~A~%" { el 'doc }))
+
+(defmethod render-md ((el test/doc-title) stream)
   (format stream "---~%title: ~A documentation~%...~%~%"
-          { test 'section }))
+          { el 'section }))
 
-(defmethod to-markdown ((test test/doc-section) &optional (stream t))
-  (format stream "~%-----~%~%### ~A~%~%" { test 'section }))
+(defmethod render-md ((el test/doc-section) stream)
+  (format stream "~%-----~%~%### ~A~%~%" { el 'section }))
 
-(defmethod to-markdown ((test test/doc-test) &optional (stream t))
+(defmethod render-md ((test test/doc-test) stream)
   (let ((thefun { test 'the-function }))
     (if (eq thefun /last-element-rendered/)
       (format stream "~%")
@@ -226,9 +262,8 @@
     (format stream "```{.commonlisp}~%~S~%```~%~%" (car { test 'raw-code }))
     (setq /last-element-rendered/ thefun)))
 
-; TODO: test test-able nil
-(defmethod to-markdown :after ((test test/doc-test) &optional (stream t))
-  (aif (output-type test)
+(defmethod render-md :after ((test test-able) stream)
+  (aif { test 'output-type }
     (let ((tmp
             (cond ((eq it! 'returns)
                      (list "=>"   (car { test 'output })))
@@ -236,7 +271,6 @@
                      (list ">>"   (cadr { test 'output })))
                   ((eq it! 'stderr)
                      (list "Std error" (caddr { test 'output }))))))
-      ; (format stream "`~A ~A~%`~%~%"
       (format stream "<small><pre>~A ~S</pre></small>~%~%~%"
               (car tmp) (cadr tmp)))))
 
@@ -244,6 +278,3 @@
   (mapcar (lambda (x) (to-markdown x stream)) /all-test-docs/)
   (ft (blue "~%rendered markdown~%")))
 ;; -----------------------------------
-
-
-
