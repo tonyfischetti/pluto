@@ -301,20 +301,21 @@
   `(let ((it! ,test))
      (if it! ,then ,else)))
 
-; TODO: IS IT MAYBE BIGGER THAN IT NEEDS TO BE BECAUSE MULTIBYTE?
 (defun slurp (path)
-  "Reads file at PATH into a single string"
-  (with-open-file (stream path :if-does-not-exist :error)
+  "Reads file at PATH into a single string
+   (note: FILE-LENGTH counts octets, so with multibyte encodings
+    the buffer can be larger than the number of characters
+    actually read; READ-SEQUENCE returns the true end)"
+  (with-open-file (stream path :if-does-not-exist :error
+                          :external-format *pluto-external-format*)
     (let ((data (make-string (file-length stream))))
-      (read-sequence data stream)
-      data)))
+      (subseq data 0 (read-sequence data stream)))))
 
 ; TODO: what?
 (defun slurp-stream (astream)
   (with-open-stream (s astream)
     (let ((data (make-string (file-length s))))
-      (read-sequence data s)
-      data)))
+      (subseq data 0 (read-sequence data s)))))
 
 (defun slurp-lines (afilename)
   "Reads lines of a file into a list"
