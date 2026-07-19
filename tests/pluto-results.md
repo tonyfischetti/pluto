@@ -575,9 +575,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G1103 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G1103
-      #:G1103
+(LET ((#:G1104 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G1104
+      #:G1104
       42))
 ```
 
@@ -772,6 +772,25 @@ FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
 ```
 
 <small><pre>=> (T T NIL)</pre></small>
+
+
+
+#### PATHNAME->NATIVE
+
+> Converts pathname (or CL namestring) APATH into the exact string\
+>    the operating system knows it by — no CL namestring escaping.\
+>    This is the string to hand to C functions (through CFFI), etc.\
+>    (SBCL backslash-escapes glob characters [* ? \[] in namestrings;\
+>    the native namestring is the raw on-disk name. ECL namestrings\
+>    are already native — though note that ECL represents filenames\
+>    containing glob characters as wild pathnames, which PROBE-FILE\
+>    et al. won't accept, the string this returns is still correct)\
+
+```{.commonlisp}
+(PATHNAME->NATIVE #P"/foo/bar baz.txt")
+```
+
+<small><pre>=> "/foo/bar baz.txt"</pre></small>
 
 
 

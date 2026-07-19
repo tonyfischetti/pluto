@@ -80,7 +80,7 @@
     :basename :pwd :realpath :size-for-humans :file-size
     :inspect-pathname :ls :directory-exists-p :file-exists-p
     :file-or-directory-exists-p :walk-directory :-path :+path
-    :absolute->relative :change-extension :file-find
+    :absolute->relative :change-extension :file-find :pathname->native
 
     ))
 
@@ -1417,6 +1417,18 @@
           #+ecl  (ext:getcwd)
           #+sbcl (sb-ext:parse-native-namestring (sb-unix:posix-getcwd/))))
     (namestring tmp)))
+
+(defun pathname->native (apath)
+  "Converts pathname (or CL namestring) APATH into the exact string
+   the operating system knows it by — no CL namestring escaping.
+   This is the string to hand to C functions (through CFFI), etc.
+   (SBCL backslash-escapes glob characters [* ? \\[] in namestrings;
+   the native namestring is the raw on-disk name. ECL namestrings
+   are already native — though note that ECL represents filenames
+   containing glob characters as wild pathnames, which PROBE-FILE
+   et al. won't accept, the string this returns is still correct)"
+  #+sbcl (sb-ext:native-namestring apath)
+  #-sbcl (namestring apath))
 
 ; #+coreutils
 (defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))

@@ -754,6 +754,28 @@
     (search "tests" test-return-value!)
     (pwd))
 
+(def-test/doc-test 'pathname->native
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "/foo/bar baz.txt")
+  (pathname->native #P"/foo/bar baz.txt"))
+
+  ; a file with glob characters in its name: `ls` hands back its
+  ; (possibly escaped) pathname; pathname->native recovers the
+  ; exact on-disk name
+  (def-test/doc-test 'pathname->native
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (let ((nasty "tmp-star*quest?br[ack].txt"))
+      (sh (fn "touch ~A" (q/sh nasty)))
+      (let ((result (and (member nasty (ls "./")
+                                 :key #'pathname->native
+                                 :test (lambda (n full) (search n full)))
+                         t)))
+        (sh (fn "rm ~A" (q/sh nasty)))
+        result)))
+
   (def-test/doc-test 'ls
     `((test-able returns))
     'function
