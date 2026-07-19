@@ -224,6 +224,101 @@ fill this out
 
 
 
+#### WALK-REPLACE-SEXP
+
+> Walks sexpression substituting `oldform` for `newform`.\
+>    It works with lists and well as atoms. Checks equality with `test`\
+>    (which is #'EQUAL by default)\
+
+```{.commonlisp}
+(WALK-REPLACE-SEXP `(+ 1 (* 2 10)) 10 3)
+```
+
+<small><pre>=> (+ 1 (* 2 3))</pre></small>
+
+
+
+```{.commonlisp}
+(WALK-REPLACE-SEXP `(A B (X Y) C) `(X Y) `IT)
+```
+
+<small><pre>=> (A B IT C)</pre></small>
+
+
+
+#### ALISTP
+
+> Test is something is an alist\
+
+```{.commonlisp}
+(ALISTP `((A . 1) (B . 2)))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### WITH-HASH-ENTRY
+
+> Establishes a lexical environment for referring to the _value_ of\
+>    key `akey` on the hash table `ahash` using the anaphor `entry!`.\
+>    So, you can setf `entry!` and the hash-table (for that key) will\
+>    by modified.\
+
+```{.commonlisp}
+(LET ((TMP (MAKE-HASH-TABLE)))
+  (WITH-HASH-ENTRY (TMP :COUNT)
+    (SETF ENTRY! 42))
+  (GETHASH :COUNT TMP))
+```
+
+<small><pre>=> 42</pre></small>
+
+
+
+#### IF-HASH-ENTRY
+
+> Executes `then` if there's a key `akey` in hash-table `ahash` and\
+>    `else` (optional) if not. For convenience, an anaphor `entry!` is\
+>    introduced that is setf-able.\
+
+```{.commonlisp}
+(LET ((TMP (MAKE-HASH-TABLE)))
+  (SETF (GETHASH :A TMP) 1)
+  (LIST (IF-HASH-ENTRY (TMP :A) :PRESENT :ABSENT)
+        (IF-HASH-ENTRY (TMP :B) :PRESENT :ABSENT)))
+```
+
+<small><pre>=> (:PRESENT :ABSENT)</pre></small>
+
+
+
+#### DELIM
+
+> Makes a string with tabs separating values.\
+>    `:what` either :list :listoflist :hash or :alist\
+>    `:sep` the (CHARACTER) separator to use (default is tab)\
+
+```{.commonlisp}
+(DELIM `("a" "b" "c"))
+```
+
+<small><pre>=> "a	b	c"</pre></small>
+
+
+
+#### ROUND-TO
+
+> Round `number` to `precision` decimal places. Stolen from somewhere\
+
+```{.commonlisp}
+(ROUND-TO 3.14159 2)
+```
+
+<small><pre>=> 3.14</pre></small>
+
+
+
 #### WITH-TIME
 
 > Anaphoric macro that executes the car of the body and\
@@ -394,6 +489,144 @@ If the argument to `for-each` is a string and the file exists,
 ```
 
 <small><pre>>> "RED -> cadmium;GREEN -> veridian;"</pre></small>
+
+
+
+-----
+
+### error handling
+
+
+#### OR-DIE
+
+> anaphoric macro that binds ERROR! to the error\
+>    It takes a MESSAGE with can include ERROR! (via\
+>    (format nil...) for example) It also takes ERRFUN\
+>    which it will FUNCALL with the MESSAGE. The default\
+>    is to DIE, but you can, for example, PRINC instead\
+
+```{.commonlisp}
+(OR-DIE ("this message never appears")
+  (/ 3 1))
+```
+
+<small><pre>=> 3</pre></small>
+
+
+
+```{.commonlisp}
+(OR-DIE ((FN "the error was: ~A" (TYPE-OF ERROR!)) :ERRFUN #'ADVISE)
+  (/ 3 0))
+```
+
+<small><pre>=> NIL</pre></small>
+
+
+
+#### OR-DO
+
+> anaphoric macro that binds ERROR! to the error.\
+>    If the body fails, the form ORTHIS gets run.\
+
+```{.commonlisp}
+(OR-DO :FALLBACK
+  (/ 3 1))
+```
+
+<small><pre>=> 3</pre></small>
+
+
+
+```{.commonlisp}
+(OR-DO :FALLBACK
+  (/ 3 0))
+```
+
+<small><pre>=> :FALLBACK</pre></small>
+
+
+Note: the reader macros below necessarily render already-expanded
+
+
+
+#### #?
+
+reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
+```{.commonlisp}
+(IGNORE-ERRORS (/ 3 0))
+```
+
+<small><pre>=> NIL</pre></small>
+
+
+
+#### ?
+
+reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
+```{.commonlisp}
+(LET ((#:G1093 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G1093
+      #:G1093
+      42))
+```
+
+<small><pre>=> 42</pre></small>
+
+
+
+-----
+
+### universal indexing operator syntax
+
+`{ thing index }` works on lists, alists, vectors, hash-tables, structs, and CLOS objects — and is setf-able. Successive indexes burrow into nested structures. (The docs below show the `{ }` reader macro already expanded into `PLUTO-GET`)
+
+
+
+#### {}
+
+`{ thing index }` — the universal indexing operator
+```{.commonlisp}
+(PLUTO::PLUTO-GET `(1 2 3) 1)
+```
+
+<small><pre>=> 2</pre></small>
+
+
+
+```{.commonlisp}
+(LET ((TMP `((:A . 1) (:B . 2))))
+  (PLUTO::PLUTO-GET TMP :B))
+```
+
+<small><pre>=> 2</pre></small>
+
+
+
+```{.commonlisp}
+(LET ((TMP (MAKE-HASH-TABLE)))
+  (SETF (GETHASH :RED TMP) "cadmium")
+  (PLUTO::PLUTO-GET TMP :RED))
+```
+
+<small><pre>=> "cadmium"</pre></small>
+
+
+
+```{.commonlisp}
+(PLUTO::PLUTO-GET #(#(1 2) #(3 4)) 1 0)
+```
+
+<small><pre>=> 3</pre></small>
+
+
+
+```{.commonlisp}
+(LET ((TMP (VECTOR 1 2 3)))
+  (SETF (PLUTO::PLUTO-GET TMP 1) 99)
+  TMP)
+```
+
+<small><pre>=> #(1 99 3)</pre></small>
 
 
 

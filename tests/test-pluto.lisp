@@ -165,6 +165,82 @@
     (and test-error! (null test-return-value!))
     (slurp "this-file-hopefully-does-not-exist.txt"))
 
+(def-test/doc-test 'walk-replace-sexp
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(+ 1 (* 2 3)))
+  (walk-replace-sexp `(+ 1 (* 2 10)) 10 3))
+
+(def-test/doc-test 'walk-replace-sexp
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(a b it c))
+  (walk-replace-sexp `(a b (x y) c) `(x y) `it))
+
+(def-test/doc-test 'alistp
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (alistp `((a . 1) (b . 2))))
+
+  (def-test/doc-test 'alistp
+    `((test-able returns))
+    'function
+    (null test-return-value!)
+    (alistp `(1 2 3)))
+
+(def-test/doc-test 'with-hash-entry
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 42)
+  (let ((tmp (make-hash-table)))
+    (with-hash-entry (tmp :count)
+      (setf entry! 42))
+    (gethash :count tmp)))
+
+(def-test/doc-test 'if-hash-entry
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(:present :absent))
+  (let ((tmp (make-hash-table)))
+    (setf (gethash :a tmp) 1)
+    (list (if-hash-entry (tmp :a) :present :absent)
+          (if-hash-entry (tmp :b) :present :absent))))
+
+  (def-test/doc-test 'if-not-hash-entry
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(:has-entry :no-entry))
+    (let ((tmp (make-hash-table)))
+      (setf (gethash :a tmp) 1)
+      (list (if-not-hash-entry (tmp :a) :no-entry :has-entry)
+            (if-not-hash-entry (tmp :b) :no-entry :has-entry))))
+
+(def-test/doc-test 'delim
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! (fn "a~Cb~Cc" #\Tab #\Tab))
+  (delim `("a" "b" "c")))
+
+  (def-test/doc-test 'delim
+    `((test-able returns))
+    'function
+    (string= test-return-value! (fn "A~C1~%B~C2" #\Tab #\Tab))
+    (delim `((a . 1) (b . 2)) :what :alist))
+
+(def-test/doc-test 'round-to
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 3.14)
+  (round-to 3.14159 2))
+
+(def-test/doc-test 'debug-these
+  `((test-able stderr))
+  'function
+  (and (search "TMP" test-stderr!) (search "84" test-stderr!))
+  (let ((tmp 42))
+    (debug-these tmp (* tmp 2))))
+
 (def-test/doc-test 'with-time
   `((test-able returns) markdown-able)
   'function
@@ -366,6 +442,116 @@
                    (cons 'green "veridian"))))
     (for-each/alist tmp
       (format t "~A -> ~A;" key! value!))))
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "error handling")
+
+(def-test/doc-test 'or-die
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 3)
+  (or-die ("this message never appears")
+    (/ 3 1)))
+
+(def-test/doc-test 'or-die
+  `(markdown-able (test-able returns))
+  'function
+  (and (null test-return-value!)
+       (search "DIVISION-BY-ZERO" test-stderr!))
+  (or-die ((fn "the error was: ~A" (type-of error!))
+           :errfun #'advise)
+    (/ 3 0)))
+
+(def-test/doc-test 'or-do
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 3)
+  (or-do :fallback (/ 3 1)))
+
+(def-test/doc-test 'or-do
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! :fallback)
+  (or-do :fallback (/ 3 0)))
+
+  (def-test/doc-test 'advise
+    `((test-able stderr))
+    'function
+    (search "be careful" test-stderr!)
+    (advise "be careful"))
+
+(def-raw-markdown
+  (fn "Note: the reader macros below necessarily render already-expanded~%~%"))
+
+(def-test/doc-test '|#?|
+  `(markdown-able (test-able returns))
+  "reader macro: `#?<form>` wraps `<form>` in `ignore-errors`"
+  (null test-return-value!)
+  #?(/ 3 0))
+
+(def-test/doc-test '|?|
+  `(markdown-able (test-able returns))
+  "reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`"
+  (= test-return-value! 42)
+  ?(gethash :missing (make-hash-table)) 42)
+
+  ; Ø is possibly getting excised, so: tests but no docs
+  (def-test/doc-test '|Ø|
+    `((test-able returns))
+    "reader macro: `Ø<form>` errors if `<form>` is null, else passes it through"
+    (= test-return-value! 42)
+    (let ((x 42)) Øx))
+
+  (def-test/doc-test '|Ø|
+    `((test-able returns))
+    "reader macro: `Ø<form>` errors if `<form>` is null, else passes it through"
+    (and test-error! (null test-return-value!))
+    (let ((x nil)) Øx))
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "universal indexing operator syntax")
+
+(def-raw-markdown
+  (fn "`{ thing index }` works on lists, alists, vectors, hash-tables, structs, and CLOS objects — and is setf-able. Successive indexes burrow into nested structures. (The docs below show the `{ }` reader macro already expanded into `PLUTO-GET`)~%~%"))
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  "`{ thing index }` — the universal indexing operator"
+  (= test-return-value! 2)
+  { `(1 2 3) 1 })
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (= test-return-value! 2)
+  (let ((tmp `((:a . 1) (:b . 2))))
+    { tmp :b }))
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (string= test-return-value! "cadmium")
+  (let ((tmp (make-hash-table)))
+    (setf (gethash :red tmp) "cadmium")
+    { tmp :red }))
+
+; note: a list-of-lists can't be nth-indexed with { } because
+; every element is a cons, so GET-AT dispatches to alist/assoc
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (= test-return-value! 3)
+  { #(#(1 2) #(3 4)) 1 0 })
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (equalp test-return-value! #(1 99 3))
+  (let ((tmp (vector 1 2 3)))
+    (setf { tmp 1 } 99)
+    tmp))
 
 ; --------------------------------------------------------------- ;
 
