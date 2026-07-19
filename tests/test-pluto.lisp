@@ -118,6 +118,13 @@
     (take `(a b c d e f) 2)
     (list one two)))
 
+  ; taking more than the list holds should error
+  (def-test/doc-test 'take
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (take `(a b) 5))
+
 (def-test/doc-test 'group
   `(markdown-able (test-able returns))
   'function
@@ -139,6 +146,25 @@
   (equal test-return-value! `(a sep b sep c))
   (interpose 'sep `(a b c)))
 
+  ; regression: multibyte characters used to leave junk
+  ; padding at the end of the slurped string
+  (def-test/doc-test 'slurp
+    `((test-able returns))
+    'function
+    (string= test-return-value! (fn "héllo wörld — ünïcode~%"))
+    (let ((tmpf "tmp-slurp-roundtrip.txt"))
+      (barf tmpf (fn "héllo wörld — ünïcode~%") :overwrite t)
+      (let ((contents (slurp tmpf)))
+        (delete-file tmpf)
+        contents)))
+
+  ; slurping a file that doesn't exist should error
+  (def-test/doc-test 'slurp
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (slurp "this-file-hopefully-does-not-exist.txt"))
+
 (def-test/doc-test 'with-time
   `((test-able returns) markdown-able)
   'function
@@ -146,6 +172,16 @@
   (with-time
     (sleep 1)
     (format nil "time elapsed: ~A" (round time!))))
+
+  ; regression: time! is a float with sub-second resolution now
+  (def-test/doc-test 'with-time
+    `((test-able returns))
+    'function
+    (and (floatp test-return-value!)
+         (< 0.05 test-return-value! 1.0))
+    (with-time
+      (sleep 0.1)
+      time!))
 
 (def-test/doc-test 'time-for-humans
   `((test-able returns) markdown-able)
@@ -164,6 +200,25 @@
   'function
   (string= test-return-value! "2.21 days")
   (time-for-humans 191000))
+
+  ; regression: boundary values used to fall through and return NIL
+  (def-test/doc-test 'time-for-humans
+    `((test-able returns))
+    'function
+    (string= test-return-value! "1.00 minutes")
+    (time-for-humans 60))
+
+  (def-test/doc-test 'time-for-humans
+    `((test-able returns))
+    'function
+    (string= test-return-value! "1.00 hours")
+    (time-for-humans 3600))
+
+  (def-test/doc-test 'time-for-humans
+    `((test-able returns))
+    'function
+    (string= test-return-value! "1.00 days")
+    (time-for-humans 86400))
 
 ; --------------------------------------------------------------- ;
 
@@ -311,6 +366,34 @@
                    (cons 'green "veridian"))))
     (for-each/alist tmp
       (format t "~A -> ~A;" key! value!))))
+
+; --------------------------------------------------------------- ;
+
+; more regression tests (test-able only; these never render into the docs)
+
+  ; regression: command output without a trailing newline
+  ; used to lose its last character
+  (def-test/doc-test 'zsh
+    `((test-able returns))
+    'function
+    (string= test-return-value! "foo")
+    (zsh "echo -n foo"))
+
+  (def-test/doc-test 'zsh
+    `((test-able returns))
+    'function
+    (string= test-return-value! "foo")
+    (zsh "echo foo"))
+
+  ; regression: die-if-null used to EVAL its arguments,
+  ; which broke on lexical variables
+  (def-test/doc-test 'die-if-null
+    `((test-able returns))
+    'function
+    (and (null test-error!) (eq test-return-value! :survived))
+    (let ((x 5) (y "hi"))
+      (die-if-null x y)
+      :survived))
 
 ; --------------------------------------------------------------- ;
 ; --------------------------------------------------------------- ;
