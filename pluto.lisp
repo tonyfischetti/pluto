@@ -494,11 +494,11 @@
 
 #+coreutils
 (defmacro with-temp-file (&body body)
-  `(let ((tempfile! (zsh "mktemp")))
+  `(let ((tempfile! (sh "mktemp")))
      (unwind-protect
        (progn
          ,@body)
-         (zsh (fn "rm ~A" tempfile!)))))
+         (sh (fn "rm ~A" tempfile!)))))
 
 ; TODO: document
 (defun display-table (header data width)
@@ -955,15 +955,15 @@
 
 ; TODO: a whole bunch
 #+sbcl
-(defun zsh (acommand &key (dry-run        nil)
-                          (err-fun        #'(lambda (code stderr)
-                                              (error (format nil "~A (~A)" stderr code))))
-                          (echo           nil)
-                          (enc            *pluto-external-format*)
-                          (in             t)
-                          (return-string  t)
-                          (split          nil)
-                          (interactive    nil))
+(defun sh (acommand &key (dry-run        nil)
+                         (err-fun        #'(lambda (code stderr)
+                                             (error (format nil "~A (~A)" stderr code))))
+                         (echo           nil)
+                         (enc            *pluto-external-format*)
+                         (in             t)
+                         (return-string  t)
+                         (split          nil)
+                         (interactive    nil))
   "Runs command `acommand` through the shell specified by the global *pluto-shell*
    `dry-run` just prints the command (default nil)
    `err-fun` takes a function that takes an error code and the STDERR output
@@ -1002,13 +1002,13 @@
 
 ; TODO: fill in doc string
 #+ecl
-(defun zsh (acommand &key (dry-run        nil)
-                          (err-fun        #'(lambda (code stderr)
-                                              (error (format nil "~A (~A)" stderr code))))
-                          (echo           nil)
-                          (return-string  t)
-                          (split          nil)
-                          (interactive  nil))
+(defun sh (acommand &key (dry-run        nil)
+                         (err-fun        #'(lambda (code stderr)
+                                             (error (format nil "~A (~A)" stderr code))))
+                         (echo           nil)
+                         (return-string  t)
+                         (split          nil)
+                         (interactive  nil))
   (flet ((strip (astring)
     (if (and (> (length astring) 0)
              (char= #\Newline (char astring (- (length astring) 1))))
@@ -1035,7 +1035,7 @@
                         retcode)))))))
 
 #+(or sbcl ecl)
-(setf (fdefinition 'sh) #'zsh)
+(setf (fdefinition 'zsh) #'sh)
 
 ; TODO document
 (defmacro sh-simple (acommand)
@@ -1071,10 +1071,10 @@
 ; TODO: beef out
 ; TODO: distro
 (defun sys/info ()
-  (let ((kernel         (zsh "uname -s"))
-        (os             (zsh "uname -o"))
+  (let ((kernel         (sh "uname -s"))
+        (os             (sh "uname -o"))
         (hostname       (hostname))
-        (architecture   (zsh "uname -m")))
+        (architecture   (sh "uname -m")))
     (let ((info
             `((:kernel . ,(cond ((string= kernel "Linux")  :linux)
                                ((string= kernel "Darwin") :darwin)
@@ -1087,7 +1087,7 @@
               (:architecture . ,(cond ((search "x86" architecture)   :x86)
                                       ((search "arm" architecture)   :arm))))))
       (when (eq (cdr (assoc :os info))  :gnu/linux)
-        (push `(:distro . ,(create-keyword (zsh "lsb_release -a 2> /dev/null | head -n 1 | awk '{ print $3 }'")))
+        (push `(:distro . ,(create-keyword (sh "lsb_release -a 2> /dev/null | head -n 1 | awk '{ print $3 }'")))
               info))
       info)))
 
@@ -1196,7 +1196,7 @@
    (values num-of-columns t) if successful and (values 200 nil)
    if not"
   (let ((raw-res (ignore-errors (parse-integer
-                                  #+sbcl (zsh "echo $COLUMNS")
+                                  #+sbcl (sh "echo $COLUMNS")
                                   #-sbcl (get-envvar "COLUMNS" "80")
                                   ))))
     (if raw-res (values raw-res t) (values 200 nil))))
@@ -1330,7 +1330,7 @@
                     (:lines     "-l")
                     (otherwise  ""))))
     (let ((response
-            (zsh (fn "~A=$(echo -e \"~A\" | smenu ~A -n~A ~A ~A); echo $~A"
+            (sh (fn "~A=$(echo -e \"~A\" | smenu ~A -n~A ~A ~A); echo $~A"
                      tmpvar xchoice (if num-p "-N" "")
                      limit xmode
                      (if sep (fn "-T '~A'" sep) "")
@@ -1394,7 +1394,7 @@
                      apath
                      (if relative-to
                        (fn "--relative-to=~A" (realpath relative-to)) ""))))
-    (nth-value 0 (zsh command))))
+    (nth-value 0 (sh command))))
 
 (defun inspect-pathname (apathname)
   (format *error-output* "received:              ~S~%" apathname)
