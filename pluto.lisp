@@ -100,8 +100,19 @@
 (defparameter *pluto-log-file*         "pluto-log.out")
 (defparameter *pluto-curly-test*       #'equal)
 (defparameter *pluto-external-format*  :UTF-8)
-#+:linux  (defparameter *pluto-shell*            "/usr/local/bin/zsh")
-#+:darwin (defparameter *pluto-shell*            "/opt/homebrew/bin/zsh")
+(defun %resolve-shell ()
+  "Resolves the shell that `sh` (et al.) will use:
+   the PLUTO_SHELL environment variable (if set and non-empty),
+   then well-known zsh locations, then /bin/sh"
+  (let ((from-env (or #+sbcl (sb-ext:posix-getenv "PLUTO_SHELL")
+                      #+ecl  (ext:getenv "PLUTO_SHELL"))))
+    (or
+      (and from-env (string/= from-env "") from-env)
+      (find-if #'probe-file '("/opt/homebrew/bin/zsh" "/usr/local/bin/zsh"
+                              "/usr/bin/zsh" "/bin/zsh"))
+      "/bin/sh")))
+
+(defparameter *pluto-shell* (%resolve-shell))
 
 (defvar *unix-epoch-difference*
   (encode-universal-time 0 0 0 1 1 1970 0))

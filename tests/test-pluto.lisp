@@ -19,6 +19,15 @@
 
 (def-raw-markdown "fill this out")
 
+  ; *pluto-shell* should always resolve to a real executable
+  (def-test/doc-test '*pluto-shell*
+    `((test-able returns))
+    ""
+    (and (stringp test-return-value!)
+         (probe-file test-return-value!)
+         t)
+    *pluto-shell*)
+
 ; --------------------------------------------------------------- ;
 
 (def-test/doc-section "formatting")
