@@ -25,6 +25,12 @@
     ; libstyx
     :stat-filesize
     :is-symlink-p
+    :tty-p
+    :terminal-columns
+    :terminal-rows
+    :acquire-lock-file
+    :release-lock-file
+    :with-lock-file
     :md5/string
     :md5/file
     :sha256/string
@@ -116,6 +122,77 @@
 ; if the namestring has a slash at the end, it doesn't work properly
 ; so we need to check if it's a directory and then strip the trailing
 ; slash
+
+
+; -------------------
+;; terminal things
+
+(cffi:defcfun "styx_isatty" :int (fd :int))
+
+(defun tty-p (&optional (fd 1))
+  "Is file descriptor FD (default 1 [stdout]) attached to a
+   terminal? Use this to suppress ANSI colors/progress bars
+   when output is piped or redirected"
+  (= 1 (styx-isatty fd)))
+
+(cffi:defcfun "styx_terminal_columns" :int (fd :int))
+(cffi:defcfun "styx_terminal_rows" :int (fd :int))
+
+(defun terminal-columns ()
+  "Asks the terminal its width with the TIOCGWINSZ ioctl
+   (trying stdout, stderr, then stdin). Returns (values cols t),
+   or (values 80 nil) if no terminal is attached"
+  (loop for fd in '(1 2 0)
+        for res = (styx-terminal-columns fd)
+        when (> res 0) do (return (values res t))
+        finally (return (values 80 nil))))
+
+(defun terminal-rows ()
+  "Like TERMINAL-COLUMNS but for the terminal's height
+   (fallback is (values 24 nil))"
+  (loop for fd in '(1 2 0)
+        for res = (styx-terminal-rows fd)
+        when (> res 0) do (return (values res t))
+        finally (return (values 24 nil))))
+
+
+; -------------------
+;; advisory file locking (flock)
+
+(cffi:defcfun "styx_flock_acquire" :int
+  (path :string) (exclusive :int) (nonblocking :int))
+(cffi:defcfun "styx_flock_release" :int (fd :int))
+
+(defun acquire-lock-file (path &key (exclusive t) (wait t))
+  "Acquires an advisory lock (flock) on PATH (creating the file if
+   needed) and returns a lock handle. If WAIT is NIL and somebody
+   else holds the lock, returns NIL immediately instead of blocking.
+   Errors if the lock file can't be opened."
+  (let ((ret (styx-flock-acquire (%->native path)
+                                 (if exclusive 1 0)
+                                 (if wait 0 1))))
+    (cond ((= ret -2)  nil)
+          ((< ret 0)   (error "acquire-lock-file: cannot lock ~A" path))
+          (t           ret))))
+
+(defun release-lock-file (handle)
+  "Releases a lock acquired with ACQUIRE-LOCK-FILE"
+  (if (= 0 (styx-flock-release handle))
+    t
+    (error "release-lock-file: cannot release lock")))
+
+(defmacro with-lock-file ((path &key (exclusive t) (wait t)) &body body)
+  "Runs BODY while holding an flock on PATH (great for cron scripts
+   that shouldn't run concurrently). If WAIT is NIL and the lock is
+   already held elsewhere, BODY is skipped and NIL is returned."
+  (let ((handle (gensym)))
+    `(let ((,handle (acquire-lock-file ,path
+                                       :exclusive ,exclusive
+                                       :wait ,wait)))
+       (when ,handle
+         (unwind-protect
+           (progn ,@body)
+           (release-lock-file ,handle))))))
 
 
 ; -------------------

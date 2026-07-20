@@ -875,16 +875,89 @@
 ; --------------------------------------------------------------- ;
 ; --------------------------------------------------------------- ;
 
-; (ql:quickload :styx :silent t)
-; (use-package :styx)
-;
-; (def-test/doc-section "temporary styx tests")
-;
-; (def-test/doc-test 'stat-filesize
-;   `(markdown-able (test-able returns))
-;   'function
-;   (= test-return-value! 14433)
-;   (stat-filesize "interior-of-a-heart.txt"))
+; build a fresh libstyx (and refresh ~/.lisp, where styx.lisp looks)
+(sh "make -C ../libstyx -s install")
+(ql:quickload :styx :silent t)
+(use-package :styx)
+
+(def-test/doc-section "temporary styx tests")
+
+(def-test/doc-test 'stat-filesize
+  `(markdown-able (test-able returns))
+  "Size of a file (via `stat`/`lstat`) without opening it"
+  (= test-return-value! 3497)
+  (stat-filesize "somebody.txt"))
+
+(def-test/doc-test 'is-symlink-p
+  `(markdown-able (test-able returns))
+  "Is it a symlink? (something portable CL cannot ask)"
+  (equal test-return-value! `(t nil))
+  (progn
+    (sh "ln -sf somebody.txt tmp-demo-link.txt")
+    (let ((res (list (is-symlink-p "tmp-demo-link.txt")
+                     (is-symlink-p "somebody.txt"))))
+      (sh "rm tmp-demo-link.txt")
+      res)))
+
+(def-test/doc-test 'md5/string
+  `(markdown-able (test-able returns))
+  "Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file variants"
+  (string= test-return-value! "5d41402abc4b2a76b9719d911017c592")
+  (md5/string "hello"))
+
+(def-test/doc-test 'sha256/file
+  `(markdown-able (test-able returns))
+  "File hashing streams in 64KB chunks (never slurps the whole file)"
+  (string= test-return-value!
+           "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0")
+  (sha256/file "somebody.txt"))
+
+  (def-test/doc-test 'ripemd160/string
+    `((test-able returns))
+    "RIPEMD160 (lives in OpenSSL 3's legacy provider)"
+    (string= test-return-value! "108f07b8382412612c048d07d13f814118445acd")
+    (ripemd160/string "hello"))
+
+  ; regression: hex strings with embedded 00 bytes used to be
+  ; truncated by strlen before hashing
+  (def-test/doc-test 'sha256/hexstring
+    `((test-able returns))
+    'function
+    (string= test-return-value!
+             "06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8")
+    (sha256/hexstring "00ff"))
+
+  ; hashing a missing file signals instead of segfaulting
+  (def-test/doc-test 'md5/file
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (md5/file "no-such-file.bin"))
+
+  ; environment-dependent, so: weak assertions, no docs
+  (def-test/doc-test 'tty-p
+    `((test-able returns))
+    'function
+    (member test-return-value! `(t nil))
+    (tty-p))
+
+  (def-test/doc-test 'terminal-columns
+    `((test-able returns))
+    'function
+    (and (integerp test-return-value!) (> test-return-value! 0))
+    (nth-value 0 (terminal-columns)))
+
+(def-test/doc-test 'with-lock-file
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(:ran nil))
+  (let ((lockf "tmp-demo.lock"))
+    (let ((res (with-lock-file (lockf)
+                 ; while we hold it, a second (non-blocking)
+                 ; acquisition fails
+                 (list :ran (acquire-lock-file lockf :wait nil)))))
+      (delete-file lockf)
+      res)))
 
 
 ; --------------------------------------------------------------- ;
