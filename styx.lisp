@@ -85,9 +85,19 @@
 ; libstyx ----------------------------------------------- ;
 
 (cffi:define-foreign-library libstyx
+  (:darwin "libstyx.dylib")
+  (:unix   "libstyx.so")
   (t (:default "libstyx")))
 
-(cffi:use-foreign-library libstyx)
+;; Load by absolute path so the pathname SBCL bakes into a saved core
+;; (save-lisp-and-die) is absolute.  A bare name resolves fine at load
+;; time (via *foreign-library-directories* / CWD), but SBCL records
+;; that same bare name in the core and, on restart, dlopen can't find
+;; it (it searches system paths, not ~/.lisp or the CWD) -> debugger.
+(cffi:load-foreign-library
+  (merge-pathnames #+darwin ".lisp/libstyx.dylib"
+                   #-darwin ".lisp/libstyx.so"
+                   (user-homedir-pathname)))
 
 ; the C side returns malloc'd hex strings (or NULL on error);
 ; `:free-from-foreign` has cffi free them after conversion
