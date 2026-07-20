@@ -83,32 +83,35 @@
 
 (cffi:use-foreign-library libstyx)
 
+; the C side returns malloc'd hex strings (or NULL on error);
+; `:free-from-foreign` has cffi free them after conversion
+; `%->native` gives C the exact on-disk name (no namestring escapes)
+
+(defun %->native (afilename)
+  (if (pathnamep afilename)
+    (pathname->native afilename)
+    afilename))
+
 ; -------------------
 ;; stat-filesize
-(cffi:defcfun "styx_stat_filesize" :int64 (afilename :string) (follow_symlinks :int) &rest)
+(cffi:defcfun "styx_stat_filesize" :int64
+  (afilename :string) (follow_symlinks :int))
 
-; TODO: everything
-; TODO: check files
 (defun stat-filesize (afilename &key (follow-symlinks t))
-  (when (pathnamep afilename)
-    (setq afilename (escape-namestring/c (namestring afilename))))
-  (let ((ret (styx-stat-filesize afilename (if follow-symlinks 1 0))))
+  (let ((ret (styx-stat-filesize (%->native afilename)
+                                 (if follow-symlinks 1 0))))
     (if (< ret 0)
-      (error "something went wrong")
+      (error "stat-filesize: cannot stat ~A" afilename)
       ret)))
 
 ; -------------------
 ;; is-symlink-p
-(cffi:defcfun "styx_stat_is_symlink_p" :int (afilename :string) &rest)
+(cffi:defcfun "styx_stat_is_symlink_p" :int (afilename :string))
 
-; TODO: everything
-; TODO: check files
 (defun is-symlink-p (afilename)
-  (when (pathnamep afilename)
-    (setq afilename (escape-namestring/c (namestring afilename))))
-  (let ((ret (styx-stat-is-symlink-p afilename)))
+  (let ((ret (styx-stat-is-symlink-p (%->native afilename))))
     (if (< ret 0)
-      (error "something went wrong")
+      (error "is-symlink-p: cannot lstat ~A" afilename)
       (if (= ret 0) nil t))))
 ; if the namestring has a slash at the end, it doesn't work properly
 ; so we need to check if it's a directory and then strip the trailing
@@ -117,68 +120,72 @@
 
 ; -------------------
 ;; md5
-(cffi:defcfun "styx_md5_string" :string (astring :string) &rest)
-(cffi:defcfun "styx_md5_file" :string (afilename :string) &rest)
+(cffi:defcfun "styx_md5_string" (:string :free-from-foreign t)
+  (astring :string))
+(cffi:defcfun "styx_md5_file" (:string :free-from-foreign t)
+  (afilename :string))
 
-; TODO: everything
-; TODO: check files, return values, etc...
 (defun md5/string (astring)
-  (styx-md5-string astring))
+  (or (styx-md5-string astring)
+      (error "md5/string: hashing failed")))
 
 (defun md5/file (afilename)
-  (when (pathnamep afilename)
-    (setq afilename (escape-namestring/c (namestring afilename))))
-  (styx-md5-file afilename))
+  (or (styx-md5-file (%->native afilename))
+      (error "md5/file: cannot hash ~A" afilename)))
 
 
 ; -------------------
 ;; sha256
-(cffi:defcfun "styx_sha256_string" :string (astring :string) &rest)
-(cffi:defcfun "styx_sha256_hexstring" :string (astring :string) &rest)
-(cffi:defcfun "styx_sha256_file" :string (afilename :string) &rest)
+(cffi:defcfun "styx_sha256_string" (:string :free-from-foreign t)
+  (astring :string))
+(cffi:defcfun "styx_sha256_hexstring" (:string :free-from-foreign t)
+  (astring :string))
+(cffi:defcfun "styx_sha256_file" (:string :free-from-foreign t)
+  (afilename :string))
 
-; TODO: everything
-; TODO: check files, return values, etc...
 (defun sha256/string (astring)
-  (styx-sha256-string astring))
+  (or (styx-sha256-string astring)
+      (error "sha256/string: hashing failed")))
 
 (defun sha256/hexstring (astring)
-  (styx-sha256-hexstring astring))
+  (or (styx-sha256-hexstring astring)
+      (error "sha256/hexstring: invalid hex string ~S" astring)))
 
 (defun sha256/file (afilename)
-  (when (pathnamep afilename)
-    (setq afilename (escape-namestring/c (namestring afilename))))
-  (styx-sha256-file afilename))
+  (or (styx-sha256-file (%->native afilename))
+      (error "sha256/file: cannot hash ~A" afilename)))
 
 
 ; -------------------
 ;; sha512
-(cffi:defcfun "styx_sha512_string" :string (astring :string) &rest)
-(cffi:defcfun "styx_sha512_file" :string (afilename :string) &rest)
+(cffi:defcfun "styx_sha512_string" (:string :free-from-foreign t)
+  (astring :string))
+(cffi:defcfun "styx_sha512_file" (:string :free-from-foreign t)
+  (afilename :string))
 
-; TODO: everything
-; TODO: check files, return values, etc...
 (defun sha512/string (astring)
-  (styx-sha512-string astring))
+  (or (styx-sha512-string astring)
+      (error "sha512/string: hashing failed")))
 
 (defun sha512/file (afilename)
-  (when (pathnamep afilename)
-    (setq afilename (escape-namestring/c (namestring afilename))))
-  (styx-sha512-file afilename))
+  (or (styx-sha512-file (%->native afilename))
+      (error "sha512/file: cannot hash ~A" afilename)))
 
 
 ; -------------------
 ;; ripemd160
-(cffi:defcfun "styx_ripemd160_string" :string (astring :string) &rest)
-(cffi:defcfun "styx_ripemd160_hexstring" :string (astring :string) &rest)
+(cffi:defcfun "styx_ripemd160_string" (:string :free-from-foreign t)
+  (astring :string))
+(cffi:defcfun "styx_ripemd160_hexstring" (:string :free-from-foreign t)
+  (astring :string))
 
-; TODO: everything
-; TODO: check files, return values, etc...
 (defun ripemd160/string (astring)
-  (styx-ripemd160-string astring))
+  (or (styx-ripemd160-string astring)
+      (error "ripemd160/string: hashing failed")))
 
 (defun ripemd160/hexstring (astring)
-  (styx-ripemd160-hexstring astring))
+  (or (styx-ripemd160-hexstring astring)
+      (error "ripemd160/hexstring: invalid hex string ~S" astring)))
 
 ;---------------------------------------------------------;
 

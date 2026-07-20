@@ -1,6 +1,9 @@
 .DS_Store
 *.o
 *.so
+*.dylib
+tests/ocicl.csv
+tests/ocicl/
 libstyx/demo.lisp
 tmp.lisp
 tmp2.lisp
