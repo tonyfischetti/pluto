@@ -974,6 +974,22 @@
   (append (multiple-value-list (get-terminal-columns))
           (multiple-value-list (terminal-columns))))
 
+; a second acquisition (even in the same process — it's a fresh
+; open file description) fails while held, succeeds after release
+(def-test/doc-test 'with-lock-file
+  `(markdown-able (test-able returns))
+  "Runs body while flock-holding path (e.g. so a cron script won't run twice); `:wait nil` skips the body instead of blocking"
+  (equal test-return-value! `(:ran nil :free-again t))
+  (let ((lockf "tmp-demo.lock"))
+    (let ((res (with-lock-file (lockf)
+                 (list :ran (acquire-lock-file lockf :wait nil)))))
+      (let ((handle (acquire-lock-file lockf :wait nil)))
+        (when handle
+          (setq res (append res (list :free-again
+                                      (release-lock-file handle))))))
+      (delete-file lockf)
+      res)))
+
 
 ; --------------------------------------------------------------- ;
 

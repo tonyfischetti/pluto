@@ -895,3 +895,22 @@ File hashing streams in 64KB chunks (never slurps the whole file)
 <small><pre>=> "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0"</pre></small>
 
 
+
+#### WITH-LOCK-FILE
+
+Runs body while flock-holding path (e.g. so a cron script won't run twice); `:wait nil` skips the body instead of blocking
+```{.commonlisp}
+(LET ((LOCKF "tmp-demo.lock"))
+  (LET ((RES
+         (WITH-LOCK-FILE (LOCKF)
+           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))
+    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))
+      (WHEN HANDLE
+        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))
+    (DELETE-FILE LOCKF)
+    RES))
+```
+
+<small><pre>=> (:RAN NIL :FREE-AGAIN T)</pre></small>
+
+

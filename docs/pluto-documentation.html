@@ -349,6 +349,8 @@ id="toc-stat-filesize">STAT-FILESIZE</a></li>
 <li><a href="#is-symlink-p" id="toc-is-symlink-p">IS-SYMLINK-P</a></li>
 <li><a href="#md5string" id="toc-md5string">MD5/STRING</a></li>
 <li><a href="#sha256file" id="toc-sha256file">SHA256/FILE</a></li>
+<li><a href="#with-lock-file"
+id="toc-with-lock-file">WITH-LOCK-FILE</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -1068,6 +1070,22 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb64
 class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>(SHA256/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0"</pre>
+<p></small></p>
+<h4 id="with-lock-file">WITH-LOCK-FILE</h4>
+<p>Runs body while flock-holding path (e.g. so a cron script won’t run
+twice); <code>:wait nil</code> skips the body instead of blocking</p>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>(LET ((LOCKF <span class="st">&quot;tmp-demo.lock&quot;</span>))</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>  (LET ((RES</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>         (WITH-LOCK-FILE (LOCKF)</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>      (WHEN HANDLE</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>    (DELETE-FILE LOCKF)</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>    RES))</span></code></pre></div>
+<small>
+<pre>=> (:RAN NIL :FREE-AGAIN T)</pre>
 <p></small></p>
 </body>
 </html>

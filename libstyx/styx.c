@@ -17,7 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -69,6 +72,38 @@ int styx_terminal_size(int fd, int* rows, int* cols){
 	*rows = ws.ws_row;
 	*cols = ws.ws_col;
 	return 0;
+}
+
+
+/* ------------------------------------------------------- */
+/* advisory file locking (flock) ------------------------- */
+
+int styx_flock_acquire(const char* path, int exclusive, int nonblocking){
+	/* O_RDONLY: flock doesn't need write access, and this way a
+	 * shared lock works on files we aren't allowed to write.
+	 * O_CLOEXEC: children we spawn must NOT inherit the fd, or a
+	 * child outliving us silently keeps the lock held. */
+	int fd = open(path, O_RDONLY | O_CREAT | O_CLOEXEC, 0644);
+	if(fd < 0){
+		return -1;
+	}
+	int op = (exclusive ? LOCK_EX : LOCK_SH) | (nonblocking ? LOCK_NB : 0);
+	int ret;
+	do {
+		ret = flock(fd, op);
+	} while(ret != 0 && errno == EINTR);
+	if(ret != 0){
+		int e = errno;
+		close(fd);
+		return (e == EWOULDBLOCK) ? -2 : -1;
+	}
+	return fd;
+}
+
+int styx_flock_release(int fd){
+	/* no LOCK_UN needed: an flock lock dies with the (sole)
+	 * open file description that holds it */
+	return close(fd);
 }
 
 

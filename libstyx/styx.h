@@ -24,6 +24,15 @@ int   styx_isatty(int fd);
  * 0 on success, -1 if fd isn't a terminal */
 int   styx_terminal_size(int fd, int* rows, int* cols);
 
+/* advisory file locking (flock). acquire opens path (creating
+ * it if needed; O_CLOEXEC, so spawned children don't inherit
+ * the lock) and returns the fd that holds the lock; one extra
+ * return code beyond the -1 convention: -2 means nonblocking
+ * and somebody else holds it. release is just closing that fd
+ * (an flock lock dies with its open file description) */
+int   styx_flock_acquire(const char* path, int exclusive, int nonblocking);
+int   styx_flock_release(int fd);
+
 char* styx_md5_data(const char* data, long len);
 char* styx_md5_string(const char* astring);
 char* styx_md5_file(const char* afilename);

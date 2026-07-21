@@ -29,6 +29,9 @@
     :terminal-size
     :terminal-columns
     :terminal-rows
+    :acquire-lock-file
+    :release-lock-file
+    :with-lock-file
     :md5/string
     :md5/file
     :sha256/string
@@ -177,6 +180,47 @@
   (multiple-value-bind (rows cols real-p) (terminal-size)
     (declare (ignore cols))
     (values rows real-p)))
+
+
+; -------------------
+;; advisory file locking (flock)
+(cffi:defcfun "styx_flock_acquire" :int
+  (path :string) (exclusive :int) (nonblocking :int))
+(cffi:defcfun "styx_flock_release" :int (fd :int))
+
+(defun acquire-lock-file (path &key (exclusive t) (wait t))
+  "Acquires an advisory lock (flock) on PATH (creating the file
+   if needed) and returns a lock handle. If WAIT is nil and
+   somebody else holds the lock, returns nil immediately instead
+   of blocking. Errors if the lock file can't be opened. The
+   underlying fd is O_CLOEXEC: processes spawned while holding
+   the lock don't inherit it"
+  (let ((ret (styx-flock-acquire (%->native path)
+                                 (if exclusive 1 0)
+                                 (if wait 0 1))))
+    (cond ((= ret -2) nil)
+          ((< ret 0)  (error "acquire-lock-file: cannot lock ~A" path))
+          (t          ret))))
+
+(defun release-lock-file (handle)
+  "Releases a lock acquired with ACQUIRE-LOCK-FILE"
+  (if (= 0 (styx-flock-release handle))
+    t
+    (error "release-lock-file: cannot release lock")))
+
+(defmacro with-lock-file ((path &key (exclusive t) (wait t)) &body body)
+  "Runs BODY while holding an flock on PATH (great for cron
+   scripts that shouldn't run concurrently). If WAIT is nil and
+   the lock is already held elsewhere, BODY is skipped and nil
+   is returned"
+  (let ((handle (gensym "LOCK-HANDLE")))
+    `(let ((,handle (acquire-lock-file ,path
+                                       :exclusive ,exclusive
+                                       :wait ,wait)))
+       (when ,handle
+         (unwind-protect
+           (progn ,@body)
+           (release-lock-file ,handle))))))
 
 
 ; -------------------
