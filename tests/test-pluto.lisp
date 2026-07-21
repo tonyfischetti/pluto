@@ -816,6 +816,20 @@
         (zsh "rm -rf tmp-walk")
         found)))
 
+  ; regression: :regex compiled into a call to charon's ~m macro
+  ; as if it were a function — it errored on every single use
+  (def-test/doc-test 'file-find
+    `((test-able returns))
+    'function
+    (and (= (length test-return-value!) 1)
+         (string= (file-namestring (car test-return-value!))
+                  "keep.txt"))
+    (progn
+      (zsh "mkdir -p tmp-walk2 && touch tmp-walk2/keep.txt tmp-walk2/skip.md")
+      (let ((found (file-find "tmp-walk2" :type :file :regex "keep")))
+        (zsh "rm -rf tmp-walk2")
+        found)))
+
   ; regression: a find that matches nothing used to die on
   ; (setf (car nil)) instead of returning nil
   (def-test/doc-test 'file-find

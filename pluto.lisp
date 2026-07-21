@@ -1720,11 +1720,23 @@
   (make-pathname :type new-extension
                  :defaults apath))
 
+; pluto can't use charon's `~m` (the dependency points the other
+; way), and referencing it here just compiled into a call to a
+; function that never exists; regex support arrives with charon
+; (cl-ppcre) at runtime, so look it up then
+(defun %regex-matches-p (regex astring)
+  (let ((scan (and (find-package "CL-PPCRE")
+                   (find-symbol "SCAN" "CL-PPCRE"))))
+    (unless (and scan (fboundp scan))
+      (error "file-find: :regex/:inv-regex needs charon (cl-ppcre) loaded"))
+    (funcall scan regex astring)))
+
 ; TODO: document
 (defun file-find (apathname &key (type nil) (test (constantly t)) (ext nil)
                             (regex nil) (inv-regex nil) (full t))
   "ext implies type file
-   regex is for full path if full is t (default)"
+   regex is for full path if full is t (default)
+   (:regex/:inv-regex require charon to be loaded)"
   (let (to-return)
     (walk-directory apathname #'(lambda (x) (push x to-return))
                     :directories :depth-first
@@ -1747,11 +1759,11 @@
                         to-return)))
     (when regex
       (setq to-return (remove-if-not
-                        (lambda (x) (~m (namestring x) regex))
+                        (lambda (x) (%regex-matches-p regex (namestring x)))
                         to-return)))
     (when inv-regex
       (setq to-return (remove-if
-                        (lambda (x) (~m (namestring x) inv-regex))
+                        (lambda (x) (%regex-matches-p inv-regex (namestring x)))
                         to-return)))
     to-return))
 
