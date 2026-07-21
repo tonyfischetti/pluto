@@ -376,18 +376,23 @@
      `:a` - append to a file (create if doesn't exist)
      `:r` - read a file      (in text mode)
      `:b` - read a file      (in binary mode [unsigned-byte 8])
-    Only provide one of these arguments"
+    Only provide one of these arguments
+    The writing modes create the file if it doesn't exist;
+    the reading modes error"
    (let ((dir (cond
                 ((eq key :w) :output)       ((eq key :a) :output)
                 ((eq key :r) :input)        ((eq key :b) :input)))
          (iex (cond
                 ((eq key :w) :supersede)    ((eq key :a) :append)
-                ((eq key :r) :append)       ((eq key :b) :append))))
+                ((eq key :r) :append)       ((eq key :b) :append)))
+         (idne (if (or (eq key :w) (eq key :a)) :create :error)))
     `(with-open-file (stream! ,filename :direction ,dir :if-exists ,iex
-                              ,@(when (eq key :b)
-                                  `(':element-type 'unsigned-byte))
-                              :if-does-not-exist :create
-                              :external-format *pluto-external-format*)
+                              :if-does-not-exist ,idne
+                              ; external-format is a text-mode
+                              ; affair; :b gets real octets
+                              ,@(if (eq key :b)
+                                  `(:element-type '(unsigned-byte 8))
+                                  `(:external-format *pluto-external-format*)))
        ,@body)))
 
 (defun interpose (separator list)

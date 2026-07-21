@@ -199,6 +199,27 @@
     (and test-error! (null test-return-value!))
     (slurp "this-file-hopefully-does-not-exist.txt"))
 
+  ; regression: the reading modes used :if-does-not-exist
+  ; :create — reading a missing file silently made an empty one
+  (def-test/doc-test 'with-a-file
+    `((test-able returns))
+    'function
+    (and test-error!
+         (not (probe-file "tmp-should-not-exist.txt")))
+    (with-a-file "tmp-should-not-exist.txt" :r
+      (read-line stream!)))
+
+  ; regression: :b used element-type 'unsigned-byte (not 8-bit
+  ; octets); "we" must read back as (119 101)
+  (def-test/doc-test 'with-a-file
+    `((test-able returns))
+    'function
+    (equal test-return-value! `((unsigned-byte 8) 119 101))
+    (with-a-file "somebody.txt" :b
+      (list (stream-element-type stream!)
+            (read-byte stream!)
+            (read-byte stream!))))
+
 (def-test/doc-test 'walk-replace-sexp
   `(markdown-able (test-able returns))
   'function
