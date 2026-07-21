@@ -16,6 +16,10 @@
 off_t styx_stat_filesize(const char* afilename, int follow_symlinks);
 int   styx_stat_is_symlink_p(const char* afilename);
 
+/* a plain predicate, not the -1 convention: 1 if fd refers to
+ * a terminal, 0 if not (a bad fd is simply not a terminal) */
+int   styx_isatty(int fd);
+
 char* styx_md5_data(const char* data, long len);
 char* styx_md5_string(const char* astring);
 char* styx_md5_file(const char* afilename);

@@ -935,6 +935,15 @@
   (and test-error! (null test-return-value!))
   (md5/file "no-such-file.bin"))
 
+; whether stdout is a tty depends on how the tests are run,
+; but a bogus fd is deterministically not one
+(def-test/doc-test 'tty-p
+  `((test-able returns))
+  'function
+  (and (member (car test-return-value!) `(t nil))
+       (null (cadr test-return-value!)))
+  (list (tty-p) (tty-p 999)))
+
 
 ; --------------------------------------------------------------- ;
 

@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <openssl/evp.h>
@@ -49,6 +50,14 @@ int styx_stat_is_symlink_p(const char* afilename){
 		return -1;
 	}
 	return S_ISLNK(st.st_mode);
+}
+
+
+/* ------------------------------------------------------- */
+/* terminal things --------------------------------------- */
+
+int styx_isatty(int fd){
+	return isatty(fd);
 }
 
 

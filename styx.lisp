@@ -25,6 +25,7 @@
     ; libstyx
     :stat-filesize
     :is-symlink-p
+    :tty-p
     :md5/string
     :md5/file
     :sha256/string
@@ -126,6 +127,18 @@
 ; if the namestring has a slash at the end, it doesn't work properly
 ; so we need to check if it's a directory and then strip the trailing
 ; slash
+
+
+; -------------------
+;; tty-p
+(cffi:defcfun "styx_isatty" :int (fd :int))
+
+(defun tty-p (&optional (fd 1))
+  "Is file descriptor FD (default 1 [stdout]) attached to a
+   terminal? Use it to suppress ANSI colors / progress bars when
+   output is piped or redirected. A closed or bogus FD is simply
+   not a terminal (nil) — no error"
+  (= 1 (styx-isatty fd)))
 
 
 ; -------------------
