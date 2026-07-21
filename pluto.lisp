@@ -20,7 +20,7 @@
     :*unix-epoch-difference* :*whitespaces*
 
     ; formatting
-    :fn :ft
+    :fn :ft :q/fmt
 
     ; ansi colors and codes
     :make-ansi-escape :+reset-terminal-color+ :+magenta-bold+ :+red-bold+
@@ -133,6 +133,15 @@
 (defmacro ft (&rest everything)
   "Alias to (format t ...)"
   `(format t ,@everything))
+
+(defun q/fmt (thing)
+  "Quotes THING (which gets princ-ed) so that it's safe to
+   embed in a format control string: escapes `~` as `~~`
+   e.g. (fn (str+ \"downloading \" (q/fmt afilename) \": ~A%\") pct)"
+  (with-output-to-string (out)
+    (loop for ch across (format nil "~A" thing)
+          do (write-char ch out)
+          when (char= ch #\~) do (write-char #\~ out))))
 
 ;---------------------------------------------------------;
 
@@ -569,9 +578,13 @@
 ; Error handling -----------------------------------------;
 
 (defun die (message &key (status 1) (red-p t))
-  "Prints MESSAGE to *ERROR-OUTPUT* and quits with a STATUS (default 1)"
+  "Prints MESSAGE to *ERROR-OUTPUT* and quits with a STATUS
+   (default 1). MESSAGE is printed as-is — never interpreted as
+   a format control string, so a stray `~` (in, say, an error
+   message we're relaying) can't crash die while dying. Build
+   fancy messages with `fn` (and `q/fmt`) first"
   (format *error-output* "~A~A~A~%" (if red-p +red-bold+ "")
-                                      (fn message)
+                                      message
                                     (if red-p +reset-terminal-color+ ""))
   #+sbcl  (sb-ext:quit :unix-status status)
   #+ecl   (ext:exit status))

@@ -709,6 +709,20 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 
 
 
+#### Q/FMT
+
+> Quotes THING (which gets princ-ed) so that it's safe to\
+>    embed in a format control string: escapes `~` as `~~`\
+>    e.g. (fn (str+ "downloading " (q/fmt afilename) ": ~A%") pct)\
+
+```{.commonlisp}
+(FN (Q/FMT "100% done ~ okay"))
+```
+
+<small><pre>=> "100% done ~ okay"</pre></small>
+
+
+
 -----
 
 ### file/filename/directory operations

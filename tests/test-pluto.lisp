@@ -658,6 +658,21 @@
     (string= test-return-value! "/tmp/has spaces/file.txt")
     (sh (fn "echo -n ~A" (q/sh #P"/tmp/has spaces/file.txt"))))
 
+(def-test/doc-test 'q/fmt
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "100% done ~ okay")
+  (fn (q/fmt "100% done ~ okay")))
+
+  ; the point: strings with stray ~s survive being embedded in
+  ; a control string (die relays error text as-is for the same
+  ; reason)
+  (def-test/doc-test 'q/fmt
+    `((test-able returns))
+    'function
+    (string= test-return-value! "downloading save~1.dat: 33%")
+    (fn (str+ "downloading " (q/fmt "save~1.dat") ": ~A%") 33))
+
   ; the full point: shell-side file operations on nasty filenames
   (def-test/doc-test 'q/sh
     `((test-able returns))
@@ -1046,5 +1061,5 @@
 (if (run-tests)
   (with-a-file "pluto-results.md" :w
     (render-markdown stream!))
-  (die "~%at least one test failed"))
+  (die (fn "~%at least one test failed")))
 
