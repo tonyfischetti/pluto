@@ -776,22 +776,21 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb36
 <h3 id="error-handling">error handling</h3>
 <h4 id="or-die">OR-DIE</h4>
 <blockquote>
-<p>anaphoric macro that binds ERROR! to the error<br />
-It takes a MESSAGE with can include ERROR! (via<br />
-(format nil…) for example) It also takes ERRFUN<br />
-which it will FUNCALL with the MESSAGE. The default<br />
-is to DIE, but you can, for example, PRINC instead<br />
+<p>Anaphoric macro that binds ERROR! to the error<br />
+Runs FORM and returns its value; if it signals an error,<br />
+ERRFUN (#’die by default) gets funcalled with MESSAGE —<br />
+which can reference ERROR!<br />
+e.g. (or-die (risky-thing) (fn “no dice: ~A” error!))<br />
+(or-die (risky-thing) “hmm” :errfun #’advise)<br />
 </p>
 </blockquote>
 <div class="sourceCode" id="cb37"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>(OR-DIE (<span class="st">&quot;this message never appears&quot;</span>)</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  (<span class="op">/</span> <span class="dv">3</span> <span class="dv">1</span>))</span></code></pre></div>
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>(OR-DIE (<span class="op">/</span> <span class="dv">3</span> <span class="dv">1</span>) <span class="st">&quot;this message never appears&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> 3</pre>
 <p></small></p>
 <div class="sourceCode" id="cb38"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>(OR-DIE ((FN <span class="st">&quot;the error was: ~A&quot;</span> (TYPE-OF ERROR!)) :ERRFUN <span class="op">#&#39;</span>ADVISE)</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  (<span class="op">/</span> <span class="dv">3</span> <span class="dv">0</span>))</span></code></pre></div>
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>(OR-DIE (<span class="op">/</span> <span class="dv">3</span> <span class="dv">0</span>) (FN <span class="st">&quot;the error was: ~A&quot;</span> (TYPE-OF ERROR!)) :ERRFUN <span class="op">#&#39;</span>ADVISE)</span></code></pre></div>
 <small>
 <pre>=> NIL</pre>
 <p></small></p>

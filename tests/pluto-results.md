@@ -510,15 +510,15 @@ If the argument to `for-each` is a string and the file exists,
 
 #### OR-DIE
 
-> anaphoric macro that binds ERROR! to the error\
->    It takes a MESSAGE with can include ERROR! (via\
->    (format nil...) for example) It also takes ERRFUN\
->    which it will FUNCALL with the MESSAGE. The default\
->    is to DIE, but you can, for example, PRINC instead\
+> Anaphoric macro that binds ERROR! to the error\
+>    Runs FORM and returns its value; if it signals an error,\
+>    ERRFUN (#'die by default) gets funcalled with MESSAGE —\
+>    which can reference ERROR!\
+>    e.g. (or-die (risky-thing) (fn "no dice: ~A" error!))\
+>         (or-die (risky-thing) "hmm" :errfun #'advise)\
 
 ```{.commonlisp}
-(OR-DIE ("this message never appears")
-  (/ 3 1))
+(OR-DIE (/ 3 1) "this message never appears")
 ```
 
 <small><pre>=> 3</pre></small>
@@ -526,8 +526,7 @@ If the argument to `for-each` is a string and the file exists,
 
 
 ```{.commonlisp}
-(OR-DIE ((FN "the error was: ~A" (TYPE-OF ERROR!)) :ERRFUN #'ADVISE)
-  (/ 3 0))
+(OR-DIE (/ 3 0) (FN "the error was: ~A" (TYPE-OF ERROR!)) :ERRFUN #'ADVISE)
 ```
 
 <small><pre>=> NIL</pre></small>

@@ -506,17 +506,16 @@
   `(markdown-able (test-able returns))
   'function
   (= test-return-value! 3)
-  (or-die ("this message never appears")
-    (/ 3 1)))
+  (or-die (/ 3 1) "this message never appears"))
 
 (def-test/doc-test 'or-die
   `(markdown-able (test-able returns))
   'function
   (and (null test-return-value!)
        (search "DIVISION-BY-ZERO" test-stderr!))
-  (or-die ((fn "the error was: ~A" (type-of error!))
-           :errfun #'advise)
-    (/ 3 0)))
+  (or-die (/ 3 0)
+          (fn "the error was: ~A" (type-of error!))
+          :errfun #'advise))
 
 (def-test/doc-test 'or-do
   `(markdown-able (test-able returns))

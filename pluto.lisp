@@ -589,16 +589,17 @@
   #+sbcl  (sb-ext:quit :unix-status status)
   #+ecl   (ext:exit status))
 
-(defmacro or-die ((message &key (errfun #'die)) &body body)
-  "anaphoric macro that binds ERROR! to the error
-   It takes a MESSAGE with can include ERROR! (via
-   (format nil...) for example) It also takes ERRFUN
-   which it will FUNCALL with the MESSAGE. The default
-   is to DIE, but you can, for example, PRINC instead"
+(defmacro or-die (form message &key (errfun '#'die))
+  "Anaphoric macro that binds ERROR! to the error
+   Runs FORM and returns its value; if it signals an error,
+   ERRFUN (#'die by default) gets funcalled with MESSAGE —
+   which can reference ERROR!
+   e.g. (or-die (risky-thing) (fn \"no dice: ~A\" error!))
+        (or-die (risky-thing) \"hmm\" :errfun #'advise)"
   `(handler-case
-     (progn
-       ,@body)
+     ,form
      (error (error!)
+       (declare (ignorable error!))
        (funcall ,errfun (format nil "~A" ,message)))))
 
 (defmacro or-do (orthis &body body)
@@ -1204,10 +1205,10 @@
                         `((or
                             (string= current ,(second x)) (string= current ,(third x)))
                           (progn
-                            (or-die ((format nil
-                                             "Fatal error processing ~A flag (~A)~%~%~A"
-                                             ,(second x) error! +USAGE-TEXT!+))
-                              ,@(nthcdr 4 x)))))
+                            (or-die (progn ,@(nthcdr 4 x))
+                                    (format nil
+                                            "Fatal error processing ~A flag (~A)~%~%~A"
+                                            ,(second x) error! +USAGE-TEXT!+)))))
                       body)))
   `(progn
      (defparameter args!        nil)
@@ -1215,8 +1216,9 @@
      (defparameter +USAGE-TEXT!+ nil)
      (macrolet ((assign-next-arg! (avar)
        `(progn (setq ,avar (cadr args!)) (process-args! (cddr args!)))))
-       (or-die ("invalid arguments")
-         (setq +USAGE-TEXT!+
+       (or-die
+         (progn
+           (setq +USAGE-TEXT!+
            (format nil "Usage: ~A ~A~%~A~%~%~A"
                    ,script-name ,after-name ,description
                    (format nil "~{~A~}" (list ,@flag-lines))))
@@ -1238,7 +1240,8 @@
                  (t
                    (progn
                      (setq bare-args! (cons current bare-args!))
-                     (process-args! (cdr args!)))))))))))))
+                     (process-args! (cdr args!)))))))))
+         "invalid arguments")))))
 
 ;---------------------------------------------------------;
 
