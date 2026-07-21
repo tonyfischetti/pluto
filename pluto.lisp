@@ -1229,17 +1229,31 @@
                                :input nil :output *standard-output*)
    #+ecl   (si:system "clear"))
 
-; TODO: SBCL doesn't have the COLUMNS environment variable. fix it
 (defun get-terminal-columns ()
-  "Retrieves the number of columns in terminal by querying
+  "Retrieves the number of columns in the terminal: via styx's
+   TIOCGWINSZ ioctl if styx is loaded, else by querying the
    `$COLUMNS` environment variable. Returns
    (values num-of-columns t) if successful and (values 200 nil)
    if not"
-  (let ((raw-res (ignore-errors (parse-integer
-                                  #+sbcl (sh "echo $COLUMNS")
-                                  #-sbcl (get-envvar "COLUMNS" "80")
-                                  ))))
-    (if raw-res (values raw-res t) (values 200 nil))))
+  ; pluto can't depend on styx (the dependency points the other
+  ; way) so the delegation is by runtime lookup
+  (let ((styx-cols (and (find-package "STYX")
+                        (find-symbol "TERMINAL-COLUMNS" "STYX"))))
+    (if (and styx-cols (fboundp styx-cols))
+      (multiple-value-bind (cols real-p) (funcall styx-cols)
+        (if real-p (values cols t) (values 200 nil)))
+      ; COLUMNS is a shell variable, usually not exported; the
+      ; zsh shell-out is a poor man's ioctl (zsh sets COLUMNS
+      ; from its own tty) for when styx isn't around
+      (let ((raw-res (ignore-errors (parse-integer
+                                      #+sbcl (sh "echo $COLUMNS")
+                                      #-sbcl (get-envvar "COLUMNS" "80")
+                                      ))))
+        ; zsh answers 0 when it has no terminal to measure —
+        ; that's a failure, not a zero-width terminal
+        (if (and raw-res (plusp raw-res))
+          (values raw-res t)
+          (values 200 nil))))))
 
 ; TODO: is there are better DRY way?
 (defun ansi-up-line (&optional (where *error-output*))

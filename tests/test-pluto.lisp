@@ -960,6 +960,20 @@
           (list (nth-value 0 (terminal-columns))
                 (nth-value 0 (terminal-rows)))))
 
+; now that styx is loaded, pluto's get-terminal-columns must
+; delegate to the ioctl (agreeing with terminal-columns) instead
+; of shelling out; with no terminal it keeps its (values 200 nil)
+(def-test/doc-test 'get-terminal-columns
+  `((test-able returns))
+  'function
+  (destructuring-bind (cols real-p styx-cols styx-real-p)
+                      test-return-value!
+    (if styx-real-p
+      (and real-p (= cols styx-cols))
+      (and (null real-p) (= cols 200))))
+  (append (multiple-value-list (get-terminal-columns))
+          (multiple-value-list (terminal-columns))))
+
 
 ; --------------------------------------------------------------- ;
 
