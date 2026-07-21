@@ -816,6 +816,19 @@
         (zsh "rm -rf tmp-walk")
         found)))
 
+  ; regression: a find that matches nothing used to die on
+  ; (setf (car nil)) instead of returning nil
+  (def-test/doc-test 'file-find
+    `((test-able returns))
+    'function
+    (and (null test-error!) (null test-return-value!))
+    (progn
+      (zsh "mkdir -p tmp-walk-empty")
+      (let ((found (file-find "tmp-walk-empty"
+                              :test (constantly nil))))
+        (zsh "rm -rf tmp-walk-empty")
+        found)))
+
   (def-test/doc-test '-path
     `((test-able returns))
     'function

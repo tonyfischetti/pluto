@@ -1729,7 +1729,11 @@
     (walk-directory apathname #'(lambda (x) (push x to-return))
                     :directories :depth-first
                     :test test)
-    (setf (car to-return) (probe-file (car to-return)))
+    ; the last visit (car, pre-reverse) is the root as-typed;
+    ; canonicalize it — unless :test filtered everything out,
+    ; in which case an empty find is just an empty list
+    (when to-return
+      (setf (car to-return) (probe-file (car to-return))))
     (unless full (setq to-return (mapcar #'absolute->relative to-return)))
     (setq to-return (reverse to-return))
     (when ext (setq type :file))
