@@ -59,10 +59,16 @@
 
 #+linux
 (cffi:define-foreign-library libsystemd
-  (t (:default "libsystemd")))
+  ; the unversioned .so only exists with the dev package installed;
+  ; ordinary machines just have the .so.0 runtime
+  (t (:or (:default "libsystemd") "libsystemd.so.0")))
 
+; a machine without systemd at all (docker containers, e.g.) shouldn't
+; lose the whole styx system over its journal bindings — sd-journal
+; degrades to a call-time error instead
 #+linux
-(cffi:use-foreign-library libsystemd)
+(defvar *libsystemd-loaded-p*
+  (and (ignore-errors (cffi:use-foreign-library libsystemd)) t))
 
 #+linux
 (cffi:defcfun "sd_journal_send" :int (theformat :string) &rest)
@@ -70,6 +76,8 @@
 #+linux
 (defun sd-journal (message &key (priority *sd-log-priority*)
                                 (identifier nil))
+  (unless *libsystemd-loaded-p*
+    (error "sd-journal: libsystemd could not be loaded on this machine"))
   (unless identifier
     (setq identifier (program/script-name)))
   (let ((ret (sd-journal-send (fn "MESSAGE=~A" message)
