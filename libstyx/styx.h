@@ -20,6 +20,10 @@ int   styx_stat_is_symlink_p(const char* afilename);
  * a terminal, 0 if not (a bad fd is simply not a terminal) */
 int   styx_isatty(int fd);
 
+/* one TIOCGWINSZ ioctl fills both out-params;
+ * 0 on success, -1 if fd isn't a terminal */
+int   styx_terminal_size(int fd, int* rows, int* cols);
+
 char* styx_md5_data(const char* data, long len);
 char* styx_md5_string(const char* astring);
 char* styx_md5_file(const char* afilename);

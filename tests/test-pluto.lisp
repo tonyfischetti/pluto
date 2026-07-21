@@ -944,6 +944,22 @@
        (null (cadr test-return-value!)))
   (list (tty-p) (tty-p 999)))
 
+; real size under a terminal, the (values 24 80 nil) fallback
+; when piped — positive integers either way, and the -columns /
+; -rows conveniences must agree with terminal-size
+(def-test/doc-test 'terminal-size
+  `((test-able returns))
+  'function
+  (destructuring-bind (rows cols real-p cols2 rows2) test-return-value!
+    (and (integerp rows) (plusp rows)
+         (integerp cols) (plusp cols)
+         (member real-p `(t nil))
+         (= cols cols2)
+         (= rows rows2)))
+  (append (multiple-value-list (terminal-size))
+          (list (nth-value 0 (terminal-columns))
+                (nth-value 0 (terminal-rows)))))
+
 
 ; --------------------------------------------------------------- ;
 

@@ -26,6 +26,9 @@
     :stat-filesize
     :is-symlink-p
     :tty-p
+    :terminal-size
+    :terminal-columns
+    :terminal-rows
     :md5/string
     :md5/file
     :sha256/string
@@ -139,6 +142,41 @@
    output is piped or redirected. A closed or bogus FD is simply
    not a terminal (nil) — no error"
   (= 1 (styx-isatty fd)))
+
+
+; -------------------
+;; terminal-size (and -columns / -rows)
+(cffi:defcfun "styx_terminal_size" :int
+  (fd :int) (rows :pointer) (cols :pointer))
+
+(defun %terminal-size (fd)
+  (cffi:with-foreign-objects ((rows :int) (cols :int))
+    (when (= 0 (styx-terminal-size fd rows cols))
+      (cons (cffi:mem-ref rows :int) (cffi:mem-ref cols :int)))))
+
+(defun terminal-size ()
+  "Asks the terminal its size with the TIOCGWINSZ ioctl, trying
+   stdout, stderr, then stdin (redirecting one of them shouldn't
+   blind us). Returns (values rows columns t), or the venerable
+   default (values 24 80 nil) if no terminal is attached (or it
+   reports zero size, as some do under exotic conditions)"
+  (loop for fd in '(1 2 0)
+        for size = (%terminal-size fd)
+        when (and size (plusp (car size)) (plusp (cdr size)))
+          do (return (values (car size) (cdr size) t))
+        finally (return (values 24 80 nil))))
+
+(defun terminal-columns ()
+  "The terminal's width: (values columns real-p) — see TERMINAL-SIZE"
+  (multiple-value-bind (rows cols real-p) (terminal-size)
+    (declare (ignore rows))
+    (values cols real-p)))
+
+(defun terminal-rows ()
+  "The terminal's height: (values rows real-p) — see TERMINAL-SIZE"
+  (multiple-value-bind (rows cols real-p) (terminal-size)
+    (declare (ignore cols))
+    (values rows real-p)))
 
 
 ; -------------------

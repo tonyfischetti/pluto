@@ -18,6 +18,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <openssl/evp.h>
@@ -58,6 +59,16 @@ int styx_stat_is_symlink_p(const char* afilename){
 
 int styx_isatty(int fd){
 	return isatty(fd);
+}
+
+int styx_terminal_size(int fd, int* rows, int* cols){
+	struct winsize ws;
+	if(ioctl(fd, TIOCGWINSZ, &ws) != 0){
+		return -1;
+	}
+	*rows = ws.ws_row;
+	*cols = ws.ws_col;
+	return 0;
 }
 
 
