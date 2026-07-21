@@ -16,13 +16,6 @@
 off_t styx_stat_filesize(const char* afilename, int follow_symlinks);
 int   styx_stat_is_symlink_p(const char* afilename);
 
-int   styx_isatty(int fd);
-int   styx_terminal_columns(int fd);
-int   styx_terminal_rows(int fd);
-
-int   styx_flock_acquire(const char* path, int exclusive, int nonblocking);
-int   styx_flock_release(int fd);
-
 char* styx_md5_data(const char* data, long len);
 char* styx_md5_string(const char* astring);
 char* styx_md5_file(const char* afilename);

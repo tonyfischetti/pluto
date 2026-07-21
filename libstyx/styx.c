@@ -2,11 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <openssl/evp.h>
@@ -39,58 +34,6 @@ int styx_stat_is_symlink_p(const char* afilename){
 		return -1;
 	}
 	return S_ISLNK(st.st_mode);
-}
-
-
-/* ------------------------------------------------------- */
-/* terminal things --------------------------------------- */
-
-int styx_isatty(int fd){
-	return isatty(fd);
-}
-
-int styx_terminal_columns(int fd){
-	struct winsize ws;
-	if(ioctl(fd, TIOCGWINSZ, &ws) != 0){
-		return -1;
-	}
-	return ws.ws_col;
-}
-
-int styx_terminal_rows(int fd){
-	struct winsize ws;
-	if(ioctl(fd, TIOCGWINSZ, &ws) != 0){
-		return -1;
-	}
-	return ws.ws_row;
-}
-
-
-/* ------------------------------------------------------- */
-/* advisory file locking (flock) ------------------------- */
-
-/* returns the fd that holds the lock (the "handle"),
- * -2 if nonblocking and somebody else holds it, -1 on error */
-int styx_flock_acquire(const char* path, int exclusive, int nonblocking){
-	int fd = open(path, O_RDWR | O_CREAT, 0644);
-	if(fd < 0){
-		return -1;
-	}
-	int op = (exclusive ? LOCK_EX : LOCK_SH) | (nonblocking ? LOCK_NB : 0);
-	if(flock(fd, op) != 0){
-		int e = errno;
-		close(fd);
-		return (e == EWOULDBLOCK) ? -2 : -1;
-	}
-	return fd;
-}
-
-int styx_flock_release(int fd){
-	if(flock(fd, LOCK_UN) != 0){
-		return -1;
-	}
-	close(fd);
-	return 0;
 }
 
 
