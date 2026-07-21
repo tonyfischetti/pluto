@@ -101,8 +101,19 @@
                    (user-homedir-pathname)))
 
 ; the C side returns malloc'd hex strings (or NULL on error);
-; `:free-from-foreign` has cffi free them after conversion
+; `%claim-c-string` copies them lispward then has *libstyx*
+; free them (styx_free) — cffi's foreign-free is free(3) on
+; sbcl but a different allocator on ecl, where freeing
+; C-malloc'd memory with it segfaults
 ; `%->native` gives C the exact on-disk name (no namestring escapes)
+
+(cffi:defcfun "styx_free" :void (p :pointer))
+
+(defun %claim-c-string (ptr)
+  (unless (cffi:null-pointer-p ptr)
+    (unwind-protect
+      (cffi:foreign-string-to-lisp ptr)
+      (styx-free ptr))))
 
 (defun %->native (afilename)
   (if (pathnamep afilename)
@@ -225,71 +236,62 @@
 
 ; -------------------
 ;; md5
-(cffi:defcfun "styx_md5_string" (:string :free-from-foreign t)
-  (astring :string))
-(cffi:defcfun "styx_md5_file" (:string :free-from-foreign t)
-  (afilename :string))
+(cffi:defcfun "styx_md5_string" :pointer (astring :string))
+(cffi:defcfun "styx_md5_file" :pointer (afilename :string))
 
 (defun md5/string (astring)
-  (or (styx-md5-string astring)
+  (or (%claim-c-string (styx-md5-string astring))
       (error "md5/string: hashing failed")))
 
 (defun md5/file (afilename)
-  (or (styx-md5-file (%->native afilename))
+  (or (%claim-c-string (styx-md5-file (%->native afilename)))
       (error "md5/file: cannot hash ~A" afilename)))
 
 
 ; -------------------
 ;; sha256
-(cffi:defcfun "styx_sha256_string" (:string :free-from-foreign t)
-  (astring :string))
-(cffi:defcfun "styx_sha256_hexstring" (:string :free-from-foreign t)
-  (astring :string))
-(cffi:defcfun "styx_sha256_file" (:string :free-from-foreign t)
-  (afilename :string))
+(cffi:defcfun "styx_sha256_string" :pointer (astring :string))
+(cffi:defcfun "styx_sha256_hexstring" :pointer (astring :string))
+(cffi:defcfun "styx_sha256_file" :pointer (afilename :string))
 
 (defun sha256/string (astring)
-  (or (styx-sha256-string astring)
+  (or (%claim-c-string (styx-sha256-string astring))
       (error "sha256/string: hashing failed")))
 
 (defun sha256/hexstring (astring)
-  (or (styx-sha256-hexstring astring)
+  (or (%claim-c-string (styx-sha256-hexstring astring))
       (error "sha256/hexstring: invalid hex string ~S" astring)))
 
 (defun sha256/file (afilename)
-  (or (styx-sha256-file (%->native afilename))
+  (or (%claim-c-string (styx-sha256-file (%->native afilename)))
       (error "sha256/file: cannot hash ~A" afilename)))
 
 
 ; -------------------
 ;; sha512
-(cffi:defcfun "styx_sha512_string" (:string :free-from-foreign t)
-  (astring :string))
-(cffi:defcfun "styx_sha512_file" (:string :free-from-foreign t)
-  (afilename :string))
+(cffi:defcfun "styx_sha512_string" :pointer (astring :string))
+(cffi:defcfun "styx_sha512_file" :pointer (afilename :string))
 
 (defun sha512/string (astring)
-  (or (styx-sha512-string astring)
+  (or (%claim-c-string (styx-sha512-string astring))
       (error "sha512/string: hashing failed")))
 
 (defun sha512/file (afilename)
-  (or (styx-sha512-file (%->native afilename))
+  (or (%claim-c-string (styx-sha512-file (%->native afilename)))
       (error "sha512/file: cannot hash ~A" afilename)))
 
 
 ; -------------------
 ;; ripemd160
-(cffi:defcfun "styx_ripemd160_string" (:string :free-from-foreign t)
-  (astring :string))
-(cffi:defcfun "styx_ripemd160_hexstring" (:string :free-from-foreign t)
-  (astring :string))
+(cffi:defcfun "styx_ripemd160_string" :pointer (astring :string))
+(cffi:defcfun "styx_ripemd160_hexstring" :pointer (astring :string))
 
 (defun ripemd160/string (astring)
-  (or (styx-ripemd160-string astring)
+  (or (%claim-c-string (styx-ripemd160-string astring))
       (error "ripemd160/string: hashing failed")))
 
 (defun ripemd160/hexstring (astring)
-  (or (styx-ripemd160-hexstring astring)
+  (or (%claim-c-string (styx-ripemd160-hexstring astring))
       (error "ripemd160/hexstring: invalid hex string ~S" astring)))
 
 ;---------------------------------------------------------;

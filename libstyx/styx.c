@@ -108,6 +108,19 @@ int styx_flock_release(int fd){
 
 
 /* ------------------------------------------------------- */
+/* memory ------------------------------------------------ */
+
+/* the hex strings below are malloc'd HERE, so they must be
+ * released HERE: the lisp side's deallocator (cffi's
+ * foreign-free) is only free(3) on some implementations —
+ * on ecl it's a different allocator and freeing our memory
+ * with it segfaults */
+void styx_free(char* p){
+	free(p);
+}
+
+
+/* ------------------------------------------------------- */
 /* hashing (openssl 3 EVP api) --------------------------- */
 
 static char* to_hex(const unsigned char* digest, unsigned int len){

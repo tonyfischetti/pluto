@@ -7,11 +7,15 @@
  * libstyx — pluto's C companion (loaded by the styx lisp system)
  *
  * conventions:
- *   - functions returning char* return a malloc'd hex string that
- *     the CALLER must free (the lisp side uses cffi's
- *     :free-from-foreign), or NULL on error
+ *   - functions returning char* return a malloc'd hex string
+ *     (or NULL on error) that the caller must release with
+ *     styx_free — NOT with its own allocator's free (cffi's
+ *     foreign-free is not free(3) everywhere; on ecl it
+ *     segfaults on our memory)
  *   - functions returning integers return -1 on error
  */
+
+void  styx_free(char* p);
 
 off_t styx_stat_filesize(const char* afilename, int follow_symlinks);
 int   styx_stat_is_symlink_p(const char* afilename);
