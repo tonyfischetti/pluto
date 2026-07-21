@@ -935,6 +935,16 @@
   (string= test-return-value! "caf%C3%A9%20%26%20bar%3Fq%3D1")
   (q/uri "café & bar?q=1"))
 
+  ; each impl now gets exactly one definition (the overlapping
+  ; guards used to make ECL define-then-clobber it at load);
+  ; nasty names must round-trip through the shell
+  (def-test/doc-test 'escape-namestring/shell
+    `((test-able returns))
+    'function
+    (string= test-return-value! "/tmp/it's got spaces!.txt")
+    (sh (fn "echo -n ~A"
+            (escape-namestring/shell "/tmp/it's got spaces!.txt"))))
+
 ; --------------------------------------------------------------- ;
 ; --------------------------------------------------------------- ;
 

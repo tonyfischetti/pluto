@@ -289,7 +289,9 @@
 ; ------------------------------------------------------- ;
 ; filename/namestring escaping -------------------------- ;
 
-#+(or sbcl clisp ecl abcl)
+; sbcl's namestrings arrive pre-escaped (?, *, [) — this variant
+; compensates; the ecl variant below escapes from scratch
+#+sbcl
 (defun escape-namestring/shell (afilename)
   (-<> afilename
        (~ra <> •\t• •\	•) (~ra <> • • •\ •) (~ra <> •;• •\;•)
@@ -302,7 +304,7 @@
        (~ra <> •`• •\\`•) (~ra <> •\|• •\|•)))
 
 
-#+(or clisp ecl abcl)
+#+ecl
 (defun escape-namestring/shell (afilename)
   (-<> afilename
        (~ra <> •\\• •\\\•) (~ra <> •\t• •\	•) (~ra <> • • •\ •)
@@ -319,7 +321,7 @@
        (~ra <> •\\• •\\\•) (~ra <> •\?• •\?•) (~ra <> •\[• •\[•)
        (~ra <> •\\\\\*• •*•) (~ra <> •\\\\\\\[• •[•) (~ra <> •\\\\\\• "")))
 
-#+(or clisp ecl abcl)
+#+ecl
 (defun escape-namestring/c (afilename)
   (-<> afilename
        (~ra <> •\\\\\*• •*•) (~ra <> •\\\\\\\[• •[•) (~ra <> •\\\\\\• "")))
