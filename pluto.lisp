@@ -648,7 +648,12 @@
     `(let ((,res ,sexp))
        (if ,res ,res ,replacement))))
 
-(set-macro-character #\? #'|if-null->this|)
+; non-terminating-p is T: `?` only fires at the START of a token,
+; so scheme-style predicate names in foreign code (fast-http's
+; `match?`, say) still read as plain symbols — with a terminating
+; `?`, quickloading such a library with pluto's readtable active
+; (i.e. compiling it from a cold fasl cache) was a reader error
+(set-macro-character #\? #'|if-null->this| t)
 
 ;---------------------------------------------------------;
 
