@@ -521,13 +521,13 @@
   `(markdown-able (test-able returns))
   'function
   (= test-return-value! 3)
-  (or-do :fallback (/ 3 1)))
+  (or-do (/ 3 1) :fallback))
 
 (def-test/doc-test 'or-do
   `(markdown-able (test-able returns))
   'function
   (eq test-return-value! :fallback)
-  (or-do :fallback (/ 3 0)))
+  (or-do (/ 3 0) :fallback))
 
   (def-test/doc-test 'advise
     `((test-able stderr))

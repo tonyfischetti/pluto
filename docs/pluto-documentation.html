@@ -796,19 +796,19 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb38
 <p></small></p>
 <h4 id="or-do">OR-DO</h4>
 <blockquote>
-<p>anaphoric macro that binds ERROR! to the error.<br />
-If the body fails, the form ORTHIS gets run.<br />
+<p>Anaphoric macro that binds ERROR! to the error<br />
+Runs FORM and returns its value; if it signals an error,<br />
+FALLBACK gets run (and returned) instead<br />
+e.g. (or-do (risky-thing) (advise (fn “eh: ~A” error!)))<br />
 </p>
 </blockquote>
 <div class="sourceCode" id="cb39"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>(OR-DO :FALLBACK</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  (<span class="op">/</span> <span class="dv">3</span> <span class="dv">1</span>))</span></code></pre></div>
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>(OR-DO (<span class="op">/</span> <span class="dv">3</span> <span class="dv">1</span>) :FALLBACK)</span></code></pre></div>
 <small>
 <pre>=> 3</pre>
 <p></small></p>
 <div class="sourceCode" id="cb40"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>(OR-DO :FALLBACK</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  (<span class="op">/</span> <span class="dv">3</span> <span class="dv">0</span>))</span></code></pre></div>
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>(OR-DO (<span class="op">/</span> <span class="dv">3</span> <span class="dv">0</span>) :FALLBACK)</span></code></pre></div>
 <small>
 <pre>=> :FALLBACK</pre>
 <p></small></p>

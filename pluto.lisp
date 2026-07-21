@@ -602,14 +602,16 @@
        (declare (ignorable error!))
        (funcall ,errfun (format nil "~A" ,message)))))
 
-(defmacro or-do (orthis &body body)
-  "anaphoric macro that binds ERROR! to the error.
-   If the body fails, the form ORTHIS gets run."
+(defmacro or-do (form fallback)
+  "Anaphoric macro that binds ERROR! to the error
+   Runs FORM and returns its value; if it signals an error,
+   FALLBACK gets run (and returned) instead
+   e.g. (or-do (risky-thing) (advise (fn \"eh: ~A\" error!)))"
   `(handler-case
-     (progn
-       ,@body)
-      (error (error!)
-        ,orthis)))
+     ,form
+     (error (error!)
+       (declare (ignorable error!))
+       ,fallback)))
 
 (defmacro die-if-null (avar &rest therest)
   "Macro to check if any of the supplied arguments are null"

@@ -535,12 +535,13 @@ If the argument to `for-each` is a string and the file exists,
 
 #### OR-DO
 
-> anaphoric macro that binds ERROR! to the error.\
->    If the body fails, the form ORTHIS gets run.\
+> Anaphoric macro that binds ERROR! to the error\
+>    Runs FORM and returns its value; if it signals an error,\
+>    FALLBACK gets run (and returned) instead\
+>    e.g. (or-do (risky-thing) (advise (fn "eh: ~A" error!)))\
 
 ```{.commonlisp}
-(OR-DO :FALLBACK
-  (/ 3 1))
+(OR-DO (/ 3 1) :FALLBACK)
 ```
 
 <small><pre>=> 3</pre></small>
@@ -548,8 +549,7 @@ If the argument to `for-each` is a string and the file exists,
 
 
 ```{.commonlisp}
-(OR-DO :FALLBACK
-  (/ 3 0))
+(OR-DO (/ 3 0) :FALLBACK)
 ```
 
 <small><pre>=> :FALLBACK</pre></small>
