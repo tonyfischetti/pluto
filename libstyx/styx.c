@@ -1,3 +1,18 @@
+/*
+ * styx.c — the C side of styx, pluto's syscall tier.
+ *
+ * Started while reading The Linux Programming Interface, as the
+ * place where pluto reaches below what portable lisp can see:
+ * stat, hashing (openssl), and friends. Anything that needs a
+ * real syscall or a real C library gets a small, boring wrapper
+ * here and a lisp face in styx.lisp.
+ *
+ * The Makefile in this directory builds libstyx.{dylib,so} and
+ * `make install` copies it to ~/.lisp, where styx.lisp loads it
+ * by absolute path. Return/ownership conventions are documented
+ * in styx.h.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
