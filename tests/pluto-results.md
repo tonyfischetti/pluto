@@ -575,9 +575,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G275 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G275
-      #:G275
+(LET ((#:G554 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G554
+      #:G554
       42))
 ```
 
@@ -838,5 +838,60 @@ NIL
 ```
 
 <small><pre>=> "caf%C3%A9%20%26%20bar%3Fq%3D1"</pre></small>
+
+
+
+-----
+
+### temporary styx tests
+
+
+#### STAT-FILESIZE
+
+Size of a file (via `stat`/`lstat`) without opening it
+```{.commonlisp}
+(STAT-FILESIZE "somebody.txt")
+```
+
+<small><pre>=> 3497</pre></small>
+
+
+
+#### IS-SYMLINK-P
+
+Is it a symlink? (something portable CL cannot ask)
+```{.commonlisp}
+(PROGN
+ (SH "ln -sf somebody.txt tmp-demo-link.txt")
+ (LET ((RES
+        (LIST (IS-SYMLINK-P "tmp-demo-link.txt")
+              (IS-SYMLINK-P "somebody.txt"))))
+   (SH "rm tmp-demo-link.txt")
+   RES))
+```
+
+<small><pre>=> (T NIL)</pre></small>
+
+
+
+#### MD5/STRING
+
+Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file variants
+```{.commonlisp}
+(MD5/STRING "hello")
+```
+
+<small><pre>=> "5d41402abc4b2a76b9719d911017c592"</pre></small>
+
+
+
+#### SHA256/FILE
+
+File hashing streams in 64KB chunks (never slurps the whole file)
+```{.commonlisp}
+(SHA256/FILE "somebody.txt")
+```
+
+<small><pre>=> "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0"</pre></small>
 
 
