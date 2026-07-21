@@ -8,3 +8,6 @@ libstyx/demo.lisp
 tmp.lisp
 tmp2.lisp
 tmp3.lisp
+*.secret
+ocicl/
+ocicl.csv
