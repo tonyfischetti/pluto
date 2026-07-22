@@ -61,4 +61,8 @@
                :pluto
                )
 
+  ; charon's own source needs pluto's reader macros even when the
+  ; ambient readtable is a standard one (see pluto's "readtable
+  ; containment" section)
+  :around-compile "pluto::call-with-pluto-readtable"
   :components ((:file "charon")))

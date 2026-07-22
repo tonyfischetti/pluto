@@ -162,10 +162,7 @@ Repeats a string TIMES times
 > Anaphoric lambda. SELF! is the function\
 
 ```{.commonlisp}
-(FUNCALL
- (ALAMBDA (X)
-   (WHEN (> X 0) (CONS X (SELF! (- X 1)))))
- 10)
+(FUNCALL (ALAMBDA (X) (WHEN (> X 0) (CONS X (SELF! (- X 1))))) 10)
 ```
 
 <small><pre>=> (10 9 8 7 6 5 4 3 2 1)</pre></small>
@@ -278,8 +275,7 @@ Repeats a string TIMES times
 
 ```{.commonlisp}
 (LET ((TMP (MAKE-HASH-TABLE)))
-  (WITH-HASH-ENTRY (TMP :COUNT)
-    (SETF ENTRY! 42))
+  (WITH-HASH-ENTRY (TMP :COUNT) (SETF ENTRY! 42))
   (GETHASH :COUNT TMP))
 ```
 
@@ -338,9 +334,7 @@ Repeats a string TIMES times
 >    forms in the body are executed\
 
 ```{.commonlisp}
-(WITH-TIME
-  (SLEEP 1)
-  (FORMAT NIL "time elapsed: ~A" (ROUND TIME!)))
+(WITH-TIME (SLEEP 1) (FORMAT NIL "time elapsed: ~A" (ROUND TIME!)))
 ```
 
 <small><pre>=> "time elapsed: 1"</pre></small>
@@ -411,8 +405,7 @@ Repeats a string TIMES times
 >   for-each/stream, and for-each/alist\
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C)
-  (FORMAT T "~A -> ~A;" INDEX! VALUE!))
+(FOR-EACH/LIST '(A B C) (FORMAT T "~A -> ~A;" INDEX! VALUE!))
 ```
 
 <small><pre>>> "1 -> A;2 -> B;3 -> C;"</pre></small>
@@ -420,10 +413,7 @@ Repeats a string TIMES times
 
 
 ```{.commonlisp}
-(FOR-EACH/LIST '(A B C D E)
-  (IF (> INDEX! 2)
-      (BREAK!))
-  (FORMAT T "~A;" VALUE!))
+(FOR-EACH/LIST '(A B C D E) (IF (> INDEX! 2) (BREAK!)) (FORMAT T "~A;" VALUE!))
 ```
 
 <small><pre>>> "A;B;"</pre></small>
@@ -432,9 +422,8 @@ Repeats a string TIMES times
 
 ```{.commonlisp}
 (FOR-EACH/LIST '(A B C D E)
-  (IF (= INDEX! 3)
-      (CONTINUE!))
-  (FORMAT T "~A;" VALUE!))
+               (IF (= INDEX! 3) (CONTINUE!))
+               (FORMAT T "~A;" VALUE!))
 ```
 
 <small><pre>>> "A;B;D;E;"</pre></small>
@@ -446,8 +435,8 @@ If the argument to `for-each` is a string and the file exists,
 
 ```{.commonlisp}
 (FOR-EACH/LINE "somebody.txt"
-  (WHEN (> INDEX! 2) (BREAK!))
-  (FORMAT T "~A -> ~A;" INDEX! VALUE!))
+               (WHEN (> INDEX! 2) (BREAK!))
+               (FORMAT T "~A -> ~A;" INDEX! VALUE!))
 ```
 
 <small><pre>>> "1 -> we gotta celebrate diversity;2 -> in the university;"</pre></small>
@@ -455,8 +444,7 @@ If the argument to `for-each` is a string and the file exists,
 
 
 ```{.commonlisp}
-(FOR-EACH "not-a-file.txt"
-  (FORMAT T "~A;" VALUE!))
+(FOR-EACH "not-a-file.txt" (FORMAT T "~A;" VALUE!))
 ```
 
 <small><pre>>> "n;o;t;-;a;-;f;i;l;e;.;t;x;t;"</pre></small>
@@ -467,8 +455,7 @@ If the argument to `for-each` is a string and the file exists,
 (LET ((TMP (MAKE-HASH-TABLE)))
   (SETF (GETHASH 'GREEN TMP) "veridian")
   (SETF (GETHASH 'RED TMP) "cadmium")
-  (FOR-EACH/HASH TMP
-    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
+  (FOR-EACH/HASH TMP (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
 <small><pre>>> "GREEN -> veridian;RED -> cadmium;"</pre></small>
@@ -479,8 +466,7 @@ If the argument to `for-each` is a string and the file exists,
 (LET ((TMP (MAKE-HASH-TABLE)))
   (SETF (GETHASH 'GREEN TMP) "veridian")
   (SETF (GETHASH 'RED TMP) "cadmium")
-  (FOR-EACH TMP
-    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
+  (FOR-EACH TMP (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
 <small><pre>>> "GREEN -> veridian;RED -> cadmium;"</pre></small>
@@ -495,8 +481,7 @@ If the argument to `for-each` is a string and the file exists,
 
 ```{.commonlisp}
 (LET ((TMP (LIST (CONS 'RED "cadmium") (CONS 'GREEN "veridian"))))
-  (FOR-EACH/ALIST TMP
-    (FORMAT T "~A -> ~A;" KEY! VALUE!)))
+  (FOR-EACH/ALIST TMP (FORMAT T "~A -> ~A;" KEY! VALUE!)))
 ```
 
 <small><pre>>> "RED -> cadmium;GREEN -> veridian;"</pre></small>
@@ -574,10 +559,8 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G558 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G558
-      #:G558
-      42))
+(LET ((#:G1539 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G1539 #:G1539 42))
 ```
 
 <small><pre>=> 42</pre></small>
@@ -666,7 +649,8 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 
 
 ```{.commonlisp}
-(MULTIPLE-VALUE-BIND (OUT ERR CODE)
+(MULTIPLE-VALUE-BIND
+    (OUT ERR CODE)
     (ZSH "echo out; echo err >&2")
   (LIST OUT ERR CODE))
 ```
@@ -772,16 +756,9 @@ Formats a byte count for human consumption
 
 FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
 ```{.commonlisp}
-(LIST
- (IF (FILE-EXISTS-P "somebody.txt")
-     T
-     NIL)
- (IF (DIRECTORY-EXISTS-P "wayward files")
-     T
-     NIL)
- (IF (FILE-EXISTS-P "no-such-file.txt")
-     T
-     NIL))
+(LIST (IF (FILE-EXISTS-P "somebody.txt") T NIL)
+      (IF (DIRECTORY-EXISTS-P "wayward files") T NIL)
+      (IF (FILE-EXISTS-P "no-such-file.txt") T NIL))
 ```
 
 <small><pre>=> (T T NIL)</pre></small>
@@ -832,8 +809,7 @@ FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
 
 #### Q/RE
 
-> Quote, i.e. prefix with #\\, all non-word characters in STRING.\
-
+NIL
 ```{.commonlisp}
 (LIST (STR-DETECT "price: 3x50" "3.50")
       (STR-DETECT "price: 3x50" (Q/RE "3.50")))
@@ -916,7 +892,7 @@ Runs body while flock-holding path (e.g. so a cron script won't run twice); `:wa
 (LET ((LOCKF "tmp-demo.lock"))
   (LET ((RES
          (WITH-LOCK-FILE (LOCKF)
-           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))
+                         (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))
     (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))
       (WHEN HANDLE
         (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))

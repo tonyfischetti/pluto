@@ -18,6 +18,7 @@
     :*pluto-output-stream* :*pluto-log-level* :*pluto-log-file*
     :*pluto-curly-test* :*pluto-external-format* :*pluto-shell*
     :*unix-epoch-difference* :*whitespaces*
+    :*pluto-readtable* :call-with-pluto-readtable
 
     ; formatting
     :fn :ft :q/fmt
@@ -1789,6 +1790,23 @@
                         (lambda (x) (%regex-matches-p inv-regex (namestring x)))
                         to-return)))
     to-return))
+
+; ------------------------------------------------------- ;
+; readtable containment ---------------------------------- ;
+
+; by this point every pluto reader macro (•, {, ?, Ø, #?) is installed
+; in the current (global) readtable — give that readtable a name so
+; code compiled under a DIFFERENT readtable can still ask for it.
+; charon.asd and styx.asd use the helper as :around-compile, so their
+; files always compile under pluto's readtable while third-party deps
+; compile under a standard one (a bare `?` token in a dep — cxml's
+; content-model `(? ...)` clauses, e.g. — is a reader error under
+; pluto's readtable).
+(defparameter *pluto-readtable* *readtable*)
+
+(defun call-with-pluto-readtable (thunk)
+  (let ((*readtable* *pluto-readtable*))
+    (funcall thunk)))
 
 ; ------------------------------------------------------- ;
 

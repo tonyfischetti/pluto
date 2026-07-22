@@ -903,7 +903,12 @@
 
 #-clisp
 (load "~/quicklisp/setup.lisp")
-(ql:quickload :charon :silent t)
+; deps compile under a STANDARD readtable — pluto's is already global
+; by now, and a bare `?` token in a dep (cxml's `(? ...)` clauses) is
+; a reader error under it.  charon's own file still compiles under
+; pluto's readtable via its .asd's :around-compile.
+(let ((*readtable* (copy-readtable nil)))
+  (ql:quickload :charon :silent t))
 (use-package :charon)
 
 (def-test/doc-section "temporary charon tests")
@@ -949,7 +954,9 @@
 
 ; build a fresh libstyx (and refresh ~/.lisp, where styx.lisp looks)
 (sh "make -C ../libstyx -s install")
-(ql:quickload :styx :silent t)
+; standard readtable for dep compiles — see the charon quickload above
+(let ((*readtable* (copy-readtable nil)))
+  (ql:quickload :styx :silent t))
 (use-package :styx)
 
 (def-test/doc-section "temporary styx tests")

@@ -18,4 +18,6 @@
                :cffi
                )
 
+  ; see charon.asd — same readtable containment
+  :around-compile "pluto::call-with-pluto-readtable"
   :components ((:file "styx")))
