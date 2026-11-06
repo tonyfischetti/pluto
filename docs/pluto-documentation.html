@@ -406,12 +406,35 @@ id="toc-readtable-containment">readtable containment</a>
 <li><a href="#call-with-pluto-readtable"
 id="toc-call-with-pluto-readtable">CALL-WITH-PLUTO-READTABLE</a></li>
 </ul></li>
-<li><a href="#temporary-charon-tests"
-id="toc-temporary-charon-tests">temporary charon tests</a>
+<li><a href="#charon-the-companion-with-dependencies"
+id="toc-charon-the-companion-with-dependencies">charon: the companion
+with dependencies</a>
 <ul>
+<li><a href="#str-trim" id="toc-str-trim">STR-TRIM</a></li>
+<li><a href="#str-normalize"
+id="toc-str-normalize">STR-NORMALIZE</a></li>
+<li><a href="#re-compile" id="toc-re-compile">RE-COMPILE</a></li>
+<li><a href="#parse-xml" id="toc-parse-xml">PARSE-XML</a></li>
+<li><a href="#xpath" id="toc-xpath">XPATH</a></li>
+<li><a href="#xpath-compile"
+id="toc-xpath-compile">XPATH-COMPILE</a></li>
+<li><a href="#use-xml-namespace"
+id="toc-use-xml-namespace">USE-XML-NAMESPACE</a></li>
+<li><a href="#parse-xml-file"
+id="toc-parse-xml-file">PARSE-XML-FILE</a></li>
+<li><a href="#hash-table-json"
+id="toc-hash-table-json">HASH-TABLE-&gt;JSON</a></li>
+<li><a href="#parse-json-file"
+id="toc-parse-json-file">PARSE-JSON-FILE</a></li>
+<li><a href="#make-octet-vector"
+id="toc-make-octet-vector">MAKE-OCTET-VECTOR</a></li>
 <li><a href="#parse-float" id="toc-parse-float">PARSE-FLOAT</a></li>
 <li><a href="#qre" id="toc-qre">Q/RE</a></li>
 <li><a href="#quri" id="toc-quri">Q/URI</a></li>
+<li><a href="#escape-namestringshell"
+id="toc-escape-namestringshell">ESCAPE-NAMESTRING/SHELL</a></li>
+<li><a href="#pathname-shell"
+id="toc-pathname-shell">PATHNAME-&gt;SHELL</a></li>
 </ul></li>
 <li><a href="#temporary-styx-tests"
 id="toc-temporary-styx-tests">temporary styx tests</a>
@@ -1575,7 +1598,155 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb91
 <pre>=> "hi"</pre>
 <p></small></p>
 <hr />
-<h3 id="temporary-charon-tests">temporary charon tests</h3>
+<h3 id="charon-the-companion-with-dependencies">charon: the companion
+with dependencies</h3>
+<p>Regexes (cl-ppcre), HTTP (dexador), XML and XPath (cxml, plexippus),
+JSON (yason), HTML (plump, lquery) and friends, wrapped the pluto way.
+<code>request/get</code> and <code>request/post</code> need a network,
+so they aren’t exercised here</p>
+<h4 id="str-trim">STR-TRIM</h4>
+<blockquote>
+<p>ASTRING without its leading and trailing whitespace (the<br />
+characters in <em>whitespaces</em>)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb92"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>(STR-TRIM (FN <span class="st">&quot;~C hi ~%&quot;</span> <span class="ch">#\T</span>ab))</span></code></pre></div>
+<small>
+<pre>=> "hi"</pre>
+<p></small></p>
+<h4 id="str-normalize">STR-NORMALIZE</h4>
+<blockquote>
+<p>ASTRING in the unicode normalization FORM – :nfd (the default),<br />
+:nfkd, :nfc, or :nfkc (cl-unicode) – for comparing strings that<br />
+differ only in how their accents are composed<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb93"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>(LIST (LENGTH <span class="st">&quot;é&quot;</span>) (LENGTH (STR-NORMALIZE <span class="st">&quot;é&quot;</span>))</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>      (LENGTH (STR-NORMALIZE <span class="st">&quot;é&quot;</span> :FORM :NFC)))</span></code></pre></div>
+<small>
+<pre>=> (1 2 1)</pre>
+<p></small></p>
+<h4 id="re-compile">RE-COMPILE</h4>
+<blockquote>
+<p>Compiles a regex into a scanner (cl-ppcre:create-scanner) for<br />
+when one pattern gets matched many times; every str-* function<br />
+(and ~m et al.) takes a scanner in place of a pattern string<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb94"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>(LET ((DIGITS (RE-COMPILE <span class="st">&quot;</span><span class="sc">\\</span><span class="st">d+&quot;</span>)))</span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>  (STR-DETECT <span class="st">&quot;abc123&quot;</span> DIGITS))</span></code></pre></div>
+<small>
+<pre>=> T</pre>
+<p></small></p>
+<h4 id="parse-xml">PARSE-XML</h4>
+<blockquote>
+<p>Parses the XML in ASTRING into a DOM document (cxml, with the
+DOM<br />
+builder) for xpath to query<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb95"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>(XPATH (PARSE-XML <span class="st">&quot;&lt;a&gt;&lt;b&gt;1&lt;/b&gt;&lt;b&gt;2&lt;/b&gt;&lt;/a&gt;&quot;</span>) <span class="st">&quot;//b&quot;</span> :TEXT T)</span></code></pre></div>
+<small>
+<pre>=> ("1" "2")</pre>
+<p></small></p>
+<h4 id="xpath">XPATH</h4>
+<blockquote>
+<p>Evaluates the XPath expression ANXPATH against DOC (a DOM<br />
+document or node) and returns the matching nodes as a list, or<br />
+nil when nothing matches. TEXT returns their string values<br />
+instead of the nodes. ALL nil returns just the first match (its<br />
+string value with TEXT, the raw node-set without). COMPILED-P<br />
+says ANXPATH was compiled with xpath-compile<br />
+e.g. (xpath doc “//item/title” :text t)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb96"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>(LET ((DOC (PARSE-XML <span class="st">&quot;&lt;a&gt;&lt;b&gt;1&lt;/b&gt;&lt;b&gt;2&lt;/b&gt;&lt;/a&gt;&quot;</span>)))</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>  (LIST (XPATH DOC <span class="st">&quot;//b&quot;</span> :ALL NIL :TEXT T) (XPATH DOC <span class="st">&quot;//zz&quot;</span>)))</span></code></pre></div>
+<small>
+<pre>=> ("1" NIL)</pre>
+<p></small></p>
+<h4 id="xpath-compile">XPATH-COMPILE</h4>
+<blockquote>
+<p>Compiles an XPath expression (xpath:compile-xpath) for repeated<br />
+use; hand the result to xpath with :compiled-p t<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb97"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>(LET ((QUERY (XPATH-COMPILE <span class="st">&quot;//b&quot;</span>)))</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>  (XPATH (PARSE-XML <span class="st">&quot;&lt;a&gt;&lt;b&gt;1&lt;/b&gt;&lt;/a&gt;&quot;</span>) QUERY :COMPILED-P T :TEXT T))</span></code></pre></div>
+<small>
+<pre>=> ("1")</pre>
+<p></small></p>
+<h4 id="use-xml-namespace">USE-XML-NAMESPACE</h4>
+<blockquote>
+<p>Makes ANNS (a namespace URI) the default namespace for xpath<br />
+queries: unprefixed element names then match elements in that<br />
+namespace, which is what a document with an xmlns= needs<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb98"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>(LET ((XPATH::*DYNAMIC-NAMESPACES* XPATH::*DYNAMIC-NAMESPACES*))</span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>  (USE-XML-NAMESPACE <span class="st">&quot;urn:x&quot;</span>)</span>
+<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>  (XPATH (PARSE-XML <span class="st">&quot;&lt;a xmlns=</span><span class="sc">\&quot;</span><span class="st">urn:x</span><span class="sc">\&quot;</span><span class="st">&gt;&lt;b&gt;1&lt;/b&gt;&lt;/a&gt;&quot;</span>) <span class="st">&quot;//b&quot;</span> :TEXT T))</span></code></pre></div>
+<small>
+<pre>=> ("1")</pre>
+<p></small></p>
+<h4 id="parse-xml-file">PARSE-XML-FILE</h4>
+<blockquote>
+<p>Parses the XML file AFILE into a DOM document (cxml, with the
+DOM<br />
+builder) for xpath to query<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb99"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>(WITH-TEMP-FILE</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  (BARF TEMPFILE! <span class="st">&quot;&lt;r&gt;&lt;x&gt;ok&lt;/x&gt;&lt;/r&gt;&quot;</span>)</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>  (XPATH (PARSE-XML-FILE TEMPFILE!) <span class="st">&quot;//x&quot;</span> :ALL NIL :TEXT T))</span></code></pre></div>
+<small>
+<pre>=> "ok"</pre>
+<p></small></p>
+<h4 id="hash-table-json">HASH-TABLE-&gt;JSON</h4>
+<blockquote>
+<p>AHASHTABLE (or anything else yason can encode: lists, strings,<br />
+numbers…) as a JSON string<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb100"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>(HASH-TABLE-&gt;JSON (ALIST-&gt;HASH-TABLE `((<span class="st">&quot;a&quot;</span> . <span class="dv">1</span>))))</span></code></pre></div>
+<small>
+<pre>=> "{\"a\":1}"</pre>
+<p></small></p>
+<h4 id="parse-json-file">PARSE-JSON-FILE</h4>
+<blockquote>
+<p>Parses the JSON file AFILE (yason:parse): objects become hash<br />
+tables and arrays become lists. Errors if the file doesn’t exist<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb101"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>(WITH-TEMP-FILE</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>  (BARF TEMPFILE! <span class="st">&quot;{</span><span class="sc">\&quot;</span><span class="st">a</span><span class="sc">\&quot;</span><span class="st">: [1, 2]}&quot;</span>)</span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>  (GETHASH <span class="st">&quot;a&quot;</span> (PARSE-JSON-FILE TEMPFILE!)))</span></code></pre></div>
+<small>
+<pre>=> (1 2)</pre>
+<p></small></p>
+<h4 id="make-octet-vector">MAKE-OCTET-VECTOR</h4>
+<blockquote>
+<p>A fresh vector of N octets – element type (unsigned-byte 8)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb102"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>(LET ((V (MAKE-OCTET-VECTOR <span class="dv">2</span>)))</span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>  (SETF (AREF V <span class="dv">0</span>) <span class="dv">1</span></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>        (AREF V <span class="dv">1</span>) <span class="dv">2</span>)</span>
+<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>  (CONCAT-OCTET-VECTOR V #(<span class="dv">3</span>)))</span></code></pre></div>
+<small>
+<pre>=> #(1 2 3)</pre>
+<p></small></p>
 <h4 id="parse-float">PARSE-FLOAT</h4>
 <blockquote>
 <p>Similar to PARSE-INTEGER, but parses a floating point value and<br />
@@ -1588,8 +1759,8 @@ the character before the exponent. Note that the exponent is only<br />
 parsed if RADIX is 10.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb92"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>(PARSE-FLOAT <span class="st">&quot;5.4&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb103"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>(PARSE-FLOAT <span class="st">&quot;5.4&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> 5.4</pre>
 <p></small></p>
@@ -1598,70 +1769,103 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb92
 <p>Quote, i.e. prefix with #\, all non-word characters in STRING.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb93"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>(LIST (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> <span class="st">&quot;3.50&quot;</span>)</span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>      (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> (Q/RE <span class="st">&quot;3.50&quot;</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb104"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>(LIST (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> <span class="st">&quot;3.50&quot;</span>)</span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>      (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> (Q/RE <span class="st">&quot;3.50&quot;</span>)))</span></code></pre></div>
 <small>
 <pre>=> (T NIL)</pre>
 <p></small></p>
 <h4 id="quri">Q/URI</h4>
-<p>NIL</p>
-<div class="sourceCode" id="cb94"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>(Q/URI <span class="st">&quot;café &amp; bar?q=1&quot;</span>)</span></code></pre></div>
+<blockquote>
+<p>Quotes THING (which gets princ-ed) for a URL: percent-encodes<br />
+whatever isn’t safe in a path segment or query string<br />
+(quri:url-encode, whose keywords :encoding and :space-to-plus<br />
+pass through)<br />
+e.g. (fn “https://x.org/search?q=~A” (q/uri “café &amp; bar”))<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb105"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>(Q/URI <span class="st">&quot;café &amp; bar?q=1&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "caf%C3%A9%20%26%20bar%3Fq%3D1"</pre>
+<p></small></p>
+<h4 id="escape-namestringshell">ESCAPE-NAMESTRING/SHELL</h4>
+<blockquote>
+<p>AFILENAME (a namestring) backslash-escaped for the shell:
+spaces,<br />
+quotes, globs, $, &amp;, ;, parens and the rest. This is the SBCL<br />
+version, which compensates for SBCL namestrings arriving with ?,<br />
+* and [ already escaped. (q/sh – single quotes, one rule – is<br />
+the newer way to quote anything for the shell)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb106"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>(SH (FN <span class="st">&quot;echo -n ~A&quot;</span> (ESCAPE-NAMESTRING/SHELL <span class="st">&quot;/tmp/it&#39;s got spaces!.txt&quot;</span>)))</span></code></pre></div>
+<small>
+<pre>=> "/tmp/it's got spaces!.txt"</pre>
+<p></small></p>
+<h4 id="pathname-shell">PATHNAME-&gt;SHELL</h4>
+<blockquote>
+<p>The pathname APATH as a namestring escaped for the shell<br />
+(escape-namestring/shell)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb107"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>(SH (FN <span class="st">&quot;echo -n ~A&quot;</span> (PATHNAME-&gt;SHELL #P<span class="st">&quot;/tmp/it&#39;s got spaces!.txt&quot;</span>)))</span></code></pre></div>
+<small>
+<pre>=> "/tmp/it's got spaces!.txt"</pre>
 <p></small></p>
 <hr />
 <h3 id="temporary-styx-tests">temporary styx tests</h3>
 <h4 id="stat-filesize">STAT-FILESIZE</h4>
 <p>Size of a file (via <code>stat</code>/<code>lstat</code>) without
 opening it</p>
-<div class="sourceCode" id="cb95"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>(STAT-FILESIZE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb108"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>(STAT-FILESIZE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> 3497</pre>
 <p></small></p>
 <h4 id="is-symlink-p">IS-SYMLINK-P</h4>
 <p>Is it a symlink? (something portable CL cannot ask)</p>
-<div class="sourceCode" id="cb96"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>(PROGN</span>
-<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a> (SH <span class="st">&quot;ln -sf somebody.txt tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a> (LET ((RES</span>
-<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>        (LIST (IS-SYMLINK-P <span class="st">&quot;tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a>              (IS-SYMLINK-P <span class="st">&quot;somebody.txt&quot;</span>))))</span>
-<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>   (SH <span class="st">&quot;rm tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a>   RES))</span></code></pre></div>
+<div class="sourceCode" id="cb109"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>(PROGN</span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a> (SH <span class="st">&quot;ln -sf somebody.txt tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a> (LET ((RES</span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>        (LIST (IS-SYMLINK-P <span class="st">&quot;tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>              (IS-SYMLINK-P <span class="st">&quot;somebody.txt&quot;</span>))))</span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>   (SH <span class="st">&quot;rm tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>   RES))</span></code></pre></div>
 <small>
 <pre>=> (T NIL)</pre>
 <p></small></p>
 <h4 id="md5string">MD5/STRING</h4>
 <p>Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file
 variants</p>
-<div class="sourceCode" id="cb97"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>(MD5/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb110"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>(MD5/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "5d41402abc4b2a76b9719d911017c592"</pre>
 <p></small></p>
 <h4 id="sha256file">SHA256/FILE</h4>
 <p>File hashing streams in 64KB chunks (never slurps the whole file)</p>
-<div class="sourceCode" id="cb98"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>(SHA256/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb111"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>(SHA256/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0"</pre>
 <p></small></p>
 <h4 id="with-lock-file">WITH-LOCK-FILE</h4>
 <p>Runs body while flock-holding path (e.g. so a cron script won’t run
 twice); <code>:wait nil</code> skips the body instead of blocking</p>
-<div class="sourceCode" id="cb99"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>(LET ((LOCKF <span class="st">&quot;tmp-demo.lock&quot;</span>))</span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  (LET ((RES</span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>         (WITH-LOCK-FILE (LOCKF)</span>
-<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))</span>
-<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))</span>
-<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>      (WHEN HANDLE</span>
-<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))</span>
-<span id="cb99-8"><a href="#cb99-8" aria-hidden="true" tabindex="-1"></a>    (DELETE-FILE LOCKF)</span>
-<span id="cb99-9"><a href="#cb99-9" aria-hidden="true" tabindex="-1"></a>    RES))</span></code></pre></div>
+<div class="sourceCode" id="cb112"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>(LET ((LOCKF <span class="st">&quot;tmp-demo.lock&quot;</span>))</span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>  (LET ((RES</span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>         (WITH-LOCK-FILE (LOCKF)</span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))</span>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a>    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))</span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a>      (WHEN HANDLE</span>
+<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a>        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))</span>
+<span id="cb112-8"><a href="#cb112-8" aria-hidden="true" tabindex="-1"></a>    (DELETE-FILE LOCKF)</span>
+<span id="cb112-9"><a href="#cb112-9" aria-hidden="true" tabindex="-1"></a>    RES))</span></code></pre></div>
 <small>
 <pre>=> (:RAN NIL :FREE-AGAIN T)</pre>
 <p></small></p>

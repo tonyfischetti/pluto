@@ -1383,7 +1383,92 @@
   (ql:quickload :charon :silent t))
 (use-package :charon)
 
-(def-test/doc-section "temporary charon tests")
+(def-test/doc-section "charon: the companion with dependencies")
+
+(def-raw-markdown
+  (fn "Regexes (cl-ppcre), HTTP (dexador), XML and XPath (cxml, plexippus), JSON (yason), HTML (plump, lquery) and friends, wrapped the pluto way. `request/get` and `request/post` need a network, so they aren't exercised here~%~%"))
+
+(def-test/doc-test 'str-trim
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "hi")
+  (str-trim (fn "~C hi ~%" #\Tab)))
+
+(def-test/doc-test 'str-normalize
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(1 2 1))
+  (list (length "é")
+        (length (str-normalize "é"))
+        (length (str-normalize "é" :form :nfc))))
+
+(def-test/doc-test 're-compile
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (let ((digits (re-compile "\\d+")))
+    (str-detect "abc123" digits)))
+
+(def-test/doc-test 'parse-xml
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("1" "2"))
+  (xpath (parse-xml "<a><b>1</b><b>2</b></a>") "//b" :text t))
+
+(def-test/doc-test 'xpath
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("1" nil))
+  (let ((doc (parse-xml "<a><b>1</b><b>2</b></a>")))
+    (list (xpath doc "//b" :all nil :text t)
+          (xpath doc "//zz"))))
+
+(def-test/doc-test 'xpath-compile
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("1"))
+  (let ((query (xpath-compile "//b")))
+    (xpath (parse-xml "<a><b>1</b></a>") query :compiled-p t :text t)))
+
+(def-test/doc-test 'use-xml-namespace
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("1"))
+  (let ((xpath::*dynamic-namespaces* xpath::*dynamic-namespaces*))
+    (use-xml-namespace "urn:x")
+    (xpath (parse-xml "<a xmlns=\"urn:x\"><b>1</b></a>") "//b" :text t)))
+
+(def-test/doc-test 'parse-xml-file
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "ok")
+  (with-temp-file
+    (barf tempfile! "<r><x>ok</x></r>")
+    (xpath (parse-xml-file tempfile!) "//x" :all nil :text t)))
+
+(def-test/doc-test 'hash-table->json
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "{\"a\":1}")
+  (hash-table->json (alist->hash-table `(("a" . 1)))))
+
+(def-test/doc-test 'parse-json-file
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(1 2))
+  (with-temp-file
+    (barf tempfile! "{\"a\": [1, 2]}")
+    (gethash "a" (parse-json-file tempfile!))))
+
+(def-test/doc-test 'make-octet-vector
+  `(markdown-able (test-able returns))
+  'function
+  (and (equalp test-return-value! #(1 2 3))
+       (typep test-return-value! `(vector (unsigned-byte 8))))
+  (let ((v (make-octet-vector 2)))
+    (setf (aref v 0) 1
+          (aref v 1) 2)
+    (concat-octet-vector v #(3))))
 
 (def-test/doc-test 'parse-float
   `(markdown-able (test-able returns))
@@ -1411,15 +1496,31 @@
   (string= test-return-value! "caf%C3%A9%20%26%20bar%3Fq%3D1")
   (q/uri "café & bar?q=1"))
 
-  ; each impl now gets exactly one definition (the overlapping
-  ; guards used to make ECL define-then-clobber it at load);
-  ; nasty names must round-trip through the shell
-  (def-test/doc-test 'escape-namestring/shell
+; each impl gets exactly one definition (the overlapping guards used
+; to make ECL define-then-clobber it at load); nasty names must
+; round-trip through the shell
+(def-test/doc-test 'escape-namestring/shell
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "/tmp/it's got spaces!.txt")
+  (sh (fn "echo -n ~A"
+          (escape-namestring/shell "/tmp/it's got spaces!.txt"))))
+
+(def-test/doc-test 'pathname->shell
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "/tmp/it's got spaces!.txt")
+  (sh (fn "echo -n ~A" (pathname->shell #P"/tmp/it's got spaces!.txt"))))
+
+  ; a plain name passes through; SBCL's namestring escaping is
+  ; undone (ECL's namestrings never had any)
+  (def-test/doc-test 'pathname->c
     `((test-able returns))
     'function
-    (string= test-return-value! "/tmp/it's got spaces!.txt")
-    (sh (fn "echo -n ~A"
-            (escape-namestring/shell "/tmp/it's got spaces!.txt"))))
+    (equal test-return-value! `("/tmp/a b.txt" "/tmp/a*.txt"))
+    (list (pathname->c #P"/tmp/a b.txt")
+          #+sbcl (escape-namestring/c "/tmp/a\\*.txt")
+          #+ecl  "/tmp/a*.txt"))
 
 ; --------------------------------------------------------------- ;
 ; --------------------------------------------------------------- ;

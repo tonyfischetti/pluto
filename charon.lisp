@@ -60,6 +60,9 @@
 ; regular expressions / cl-ppcre wrappers ----------------;
 
 (defmacro re-compile (&rest everything)
+  "Compiles a regex into a scanner (cl-ppcre:create-scanner) for
+   when one pattern gets matched many times; every str-* function
+   (and ~m et al.) takes a scanner in place of a pattern string"
   `(cl-ppcre:create-scanner ,@everything))
 
 (defmacro str-split (astr sep &rest everything)
@@ -102,6 +105,8 @@
     need))
 
 (defun str-trim (astring)
+  "ASTRING without its leading and trailing whitespace (the
+   characters in *whitespaces*)"
   (string-trim *whitespaces* astring))
 
 (defmacro ~m (&rest everything)
@@ -136,6 +141,9 @@
 (abbr q/re cl-ppcre:quote-meta-chars)
 
 (defun str-normalize (astring &key (form :nfd))
+  "ASTRING in the unicode normalization FORM -- :nfd (the default),
+   :nfkd, :nfc, or :nfkc (cl-unicode) -- for comparing strings that
+   differ only in how their accents are composed"
   (let ((code-points
           (cond ((eq form :nfd)  (cl-unicode:normalization-form-d astring))
                 ((eq form :nfkd) (cl-unicode:normalization-form-k-d astring))
@@ -213,22 +221,48 @@
 ; ------------------------------------------------------- ;
 ; HTML/XML stuff ---------------------------------------- ;
 
-; percent-encodes a string for safe inclusion in a URL
-(abbr q/uri quri:url-encode)
+; (a defun rather than an abbr of quri:url-encode: that has no
+; docstring to inherit, and the other q/ functions princ their THING)
+(defun q/uri (thing &rest keys)
+  "Quotes THING (which gets princ-ed) for a URL: percent-encodes
+   whatever isn't safe in a path segment or query string
+   (quri:url-encode, whose keywords :encoding and :space-to-plus
+   pass through)
+   e.g. (fn \"https://x.org/search?q=~A\" (q/uri \"café & bar\"))"
+  (apply #'quri:url-encode (fn "~A" thing) keys))
 
 (defmacro request/get (&rest everything)
+  "HTTP GET (dexador:get, same arguments): a URI, then dexador's
+   keywords (:headers, :basic-auth, :want-stream...). Returns the
+   body, the status code, the response headers, the final URI, and
+   the stream, as values"
   `(dexador:get ,@everything))
 
 (defmacro request/post (&rest everything)
+  "HTTP POST (dexador:post, same arguments): a URI, then :content
+   (an alist of form fields, or a string) and dexador's other
+   keywords. Returns the body, the status code, the response
+   headers, the final URI, and the stream, as values"
   `(dexador:post ,@everything))
 
 (defun parse-xml (astring)
+  "Parses the XML in ASTRING into a DOM document (cxml, with the DOM
+   builder) for xpath to query"
   (cxml:parse astring (cxml-dom:make-dom-builder)))
 
 (defun parse-xml-file (afile)
+  "Parses the XML file AFILE into a DOM document (cxml, with the DOM
+   builder) for xpath to query"
   (cxml:parse-file afile (cxml-dom:make-dom-builder)))
 
 (defun xpath (doc anxpath &key (all t) (compiled-p nil) (text nil))
+  "Evaluates the XPath expression ANXPATH against DOC (a DOM
+   document or node) and returns the matching nodes as a list, or
+   nil when nothing matches. TEXT returns their string values
+   instead of the nodes. ALL nil returns just the first match (its
+   string value with TEXT, the raw node-set without). COMPILED-P
+   says ANXPATH was compiled with xpath-compile
+   e.g. (xpath doc \"//item/title\" :text t)"
   (let ((result (if compiled-p
                   (xpath:evaluate-compiled anxpath doc)
                   (xpath:evaluate anxpath doc))))
@@ -242,9 +276,14 @@
             result))))))
 
 (defmacro xpath-compile (&rest everything)
+  "Compiles an XPath expression (xpath:compile-xpath) for repeated
+   use; hand the result to xpath with :compiled-p t"
   `(xpath:compile-xpath ,@everything))
 
 (defmacro use-xml-namespace (anns)
+  "Makes ANNS (a namespace URI) the default namespace for xpath
+   queries: unprefixed element names then match elements in that
+   namespace, which is what a document with an xmlns= needs"
   `(setq xpath::*dynamic-namespaces*
          (cons
            (cons nil ,anns)
@@ -264,20 +303,25 @@
 (abbr parse-json yason:parse)
 (abbr export-json yason:encode)
 
-; TODO: document
 (defun hash-table->json (ahashtable)
+  "AHASHTABLE (or anything else yason can encode: lists, strings,
+   numbers...) as a JSON string"
   (let ((s (make-string-output-stream)))
     (yason:encode ahashtable s)
     (get-output-stream-string s)))
 
 (defun parse-json-file (afile)
+  "Parses the JSON file AFILE (yason:parse): objects become hash
+   tables and arrays become lists. Errors if the file doesn't exist"
   (with-a-file afile :r
     (yason:parse stream!)))
 
 (defmacro make-octet-vector (n)
+  "A fresh vector of N octets -- element type (unsigned-byte 8)"
   `(make-array ,n :element-type '(unsigned-byte 8)))
 
 (defmacro concat-octet-vector (&rest everything)
+  "The octet vectors EVERYTHING concatenated into one"
   `(concatenate '(vector (unsigned-byte 8)) ,@everything))
 
 (abbr parse-html plump:parse)
@@ -293,6 +337,11 @@
 ; compensates; the ecl variant below escapes from scratch
 #+sbcl
 (defun escape-namestring/shell (afilename)
+  "AFILENAME (a namestring) backslash-escaped for the shell: spaces,
+   quotes, globs, $, &, ;, parens and the rest. This is the SBCL
+   version, which compensates for SBCL namestrings arriving with ?,
+   * and [ already escaped. (q/sh -- single quotes, one rule -- is
+   the newer way to quote anything for the shell)"
   (-<> afilename
        (~ra <> •\t• •\	•) (~ra <> • • •\ •) (~ra <> •;• •\;•)
        (~ra <> •\^• •\^•) (~ra <> •\$• •\$•) (~ra <> •\\\?• •\?•)
@@ -306,6 +355,11 @@
 
 #+ecl
 (defun escape-namestring/shell (afilename)
+  "AFILENAME (a namestring) backslash-escaped for the shell: spaces,
+   quotes, globs, $, &, ;, parens and the rest. This is the ECL
+   version, which escapes from scratch (ECL namestrings arrive
+   unescaped). (q/sh -- single quotes, one rule -- is the newer way
+   to quote anything for the shell)"
   (-<> afilename
        (~ra <> •\\• •\\\•) (~ra <> •\t• •\	•) (~ra <> • • •\ •)
        (~ra <> •;• •\;•) (~ra <> •\^• •\^•) (~ra <> •\$• •\$•)
@@ -317,19 +371,32 @@
 
 #+sbcl
 (defun escape-namestring/c (afilename)
+  "AFILENAME (a namestring) as the exact on-disk name a C function
+   expects: undoes the backslashes SBCL puts before ?, * and [ in
+   its namestrings. A regex-based predecessor of pluto's
+   pathname->native, which does this properly"
   (-<> afilename
        (~ra <> •\\• •\\\•) (~ra <> •\?• •\?•) (~ra <> •\[• •\[•)
        (~ra <> •\\\\\*• •*•) (~ra <> •\\\\\\\[• •[•) (~ra <> •\\\\\\• "")))
 
 #+ecl
 (defun escape-namestring/c (afilename)
+  "AFILENAME (a namestring) as the exact on-disk name a C function
+   expects. ECL namestrings aren't escaped to begin with, so this
+   version has little to undo. A regex-based predecessor of pluto's
+   pathname->native, which does this properly"
   (-<> afilename
        (~ra <> •\\\\\*• •*•) (~ra <> •\\\\\\\[• •[•) (~ra <> •\\\\\\• "")))
 
 (defun pathname->shell (apath)
+  "The pathname APATH as a namestring escaped for the shell
+   (escape-namestring/shell)"
   (escape-namestring/shell (namestring apath)))
 
 (defun pathname->c (apath)
+  "The pathname APATH as the string a C function expects
+   (escape-namestring/c) -- pluto's pathname->native is the
+   better tool for this"
   (escape-namestring/c (namestring apath)))
 
 ; ------------------------------------------------------- ;

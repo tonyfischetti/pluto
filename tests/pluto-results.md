@@ -1353,7 +1353,173 @@ The cursor movements print escapes (compared against the `+ansi-escape-...+` con
 
 -----
 
-### temporary charon tests
+### charon: the companion with dependencies
+
+Regexes (cl-ppcre), HTTP (dexador), XML and XPath (cxml, plexippus), JSON (yason), HTML (plump, lquery) and friends, wrapped the pluto way. `request/get` and `request/post` need a network, so they aren't exercised here
+
+
+
+#### STR-TRIM
+
+> ASTRING without its leading and trailing whitespace (the\
+>    characters in *whitespaces*)\
+
+```{.commonlisp}
+(STR-TRIM (FN "~C hi ~%" #\Tab))
+```
+
+<small><pre>=> "hi"</pre></small>
+
+
+
+#### STR-NORMALIZE
+
+> ASTRING in the unicode normalization FORM -- :nfd (the default),\
+>    :nfkd, :nfc, or :nfkc (cl-unicode) -- for comparing strings that\
+>    differ only in how their accents are composed\
+
+```{.commonlisp}
+(LIST (LENGTH "é") (LENGTH (STR-NORMALIZE "é"))
+      (LENGTH (STR-NORMALIZE "é" :FORM :NFC)))
+```
+
+<small><pre>=> (1 2 1)</pre></small>
+
+
+
+#### RE-COMPILE
+
+> Compiles a regex into a scanner (cl-ppcre:create-scanner) for\
+>    when one pattern gets matched many times; every str-* function\
+>    (and ~m et al.) takes a scanner in place of a pattern string\
+
+```{.commonlisp}
+(LET ((DIGITS (RE-COMPILE "\\d+")))
+  (STR-DETECT "abc123" DIGITS))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### PARSE-XML
+
+> Parses the XML in ASTRING into a DOM document (cxml, with the DOM\
+>    builder) for xpath to query\
+
+```{.commonlisp}
+(XPATH (PARSE-XML "<a><b>1</b><b>2</b></a>") "//b" :TEXT T)
+```
+
+<small><pre>=> ("1" "2")</pre></small>
+
+
+
+#### XPATH
+
+> Evaluates the XPath expression ANXPATH against DOC (a DOM\
+>    document or node) and returns the matching nodes as a list, or\
+>    nil when nothing matches. TEXT returns their string values\
+>    instead of the nodes. ALL nil returns just the first match (its\
+>    string value with TEXT, the raw node-set without). COMPILED-P\
+>    says ANXPATH was compiled with xpath-compile\
+>    e.g. (xpath doc "//item/title" :text t)\
+
+```{.commonlisp}
+(LET ((DOC (PARSE-XML "<a><b>1</b><b>2</b></a>")))
+  (LIST (XPATH DOC "//b" :ALL NIL :TEXT T) (XPATH DOC "//zz")))
+```
+
+<small><pre>=> ("1" NIL)</pre></small>
+
+
+
+#### XPATH-COMPILE
+
+> Compiles an XPath expression (xpath:compile-xpath) for repeated\
+>    use; hand the result to xpath with :compiled-p t\
+
+```{.commonlisp}
+(LET ((QUERY (XPATH-COMPILE "//b")))
+  (XPATH (PARSE-XML "<a><b>1</b></a>") QUERY :COMPILED-P T :TEXT T))
+```
+
+<small><pre>=> ("1")</pre></small>
+
+
+
+#### USE-XML-NAMESPACE
+
+> Makes ANNS (a namespace URI) the default namespace for xpath\
+>    queries: unprefixed element names then match elements in that\
+>    namespace, which is what a document with an xmlns= needs\
+
+```{.commonlisp}
+(LET ((XPATH::*DYNAMIC-NAMESPACES* XPATH::*DYNAMIC-NAMESPACES*))
+  (USE-XML-NAMESPACE "urn:x")
+  (XPATH (PARSE-XML "<a xmlns=\"urn:x\"><b>1</b></a>") "//b" :TEXT T))
+```
+
+<small><pre>=> ("1")</pre></small>
+
+
+
+#### PARSE-XML-FILE
+
+> Parses the XML file AFILE into a DOM document (cxml, with the DOM\
+>    builder) for xpath to query\
+
+```{.commonlisp}
+(WITH-TEMP-FILE
+  (BARF TEMPFILE! "<r><x>ok</x></r>")
+  (XPATH (PARSE-XML-FILE TEMPFILE!) "//x" :ALL NIL :TEXT T))
+```
+
+<small><pre>=> "ok"</pre></small>
+
+
+
+#### HASH-TABLE->JSON
+
+> AHASHTABLE (or anything else yason can encode: lists, strings,\
+>    numbers...) as a JSON string\
+
+```{.commonlisp}
+(HASH-TABLE->JSON (ALIST->HASH-TABLE `(("a" . 1))))
+```
+
+<small><pre>=> "{\"a\":1}"</pre></small>
+
+
+
+#### PARSE-JSON-FILE
+
+> Parses the JSON file AFILE (yason:parse): objects become hash\
+>    tables and arrays become lists. Errors if the file doesn't exist\
+
+```{.commonlisp}
+(WITH-TEMP-FILE
+  (BARF TEMPFILE! "{\"a\": [1, 2]}")
+  (GETHASH "a" (PARSE-JSON-FILE TEMPFILE!)))
+```
+
+<small><pre>=> (1 2)</pre></small>
+
+
+
+#### MAKE-OCTET-VECTOR
+
+> A fresh vector of N octets -- element type (unsigned-byte 8)\
+
+```{.commonlisp}
+(LET ((V (MAKE-OCTET-VECTOR 2)))
+  (SETF (AREF V 0) 1
+        (AREF V 1) 2)
+  (CONCAT-OCTET-VECTOR V #(3)))
+```
+
+<small><pre>=> #(1 2 3)</pre></small>
+
 
 
 #### PARSE-FLOAT
@@ -1389,12 +1555,46 @@ The cursor movements print escapes (compared against the `+ansi-escape-...+` con
 
 #### Q/URI
 
-NIL
+> Quotes THING (which gets princ-ed) for a URL: percent-encodes\
+>    whatever isn't safe in a path segment or query string\
+>    (quri:url-encode, whose keywords :encoding and :space-to-plus\
+>    pass through)\
+>    e.g. (fn "https://x.org/search?q=~A" (q/uri "café & bar"))\
+
 ```{.commonlisp}
 (Q/URI "café & bar?q=1")
 ```
 
 <small><pre>=> "caf%C3%A9%20%26%20bar%3Fq%3D1"</pre></small>
+
+
+
+#### ESCAPE-NAMESTRING/SHELL
+
+> AFILENAME (a namestring) backslash-escaped for the shell: spaces,\
+>    quotes, globs, $, &, ;, parens and the rest. This is the SBCL\
+>    version, which compensates for SBCL namestrings arriving with ?,\
+>    * and [ already escaped. (q/sh -- single quotes, one rule -- is\
+>    the newer way to quote anything for the shell)\
+
+```{.commonlisp}
+(SH (FN "echo -n ~A" (ESCAPE-NAMESTRING/SHELL "/tmp/it's got spaces!.txt")))
+```
+
+<small><pre>=> "/tmp/it's got spaces!.txt"</pre></small>
+
+
+
+#### PATHNAME->SHELL
+
+> The pathname APATH as a namestring escaped for the shell\
+>    (escape-namestring/shell)\
+
+```{.commonlisp}
+(SH (FN "echo -n ~A" (PATHNAME->SHELL #P"/tmp/it's got spaces!.txt")))
+```
+
+<small><pre>=> "/tmp/it's got spaces!.txt"</pre></small>
 
 
 
