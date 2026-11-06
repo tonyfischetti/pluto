@@ -870,6 +870,29 @@ If the argument to `for-each` is a string and the file exists,
 
 
 
+#### FOR-EACH/PARALLEL
+
+> Like for-each/list, but every element's BODY runs in its own\
+>    thread -- at most LIMIT of them at a time (default: all at once)\
+>    -- and, unlike the other for-eaches, it returns the list of\
+>    BODY's values, in A-LIST's order. index! and value! are there as\
+>    usual; continue! ends that element's body (its value is nil);\
+>    break! has nothing to break out of. If an element's body errors,\
+>    every element still runs, then the first error is re-signalled\
+>    -- wrap the body in or-do if a failure should be a result instead.\
+>    BODY runs in a fresh thread, so the caller's dynamic bindings (a\
+>    let of a special, a rebound *standard-output*) aren't visible\
+>    e.g. (for-each/parallel (urls :limit 4) (fetch value!))\
+
+```{.commonlisp}
+(FOR-EACH/PARALLEL ('(A B C))
+  (LIST INDEX! VALUE!))
+```
+
+<small><pre>=> ((1 A) (2 B) (3 C))</pre></small>
+
+
+
 #### PROGRESS
 
 > Prints `INDEX of LIMIT..... [percent%]` (in yellow) to WHERE\
@@ -974,9 +997,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G641 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G641
-      #:G641
+(LET ((#:G649 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G649
+      #:G649
       42))
 ```
 
@@ -1304,6 +1327,51 @@ NIL
 
 -----
 
+### threads
+
+The two blessed implementations' threads under one set of names (pluto can't lean on bordeaux-threads). `for-each/parallel`, `with-loading` and `with-status-lines` are built on them
+
+
+
+#### MAKE-THREAD
+
+> Starts FN (a function of no arguments) in a new thread and\
+>    returns the thread; join-thread waits for it and hands back FN's\
+>    value. The new thread sees the global values of special\
+>    variables, not the caller's dynamic bindings -- pass what it\
+>    needs lexically\
+
+```{.commonlisp}
+(JOIN-THREAD (MAKE-THREAD (LAMBDA () (* 6 7))))
+```
+
+<small><pre>=> 42</pre></small>
+
+
+
+#### WITH-MUTEX
+
+> Runs BODY holding MUTEX (from make-mutex) -- waiting first if\
+>    another thread has it -- and releases it however BODY exits.\
+>    Every thread touching the shared thing must go through the same\
+>    mutex; a write that skips it is still a race\
+>    e.g. (with-mutex (m) (incf count))\
+
+```{.commonlisp}
+(LET ((COUNT 0) (M (MAKE-MUTEX)))
+  (FOR-EACH/PARALLEL ('(1 2 3 4))
+    (LOOP REPEAT 1000
+          DO (WITH-MUTEX (M)
+               (INCF COUNT))))
+  COUNT)
+```
+
+<small><pre>=> 4000</pre></small>
+
+
+
+-----
+
 ### terminal things / terminal manipulation
 
 The cursor movements print escapes (compared against the `+ansi-escape-...+` constants here, since they don't render); the progress bar is shown with `:one-line nil`, so it doesn't try to redraw over the previous line
@@ -1342,6 +1410,40 @@ The cursor movements print escapes (compared against the `+ansi-escape-...+` con
 ```
 
 <small><pre>=> T</pre></small>
+
+
+`with-status-lines` is homebrew-style live progress: one line per key, each with its own spinner until `done!` or `failed!`, redrawn in place by a renderer thread. Without a terminal (as here, writing to a string) nothing animates: each line is printed once, when it finishes
+
+
+
+#### WITH-STATUS-LINES
+
+> Homebrew-style live progress: one line per key in KEYS (symbols\
+>    or strings), each with a spinner until the body marks it with\
+>    done! or failed!; status! changes a line's text meanwhile. A\
+>    renderer thread redraws the lines in place ten times a second on\
+>    WHERE (default *error-output*), so the body (and any threads it\
+>    starts -- for-each/parallel, say) must not print there itself.\
+>    Binds `lines!` to the board for the three macros. When the body\
+>    ends, however it ends, the final state is left on screen and the\
+>    cursor sits below it: the place for whatever comes next. Without\
+>    a terminal (a pipe, cron) or with more keys than rows, nothing\
+>    animates: each line is printed once, as it finishes\
+>    e.g. (with-status-lines ('(zsh pluto))\
+>           (for-each/parallel ('(zsh pluto))\
+>             (status! value! "fetching...")\
+>             (done! value! (fetch-and-describe value!))))\
+
+```{.commonlisp}
+(SPLIT-STRING->LINES
+ (WITH-OUTPUT-TO-STRING (S)
+   (WITH-STATUS-LINES ('(ZSH PLUTO) :WHERE S)
+     (STATUS! 'PLUTO "fetching...")
+     (DONE! 'ZSH "up to date")
+     (FAILED! 'PLUTO "18 to push"))))
+```
+
+<small><pre>=> ("✓ zsh    up to date" "✗ pluto  18 to push")</pre></small>
 
 
 

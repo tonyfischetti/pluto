@@ -17,7 +17,7 @@
     ; pluto parameters
     :*pluto-output-stream* :*pluto-log-level* :*pluto-log-file*
     :*pluto-curly-test* :*pluto-external-format* :*pluto-shell*
-    :*unix-epoch-difference* :*whitespaces*
+    :*unix-epoch-difference* :*whitespaces* :*pluto-spinner-frames*
     :*pluto-readtable* :call-with-pluto-readtable
 
     ; formatting
@@ -27,6 +27,8 @@
     :make-ansi-escape :+reset-terminal-color+ :+magenta-bold+ :+red-bold+
     :+yellow-bold+ :+green-bold+ :+cyan-bold+ :+blue-bold+ :+grey-bold+
     :+ansi-escape-up+ :+ansi-escape-left-all+ :+ansi-escape-left-one+
+    :+ansi-escape-clear-line+ :+ansi-escape-hide-cursor+
+    :+ansi-escape-show-cursor+
     :magenta :red :yellow :green :cyan :blue :grey
 
     ; string operations
@@ -57,7 +59,7 @@
     :with-interactive-interrupt-handler
     :progress :break! :continue! :index! :value! :key! :for-each/line
     :for-each/list :for-each/hash :for-each/vector :for-each/stream
-    :for-each/alist :for-each/call :for-each :forever
+    :for-each/alist :for-each/call :for-each/parallel :for-each :forever
 
     ; shell and zsh
     :zsh :sh :zsh-simple :sh-simple :q/sh
@@ -72,10 +74,15 @@
     :program/script-name :cmdargs :def-cli-args :args! :bare-args!
     :+USAGE-TEXT!+ :print-usage! :process-args! :assign-next-arg!
 
+    ; threads
+    :make-thread :join-thread :make-mutex :with-mutex
+
     ; terminal things / terminal manipulation
     :clear-screen
     :get-terminal-columns :ansi-up-line :ansi-left-all :ansi-clear-line
-    :ansi-left-one :progress-bar :loading-forever :with-loading :give-choices
+    :ansi-left-one :ansi-up-lines :progress-bar :loading-forever
+    :with-loading :give-choices
+    :with-status-lines :lines! :status! :done! :failed!
 
     ; file/filename/directory operations
     :basename :pwd :realpath :size-for-humans :file-size
@@ -140,6 +147,12 @@
                         #\Linefeed #\Page #\Return #\Rubout)
   "The characters that count as whitespace: a character bag for
    string-trim and friends (charon's str-trim uses it)")
+
+(defparameter *pluto-spinner-frames* #("-" "\\" "|" "/")
+  "The frames of the spinner that loading-forever (so with-loading)
+   and with-status-lines show, cycled ten times a second: a vector
+   of one-column strings. Braille is the usual upgrade:
+   #(\"⠋\" \"⠙\" \"⠹\" \"⠸\" \"⠼\" \"⠴\" \"⠦\" \"⠧\" \"⠇\" \"⠏\")")
 
 ;---------------------------------------------------------;
 
@@ -211,6 +224,14 @@
    say to the start of the line (ESC[500D)")
 (defvar +ansi-escape-left-one+  (format nil "~c[1D" #\ESC)
   "The escape that moves the cursor one column left (ESC[1D)")
+(defvar +ansi-escape-clear-line+   (format nil "~c[2K" #\ESC)
+  "The escape that blanks the whole current line (ESC[2K) without
+   moving the cursor")
+(defvar +ansi-escape-hide-cursor+  (format nil "~c[?25l" #\ESC)
+  "The escape that hides the cursor (ESC[?25l) -- show it again
+   before you're done, or the terminal stays that way")
+(defvar +ansi-escape-show-cursor+  (format nil "~c[?25h" #\ESC)
+  "The escape that shows the cursor again (ESC[?25h)")
 
 (defun do-with-color (acolor thestring &rest everything)
   "Wraps THESTRING (a format control string, EVERYTHING its
@@ -973,6 +994,54 @@
                     do (progn (incf index!)
                               (block this-pass! ,@body)))))))
 
+(defun %run-in-parallel (items limit fn)
+  "The engine of for-each/parallel: calls FN with (index item) for
+   every item of ITEMS, LIMIT at a time (nil: all at once), and
+   returns the results in ITEMS' order. Every item runs even when
+   some fail; then the first error is re-signalled"
+  (check-type limit (or null (integer 1)))
+  (let* ((items    (coerce items 'vector))
+         (n        (length items))
+         (results  (make-array n :initial-element nil))
+         (errors   (make-array n :initial-element nil))
+         (next     0)
+         (mutex    (make-mutex :name "for-each/parallel"))
+         (workers  (min n (or limit n))))
+    (flet ((worker ()
+             (loop
+               (let ((i (with-mutex (mutex)
+                          (when (< next n) (prog1 next (incf next))))))
+                 (unless i (return))
+                 (handler-case
+                   (setf (aref results i) (funcall fn (1+ i) (aref items i)))
+                   (error (e) (setf (aref errors i) e)))))))
+      (mapc #'join-thread
+            (loop repeat workers
+                  collect (make-thread #'worker :name "for-each/parallel"))))
+    (let ((failed (remove nil errors)))
+      (when (plusp (length failed))
+        (error "for-each/parallel: ~A of ~A tasks errored -- the first: ~A"
+               (length failed) n (aref failed 0))))
+    (coerce results 'list)))
+
+(defmacro for-each/parallel ((a-list &key limit) &body body)
+  "Like for-each/list, but every element's BODY runs in its own
+   thread -- at most LIMIT of them at a time (default: all at once)
+   -- and, unlike the other for-eaches, it returns the list of
+   BODY's values, in A-LIST's order. index! and value! are there as
+   usual; continue! ends that element's body (its value is nil);
+   break! has nothing to break out of. If an element's body errors,
+   every element still runs, then the first error is re-signalled
+   -- wrap the body in or-do if a failure should be a result instead.
+   BODY runs in a fresh thread, so the caller's dynamic bindings (a
+   let of a special, a rebound *standard-output*) aren't visible
+   e.g. (for-each/parallel (urls :limit 4) (fetch value!))"
+  `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
+     (%run-in-parallel ,a-list ,limit
+                       (lambda (index! value!)
+                         (declare (ignorable index! value!))
+                         (block this-pass! ,@body)))))
+
 ; TODO: weird sbcl compiler notes
 (defmacro for-each (a-thing &body body)
   "A super-duper imperative looping construct.
@@ -1411,6 +1480,52 @@
 
 
 ; ------------------------------------------------------- ;
+; threads ----------------------------------------------- ;
+
+; the two blessed implementations' threads under one set of names
+; (pluto can't lean on bordeaux-threads: zero deps). with-loading,
+; for-each/parallel and with-status-lines are built on these
+
+(defun make-thread (fn &key (name "pluto-thread"))
+  "Starts FN (a function of no arguments) in a new thread and
+   returns the thread; join-thread waits for it and hands back FN's
+   value. The new thread sees the global values of special
+   variables, not the caller's dynamic bindings -- pass what it
+   needs lexically"
+  #+sbcl (sb-thread:make-thread fn :name name)
+  #+ecl  (mp:process-run-function name fn))
+
+(defun join-thread (thread)
+  "Waits for THREAD (from make-thread) to finish and returns what
+   its function returned"
+  #+sbcl (sb-thread:join-thread thread)
+  #+ecl  (mp:process-join thread))
+
+(defun %terminate-thread (thread)
+  #+sbcl (sb-thread:terminate-thread thread)
+  #+ecl  (mp:process-kill thread))
+
+(defun make-mutex (&key (name "pluto-mutex"))
+  "A mutex, for with-mutex: whatever two threads must never do at
+   once (update a shared list, a hash table, a counter) is done
+   holding it. Not recursive: taking it again from the thread that
+   holds it is an error, not a no-op"
+  #+sbcl (sb-thread:make-mutex :name name)
+  #+ecl  (mp:make-lock :name name))
+
+(defmacro with-mutex ((mutex) &body body)
+  "Runs BODY holding MUTEX (from make-mutex) -- waiting first if
+   another thread has it -- and releases it however BODY exits.
+   Every thread touching the shared thing must go through the same
+   mutex; a write that skips it is still a race
+   e.g. (with-mutex (m) (incf count))"
+  #+sbcl `(sb-thread:with-mutex (,mutex) ,@body)
+  #+ecl  `(mp:with-lock (,mutex) ,@body))
+
+; ------------------------------------------------------- ;
+
+
+; ------------------------------------------------------- ;
 ; terminal things / terminal manipulation --------------- ;
 
 (defun clear-screen ()
@@ -1450,6 +1565,12 @@
   "Moves the cursor up one line on WHERE (default *error-output*)
    by printing +ansi-escape-up+"
   (format where "~A" +ansi-escape-up+))
+
+(defun ansi-up-lines (n &optional (where *error-output*))
+  "Moves the cursor up N lines on WHERE (default *error-output*):
+   ESC[<n>A. Does nothing for an N of 0"
+  (when (plusp n)
+    (format where "~C[~AA" #\ESC n)))
 
 (defun ansi-left-all (&optional (where *error-output*))
   "Moves the cursor to the start of the line on WHERE (default
@@ -1507,12 +1628,8 @@
   (let ((counter -1))
     (forever
       (incf counter)
-      (setq counter (mod counter 4))
-      (let ((rune (case counter
-                    (0  "-")
-                    (1  "\\")
-                    (2  "|")
-                    (t  "/"))))
+      (let ((rune (aref *pluto-spinner-frames*
+                        (mod counter (length *pluto-spinner-frames*)))))
         (format t "~A" rune)
         (force-output)
         (ansi-left-one *standard-output*)
@@ -1539,39 +1656,194 @@
   (let ((long-thread	  (gensym))
         (loading-thread (gensym))
         (the-return     (gensym)))
-    `(progn
-       (let ((,long-thread
-               #+sbcl (sb-thread:make-thread
-                        (lambda () ,@body)
-                        :name "background-thread")
-               #+ecl (mp:process-run-function
-                       'background-thread
-                       (lambda () ,@body))
-               ; (bt:make-thread (lambda () ,@body) :name "long-thread")
-               )
-             (,loading-thread
-               #+sbcl (sb-thread:make-thread
-                        #'loading-forever
-                        :name "loading-thread")
-               #+ecl (mp:process-run-function
-                       'loading-thead
-                       #'loading-forever)
-               ; (bt:make-thread #'loading-forever :name "loading-thread")
-               ))
-         (let ((,the-return
-                 #+sbcl (sb-thread:join-thread ,long-thread)
-                 #+ecl (mp:process-join ,long-thread)
-                 ; (bt:join-thread ,long-thread)
-                 ))
-           #+sbcl (sb-thread:terminate-thread ,loading-thread)
-           #+ecl (mp:process-kill ,loading-thread)
-           ; (bt:destroy-thread ,loading-thread)
-           (terpri)
-           ,the-return)))))
+    `(let ((,long-thread    (make-thread (lambda () ,@body) :name "background-thread"))
+           (,loading-thread (make-thread #'loading-forever :name "loading-thread")))
+       (let ((,the-return (join-thread ,long-thread)))
+         (%terminate-thread ,loading-thread)
+         (terpri)
+         ,the-return))))
 
 #-(or sbcl ecl)
 (defmacro with-loading (&body body)
   `(warn "only implemented for sbcl and ecl"))
+
+; -------------------
+;; status lines: homebrew-style live progress -- one line per thing
+;; being worked on, each with its own spinner until it's done. The
+;; one rule: only the renderer thread prints; the workers (status!,
+;; done!, failed!) just change the lines' state, under the mutex
+
+(defstruct (%status-lines (:conc-name %sl-))
+  keys texts states mutex where live-p key-width columns (frame 0) stop-p renderer)
+
+(defun %styx-call (name default &rest args)
+  "Calls styx's function NAME with ARGS when styx is loaded (pluto
+   can't depend on it: the arrows point the other way); DEFAULT
+   otherwise"
+  (let ((f (and (find-package "STYX") (find-symbol name "STYX"))))
+    (if (and f (fboundp f))
+      (values (apply f args))
+      default)))
+
+(defun %stream-fd (stream)
+  "The file descriptor behind STREAM when it's one of the standard
+   streams, nil otherwise (a string stream, say)"
+  #+sbcl
+  (let ((s (if (typep stream 'synonym-stream)
+             (symbol-value (synonym-stream-symbol stream))
+             stream)))
+    (when (typep s 'sb-sys:fd-stream)
+      (return-from %stream-fd (sb-sys:fd-stream-fd s))))
+  (cond ((eq stream *standard-output*) 1)
+        ((eq stream *error-output*)    2)
+        ((eq stream *terminal-io*)     1)
+        (t                             nil)))
+
+(defun %terminal-stream-p (stream)
+  "Is STREAM a terminal? (styx asks the fd; without styx the
+   standard streams are assumed to be one)"
+  (let ((fd (%stream-fd stream)))
+    (and fd (%styx-call "TTY-P" t fd) t)))
+
+(defun %key-string (key)
+  (if (symbolp key) (string-downcase (symbol-name key)) (fn "~A" key)))
+
+(defun %make-status-lines (keys where)
+  (let* ((keys   (coerce keys 'vector))
+         (n      (length keys))
+         (rows   (%styx-call "TERMINAL-ROWS" 24))
+         ; animation needs a terminal with room for every line;
+         ; otherwise lines are printed plainly as they finish
+         (live-p (and (%terminal-stream-p where) (< n rows))))
+    (make-%status-lines
+      :keys      keys
+      :texts     (make-array n :initial-element "")
+      :states    (make-array n :initial-element :running)
+      :mutex     (make-mutex :name "status-lines")
+      :where     where
+      :live-p    live-p
+      :key-width (reduce #'max (map 'list (lambda (k) (length (%key-string k))) keys)
+                         :initial-value 0)
+      :columns   (multiple-value-bind (cols real-p) (get-terminal-columns)
+                   (if real-p cols 80)))))
+
+(defun %line-index (board key)
+  (or (position key (%sl-keys board) :test *pluto-curly-test*)
+      (error "status lines: there's no line for ~S" key)))
+
+(defun %mark (state frame)
+  (case state
+    (:done   "✓")
+    (:failed "✗")
+    (t       (aref *pluto-spinner-frames*
+                   (mod frame (length *pluto-spinner-frames*))))))
+
+(defun %render-status-line (board i &key color-p)
+  "One line as it should look right now -- mark, key (padded), text
+   -- cut to the terminal's width"
+  (let* ((state (aref (%sl-states board) i))
+         (mark  (%mark state (%sl-frame board)))
+         (mark  (if color-p
+                  (case state
+                    (:done   (green "~A" mark))
+                    (:failed (red "~A" mark))
+                    (t       (yellow "~A" mark)))
+                  mark))
+         (rest  (fn "~vA  ~A" (%sl-key-width board)
+                    (%key-string (aref (%sl-keys board) i))
+                    (aref (%sl-texts board) i)))
+         (room  (max 0 (- (%sl-columns board) 2))))
+    (fn "~A ~A" mark (if (> (length rest) room) (subseq rest 0 room) rest))))
+
+(defun %render-status-frame (board)
+  "Every line, each cleared then redrawn, newline-terminated: what
+   the renderer writes each tick, after moving back up over the
+   last frame"
+  (with-output-to-string (s)
+    (dotimes (i (length (%sl-keys board)))
+      (format s "~A~A~%" +ansi-escape-clear-line+
+              (%render-status-line board i :color-p t)))))
+
+(defun %status-lines-redraw (board &key first-p)
+  (let ((where (%sl-where board)))
+    (unless first-p
+      (ansi-up-lines (length (%sl-keys board)) where))
+    (write-string (%render-status-frame board) where)
+    (force-output where)))
+
+(defun %status-lines-start (board)
+  (when (%sl-live-p board)
+    (let ((where (%sl-where board)))
+      (write-string +ansi-escape-hide-cursor+ where)
+      (with-mutex ((%sl-mutex board))
+        (%status-lines-redraw board :first-p t))
+      (setf (%sl-renderer board)
+            (make-thread
+              (lambda ()
+                (loop until (%sl-stop-p board)
+                      do (sleep 0.1)
+                         (with-mutex ((%sl-mutex board))
+                           (incf (%sl-frame board))
+                           (%status-lines-redraw board))))
+              :name "status-lines")))))
+
+(defun %status-lines-stop (board)
+  (when (%sl-live-p board)
+    (setf (%sl-stop-p board) t)
+    (join-thread (%sl-renderer board))
+    (with-mutex ((%sl-mutex board))
+      (%status-lines-redraw board))              ; the final frame
+    (write-string +ansi-escape-show-cursor+ (%sl-where board))
+    (force-output (%sl-where board))))
+
+(defun %line-update (board key &key (text nil text-p) (state nil state-p))
+  (let ((i (%line-index board key)))
+    (with-mutex ((%sl-mutex board))
+      (when text-p  (setf (aref (%sl-texts board) i) (fn "~A" text)))
+      (when state-p (setf (aref (%sl-states board) i) state))
+      ; no terminal, no redrawing: a line is printed once, when it
+      ; finishes
+      (when (and state-p (not (%sl-live-p board)))
+        (format (%sl-where board) "~A~%" (%render-status-line board i))
+        (force-output (%sl-where board))))
+    nil))
+
+(defmacro with-status-lines ((keys &key (where '*error-output*)) &body body)
+  "Homebrew-style live progress: one line per key in KEYS (symbols
+   or strings), each with a spinner until the body marks it with
+   done! or failed!; status! changes a line's text meanwhile. A
+   renderer thread redraws the lines in place ten times a second on
+   WHERE (default *error-output*), so the body (and any threads it
+   starts -- for-each/parallel, say) must not print there itself.
+   Binds `lines!` to the board for the three macros. When the body
+   ends, however it ends, the final state is left on screen and the
+   cursor sits below it: the place for whatever comes next. Without
+   a terminal (a pipe, cron) or with more keys than rows, nothing
+   animates: each line is printed once, as it finishes
+   e.g. (with-status-lines ('(zsh pluto))
+          (for-each/parallel ('(zsh pluto))
+            (status! value! \"fetching...\")
+            (done! value! (fetch-and-describe value!))))"
+  `(let ((lines! (%make-status-lines ,keys ,where)))
+     (%status-lines-start lines!)
+     (unwind-protect
+       (progn ,@body)
+       (%status-lines-stop lines!))))
+
+(defmacro status! (key text)
+  "Changes the text on KEY's line in the enclosing with-status-lines;
+   its spinner keeps going"
+  `(%line-update lines! ,key :text ,text))
+
+(defmacro done! (key text)
+  "Finishes KEY's line in the enclosing with-status-lines: a green ✓
+   replaces the spinner, TEXT the text"
+  `(%line-update lines! ,key :text ,text :state :done))
+
+(defmacro failed! (key text)
+  "Finishes KEY's line in the enclosing with-status-lines: a red ✗
+   replaces the spinner, TEXT the text"
+  `(%line-update lines! ,key :text ,text :state :failed))
 
 (defun give-choices (choices &key (limit 37)
                                   (num-p nil)

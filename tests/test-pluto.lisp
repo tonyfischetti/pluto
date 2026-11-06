@@ -827,6 +827,51 @@
     (for-each/alist tmp
       (format t "~A -> ~A;" key! value!))))
 
+(def-test/doc-test 'for-each/parallel
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `((1 a) (2 b) (3 c)))
+  (for-each/parallel ('(a b c))
+    (list index! value!)))
+
+  ; :limit caps how many run at once; the results still come back in order
+  (def-test/doc-test 'for-each/parallel
+    `((test-able returns))
+    'function
+    (equal test-return-value! `((1 4 9 16 25) t))
+    (let ((active 0) (peak 0) (m (make-mutex)))
+      (list (for-each/parallel ('(1 2 3 4 5) :limit 2)
+              (with-mutex (m) (incf active) (setq peak (max peak active)))
+              (sleep 0.05)
+              (with-mutex (m) (decf active))
+              (* value! value!))
+            (<= 1 peak 2))))
+
+  ; continue! ends that element's body (its result is nil)
+  (def-test/doc-test 'for-each/parallel
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(1 nil 3))
+    (for-each/parallel ('(1 2 3))
+      (when (= value! 2) (continue!))
+      value!))
+
+  ; one element erroring doesn't stop the others; the error comes
+  ; once everything has run
+  (defparameter /ran/ 0)
+  (def-test/doc-test 'for-each/parallel
+    `((test-able returns))
+    'function
+    (and test-error!
+         (search "1 of 3" (fn "~A" test-error!))
+         (= /ran/ 3))
+    (let ((m (make-mutex)))
+      (setq /ran/ 0)
+      (for-each/parallel ('(1 2 3))
+        (with-mutex (m) (incf /ran/))
+        (when (= value! 2) (error "two is bad"))
+        value!)))
+
 ; progress prints in yellow, so the example checks the text inside the escapes
 (def-test/doc-test 'progress
   `(markdown-able (test-able returns))
@@ -1301,6 +1346,37 @@
 
 ; --------------------------------------------------------------- ;
 
+(def-test/doc-section "threads")
+
+(def-raw-markdown
+  (fn "The two blessed implementations' threads under one set of names (pluto can't lean on bordeaux-threads). `for-each/parallel`, `with-loading` and `with-status-lines` are built on them~%~%"))
+
+(def-test/doc-test 'make-thread
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 42)
+  (join-thread (make-thread (lambda () (* 6 7)))))
+
+(def-test/doc-test 'with-mutex
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 4000)
+  (let ((count 0)
+        (m     (make-mutex)))
+    (for-each/parallel ('(1 2 3 4))
+      (loop repeat 1000 do (with-mutex (m) (incf count))))
+    count))
+
+  ; join-thread hands back whatever the function returned, nil included
+  (def-test/doc-test 'join-thread
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(nil "done"))
+    (list (join-thread (make-thread (lambda () nil)))
+          (join-thread (make-thread (lambda () (sleep 0.05) "done") :name "sleeper"))))
+
+; --------------------------------------------------------------- ;
+
 (def-test/doc-section "terminal things / terminal manipulation")
 
 (def-raw-markdown
@@ -1355,6 +1431,50 @@
                  (search +ansi-escape-left-all+ out)
                  (search "◖▬▬▭▭ ◗" out)
                  t))))
+
+(def-raw-markdown
+  (fn "`with-status-lines` is homebrew-style live progress: one line per key, each with its own spinner until `done!` or `failed!`, redrawn in place by a renderer thread. Without a terminal (as here, writing to a string) nothing animates: each line is printed once, when it finishes~%~%"))
+
+(def-test/doc-test 'with-status-lines
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("✓ zsh    up to date" "✗ pluto  18 to push"))
+  (split-string->lines
+    (with-output-to-string (s)
+      (with-status-lines ('(zsh pluto) :where s)
+        (status! 'pluto "fetching...")
+        (done!   'zsh   "up to date")
+        (failed! 'pluto "18 to push")))))
+
+  ; a frame as the renderer draws it: every line cleared and redrawn,
+  ; the marks colored, the spinner on the unfinished one; and a line
+  ; is cut to the terminal's width
+  (def-test/doc-test 'with-status-lines
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (let ((board (pluto::%make-status-lines '(a bb) (make-string-output-stream))))
+      (pluto::%line-update board 'bb :text "done" :state :done)
+      (pluto::%line-update board 'a  :text "still going")
+      (let ((frame (pluto::%render-status-frame board)))
+        (setf (pluto::%sl-columns board) 8)
+        (and (= 2 (count #\Newline frame))
+             (search +ansi-escape-clear-line+ frame)
+             (search (green "~A" "✓") frame)
+             (search (yellow "~A" (aref *pluto-spinner-frames* 0)) frame)
+             (search "bb  done" frame)
+             (search "a   still going" frame)
+             (<= (length (pluto::%render-status-line board 0)) 8)
+             t))))
+
+  ; a key that isn't one of the lines is an error
+  (def-test/doc-test 'with-status-lines
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (with-output-to-string (s)
+      (with-status-lines ('(a) :where s)
+        (done! 'zz "nope"))))
 
 ; --------------------------------------------------------------- ;
 
