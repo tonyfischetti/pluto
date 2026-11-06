@@ -212,7 +212,7 @@
 
 (def-test/doc-test 'repeat-string
   `(markdown-able (test-able returns))
-  "Repeats a string TIMES times"
+  'function
   (string= test-return-value! "ababab")
   (repeat-string "ab" 3))
 
@@ -371,6 +371,41 @@
       (list (stream-element-type stream!)
             (read-byte stream!)
             (read-byte stream!))))
+
+(def-test/doc-test 'with-temp-file
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "hello")
+  (with-temp-file
+    (barf tempfile! "hello")
+    (slurp tempfile!)))
+
+  ; the file is gone afterwards
+  (def-test/doc-test 'with-temp-file
+    `((test-able returns))
+    'function
+    (and (stringp (car test-return-value!))
+         (null (cadr test-return-value!)))
+    (let (path)
+      (with-temp-file (setq path tempfile!))
+      (list path (probe-file path))))
+
+(def-test/doc-test 'capture-all-outputs
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(42 "to stdout" "to stderr"))
+  (multiple-value-list
+    (capture-all-outputs
+      (ft "to stdout")
+      (format *error-output* "to stderr")
+      42)))
+
+(def-test/doc-test 'display-table
+  `(markdown-able (test-able stdout))
+  'function
+  (string= test-stdout!
+           (fn "|------|------|~%| name | n    |~%|------|------|~%| ab   | 1    |~%| cd   | 2    |~%|------|------|~%"))
+  (display-table '("name" "n") '(("ab" 1) ("cd" 2)) 6))
 
 (def-test/doc-test 'walk-replace-sexp
   `(markdown-able (test-able returns))

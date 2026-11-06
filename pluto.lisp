@@ -273,8 +273,9 @@
     (loop for value = (read-line s nil)
           while value collect value)))
 
-; TODO: document
 (defun repeat-string (str times)
+  "Returns STR repeated TIMES times, as one string
+   e.g. (repeat-string \"ab\" 3)  =>  \"ababab\""
   (fn "~{~A~}" (loop for i from 1 to times collect str)))
 
 (defun str-pad (thing width &key (side :left) (pad #\Space))
@@ -578,27 +579,38 @@
 
 (set-macro-character #\• #'|•-reader|)
 
-; TODO: document
-; TODO: TAKES A FUNCTION
 (defmacro capture-all-outputs (&body body)
+  "Runs BODY with *standard-output* and *error-output* captured and
+   returns three values: what BODY returned (its first value), what
+   it printed to stdout, and what it printed to stderr
+   e.g. (capture-all-outputs (ft \"hi\") 42)  =>  42, \"hi\", \"\""
+  ; (it used to FUNCALL its body -- a function and its arguments --
+  ; which the name never suggested; nothing called it that way)
   (let ((ret (gensym)))
     `(let ((*standard-output*   (make-string-output-stream))
            (*error-output*      (make-string-output-stream)))
-       (let ((,ret (funcall ,@body)))
+       (let ((,ret (progn ,@body)))
          (values ,ret
                  (get-output-stream-string *standard-output*)
                  (get-output-stream-string *error-output*))))))
 
 #+coreutils
 (defmacro with-temp-file (&body body)
+  "Anaphoric macro: runs BODY with `tempfile!` bound to the path of
+   a fresh temporary file (from mktemp) and deletes the file
+   afterwards, however BODY exits. Only defined when :coreutils is
+   in *features* (the rc files put it there)"
   `(let ((tempfile! (sh "mktemp")))
      (unwind-protect
        (progn
          ,@body)
          (sh (fn "rm ~A" tempfile!)))))
 
-; TODO: document
 (defun display-table (header data width)
+  "Prints a plain-text table to stdout: HEADER is the list of
+   column titles, DATA the list of rows (each a list with one
+   element per column), and WIDTH the width of every column. The
+   cells are princ-ed and left-aligned"
   (let ((num-cols (length header)))
     (ft (fn "~~{|~~{~~~AA|~~}~~%~~}" width)
         `(,(loop for i from 1 to num-cols collect (repeat-string "-" width))))

@@ -274,7 +274,9 @@ The color functions wrap a `format` control string in a bold ANSI escape and a r
 
 #### REPEAT-STRING
 
-Repeats a string TIMES times
+> Returns STR repeated TIMES times, as one string\
+>    e.g. (repeat-string "ab" 3)  =>  "ababab"\
+
 ```{.commonlisp}
 (REPEAT-STRING "ab" 3)
 ```
@@ -406,6 +408,63 @@ Repeats a string TIMES times
 ```
 
 <small><pre>=> (A SEP B SEP C)</pre></small>
+
+
+
+#### WITH-TEMP-FILE
+
+> Anaphoric macro: runs BODY with `tempfile!` bound to the path of\
+>    a fresh temporary file (from mktemp) and deletes the file\
+>    afterwards, however BODY exits. Only defined when :coreutils is\
+>    in *features* (the rc files put it there)\
+
+```{.commonlisp}
+(WITH-TEMP-FILE
+  (BARF TEMPFILE! "hello")
+  (SLURP TEMPFILE!))
+```
+
+<small><pre>=> "hello"</pre></small>
+
+
+
+#### CAPTURE-ALL-OUTPUTS
+
+> Runs BODY with *standard-output* and *error-output* captured and\
+>    returns three values: what BODY returned (its first value), what\
+>    it printed to stdout, and what it printed to stderr\
+>    e.g. (capture-all-outputs (ft "hi") 42)  =>  42, "hi", ""\
+
+```{.commonlisp}
+(MULTIPLE-VALUE-LIST
+ (CAPTURE-ALL-OUTPUTS
+   (FT "to stdout")
+   (FORMAT *ERROR-OUTPUT* "to stderr")
+   42))
+```
+
+<small><pre>=> (42 "to stdout" "to stderr")</pre></small>
+
+
+
+#### DISPLAY-TABLE
+
+> Prints a plain-text table to stdout: HEADER is the list of\
+>    column titles, DATA the list of rows (each a list with one\
+>    element per column), and WIDTH the width of every column. The\
+>    cells are princ-ed and left-aligned\
+
+```{.commonlisp}
+(DISPLAY-TABLE '("name" "n") '(("ab" 1) ("cd" 2)) 6)
+```
+
+<small><pre>>> "|------|------|
+| name | n    |
+|------|------|
+| ab   | 1    |
+| cd   | 2    |
+|------|------|
+"</pre></small>
 
 
 
@@ -748,9 +807,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G600 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G600
-      #:G600
+(LET ((#:G608 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G608
+      #:G608
       42))
 ```
 
