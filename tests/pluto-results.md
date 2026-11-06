@@ -1002,6 +1002,34 @@ reader macro: `Ø<form>` errors if `<form>` is null, else passes it through
 
 
 ```{.commonlisp}
+(LET ((P (MAKE-POINT :X 1 :Y 2)))
+  (PLUTO::PLUTO-GET P 'Y))
+```
+
+<small><pre>=> 2</pre></small>
+
+
+
+```{.commonlisp}
+(LET ((O (MAKE-INSTANCE 'THING :NAME "cup" :SIZE 3)))
+  (PLUTO::PLUTO-GET O 'NAME))
+```
+
+<small><pre>=> "cup"</pre></small>
+
+
+
+```{.commonlisp}
+(LET ((P (MAKE-POINT :X 1 :Y 2)))
+  (SETF (PLUTO::PLUTO-GET P 'X) 10)
+  (POINT-X P))
+```
+
+<small><pre>=> 10</pre></small>
+
+
+
+```{.commonlisp}
 (PLUTO::PLUTO-GET #(#(1 2) #(3 4)) 1 0)
 ```
 

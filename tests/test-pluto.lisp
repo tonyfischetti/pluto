@@ -910,6 +910,55 @@
     (setf (gethash :red tmp) "cadmium")
     { tmp :red }))
 
+; structs and CLOS objects are indexed by slot name (the symbol)
+(defstruct point x y)
+(defclass thing ()
+  ((name :initarg :name)
+   (size :initarg :size)))
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (= test-return-value! 2)
+  (let ((p (make-point :x 1 :y 2)))
+    { p 'y }))
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (string= test-return-value! "cup")
+  (let ((o (make-instance 'thing :name "cup" :size 3)))
+    { o 'name }))
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (= test-return-value! 10)
+  (let ((p (make-point :x 1 :y 2)))
+    (setf { p 'x } 10)
+    (point-x p)))
+
+  ; setf on a CLOS object, and burrowing: a list of hash tables of structs
+  (def-test/doc-test '|{}|
+    `((test-able returns))
+    ""
+    (equal test-return-value! `(9 2))
+    (let ((o    (make-instance 'thing :name "cup" :size 3))
+          (data (list (let ((h (make-hash-table)))
+                        (setf (gethash :home h) (make-point :x 1 :y 2))
+                        h))))
+      (setf { o 'size } 9)
+      (list (slot-value o 'size)
+            { data 0 :home 'y })))
+
+  ; a slot that isn't there is an error, not nil
+  (def-test/doc-test '|{}|
+    `((test-able returns))
+    ""
+    (and test-error! (null test-return-value!))
+    (let ((p (make-point :x 1 :y 2)))
+      { p 'z }))
+
 (def-test/doc-test '|{}|
   `(markdown-able (test-able returns))
   ""
