@@ -540,7 +540,37 @@
 
 ; --------------------------------------------------------------- ;
 
+(def-test/doc-section "queries")
+
+; interactive, so the example feeds it a bare Enter, which picks the default
+(def-test/doc-test 'y-or-n-def
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (let ((*query-io* (make-two-way-stream (make-string-input-stream (fn "~%"))
+                                         (make-string-output-stream))))
+    (y-or-n-def "proceed?" :default #\y)))
+
+  ; an explicit answer beats the default, and the prompt shows the default
+  (def-test/doc-test 'y-or-n-def
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(nil "[Y/n]"))
+    (let* ((out       (make-string-output-stream))
+           (*query-io* (make-two-way-stream (make-string-input-stream (fn "n~%")) out)))
+      (let ((answer (y-or-n-def "proceed?" :default #\y)))
+        (list answer
+              (and (search "[Y/n]" (get-output-stream-string out)) "[Y/n]")))))
+
+; --------------------------------------------------------------- ;
+
 (def-test/doc-section "other abbreviations and shortcuts")
+
+(def-test/doc-test 'λ
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(1 4 9))
+  (mapcar (λ (x) (* x x)) `(1 2 3)))
 
 ; (def-test/doc-test 'file-size
 ;   `(markdown-able (test-able returns))
@@ -684,6 +714,31 @@
                    (cons 'green "veridian"))))
     (for-each/alist tmp
       (format t "~A -> ~A;" key! value!))))
+
+; progress prints in yellow, so the example checks the text inside the escapes
+(def-test/doc-test 'progress
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (let ((out (with-output-to-string (s) (progress 3 4 :where s))))
+    (and (search "3 of 4..... [75.00%]" out) t)))
+
+  ; only every INTERVAL-th index reports
+  (def-test/doc-test 'progress
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("" t))
+    (list (with-output-to-string (s) (progress 3 4 :where s :interval 2))
+          (and (plusp (length (with-output-to-string (s)
+                                (progress 4 4 :where s :interval 2))))
+               t)))
+
+(def-test/doc-test 'with-interactive-interrupt-handler
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 42)
+  (with-interactive-interrupt-handler "interrupted!"
+    42))
 
 ; --------------------------------------------------------------- ;
 
@@ -862,6 +917,21 @@
   'function
   (string= test-stdout! (fn "$ echo hi~%"))
   (zsh "echo hi" :dry-run t))
+
+(def-raw-markdown
+  (fn "(`sh-simple` and `zsh-simple` are the bare run-program underneath: the command runs, nothing is captured, nothing is signalled)~%~%"))
+
+  ; sh-simple runs the command (and waits for it), returning
+  ; run-program's own value, which differs by implementation
+  (def-test/doc-test 'sh-simple
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (let ((marker "tmp-sh-simple-ran.txt"))
+      (sh-simple (fn "touch ~A" (q/sh marker)))
+      (let ((ran (and (probe-file marker) t)))
+        (delete-file marker)
+        ran)))
 
 (def-test/doc-test 'q/sh
   `(markdown-able (test-able returns))

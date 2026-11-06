@@ -645,8 +645,10 @@
             "(y or n)"))
   (finish-output *query-io*))
 
-; TODO: document
 (defun y-or-n-def (prompt &key (default nil))
+  "Asks PROMPT on *query-io* and returns T for y, NIL for n. With
+   DEFAULT (#\\y or #\\n) the prompt shows [Y/n] or [y/N] and a bare
+   Enter picks the default; without one it's plain y-or-n-p"
   (if default
     (loop (yond-prompt prompt :default default)
       (case (yond-read-char :default default)
@@ -821,6 +823,11 @@
 (declaim (inline progress))
 (defun progress (index limit &key (interval 1) (where *error-output*)
                        (newline-p t))
+  "Prints `INDEX of LIMIT..... [percent%]` (in yellow) to WHERE
+   (default *error-output*), but only when INDEX is a multiple of
+   INTERVAL (default 1: every time). NEWLINE-P (default t) ends the
+   line; nil leaves the cursor on it, for with-loading's spinner
+   e.g. (for-each things (progress index! (length things) :interval 10) ...)"
   (when (= 0 (mod index interval))
     (format where (yellow "~A of ~A..... [~$%]"
                           index limit (* 100 (/ index limit))))
@@ -837,6 +844,10 @@
   `(return-from this-pass!))
 
 (defmacro with-interactive-interrupt-handler (the-message &body body)
+  "Runs BODY; if Control-C arrives meanwhile, dies (exit status 1)
+   printing THE-MESSAGE instead of landing in the debugger. The
+   for-each family wraps its loops in it. THE-MESSAGE is printed as
+   data (die's rule), so build it with `fn` if it needs directives"
   `(handler-case
      (progn
        ,@body)
@@ -848,7 +859,7 @@
   "(see documentation for `for-each`)"
   (let ((resolved-fn            (gensym))
         (instream               (gensym)))
-    `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+    `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
        (let ((index!            0)
              (value!            nil)
              (,resolved-fn      ,a-thing))
@@ -864,7 +875,7 @@
 (defmacro for-each/list (a-thing &body body)
   "(see documentation for `for-each`)"
   (let ((the-list         (gensym)))
-    `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+    `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
       (let ((index!       0)
              (value!      nil)
              (,the-list   ,a-thing))
@@ -878,7 +889,7 @@
   "(see documentation for `for-each`)"
   (let ((the-hash         (gensym))
         (tmp              (gensym)))
-    `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+    `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
        (let ((index!      0)
              (key!        nil)
              (value!      nil)
@@ -895,7 +906,7 @@
 (defmacro for-each/vector (a-thing &body body)
   "(see documentation for `for-each`)"
   (let ((the-vector       (gensym)))
-    `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+    `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
       (let ((index!       0)
             (value!      nil)
             (,the-vector ,a-thing))
@@ -910,7 +921,7 @@
 (defmacro for-each/stream (the-stream &body body)
   "(see documentation for `for-each`)"
   (let ((instream               (gensym)))
-    `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+    `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
        (let ((index!            0)
              (value!            nil)
              (,instream         ,the-stream))
@@ -927,7 +938,7 @@
   of relying on `for-each`'s 'dispatch' mechanism."
   (let ((tmp          (gensym))
         (resolved     (gensym)))
-    `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+    `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
       (let ((index!         0)
             (key!           nil)
             (value!         nil)
@@ -948,7 +959,7 @@
    if always needs to be called explicitly). It's only
    argument (besides the body) is a closure that is repeatedly
    `FUNCALL`ed and terminates when the closure returns NIL"
-  `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+  `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
      (let ((index!      0)
            (value!      nil))
        (declare (ignorable value!))
@@ -1000,7 +1011,7 @@
   "Performed BODY forever. Must be terminated by
    RETURN-FROM NIL, or, simple RETURN
    Simple wrapper around `(loop (progn ,@body))`"
-  `(with-interactive-interrupt-handler "~%Loop aborted. Bailing out.~%"
+  `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
      (block nil (loop (progn ,@body)))))
 
 ;---------------------------------------------------------;
@@ -1182,8 +1193,11 @@
 #+(or sbcl ecl)
 (setf (fdefinition 'zsh) #'sh)
 
-; TODO document
 (defmacro sh-simple (acommand)
+  "Runs ACOMMAND through *pluto-shell* with the implementation's
+   bare run-program (and its defaults: nothing captured, nothing
+   signalled) and returns whatever run-program returns -- a process
+   object on SBCL. For output, exit codes, and errors use `sh`"
   #+sbcl
   `(sb-ext:run-program *pluto-shell* `("-c" ,,acommand))
   #+ecl
@@ -1214,6 +1228,7 @@
 ; other abbreviations and shortcuts --------------------- ;
 
 (defmacro λ (&body body)
+  "lambda, in one character: (λ (x) (* x x))"
   `(lambda ,@body))
 
 ;---------------------------------------------------------;

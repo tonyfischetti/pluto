@@ -610,7 +610,45 @@ The color functions wrap a `format` control string in a bold ANSI escape and a r
 
 -----
 
+### queries
+
+
+#### Y-OR-N-DEF
+
+> Asks PROMPT on *query-io* and returns T for y, NIL for n. With\
+>    DEFAULT (#\y or #\n) the prompt shows [Y/n] or [y/N] and a bare\
+>    Enter picks the default; without one it's plain y-or-n-p\
+
+```{.commonlisp}
+(LET ((*QUERY-IO*
+       (MAKE-TWO-WAY-STREAM (MAKE-STRING-INPUT-STREAM (FN "~%"))
+                            (MAKE-STRING-OUTPUT-STREAM))))
+  (Y-OR-N-DEF "proceed?" :DEFAULT #\y))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+-----
+
 ### other abbreviations and shortcuts
+
+
+#### Λ
+
+> lambda, in one character: (λ (x) (* x x))\
+
+```{.commonlisp}
+(MAPCAR
+ (Λ
+   (X)
+   (* X X))
+ `(1 2 3))
+```
+
+<small><pre>=> (1 4 9)</pre></small>
+
 
 
 -----
@@ -736,6 +774,39 @@ If the argument to `for-each` is a string and the file exists,
 
 
 
+#### PROGRESS
+
+> Prints `INDEX of LIMIT..... [percent%]` (in yellow) to WHERE\
+>    (default *error-output*), but only when INDEX is a multiple of\
+>    INTERVAL (default 1: every time). NEWLINE-P (default t) ends the\
+>    line; nil leaves the cursor on it, for with-loading's spinner\
+>    e.g. (for-each things (progress index! (length things) :interval 10) ...)\
+
+```{.commonlisp}
+(LET ((OUT (WITH-OUTPUT-TO-STRING (S) (PROGRESS 3 4 :WHERE S))))
+  (AND (SEARCH "3 of 4..... [75.00%]" OUT) T))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### WITH-INTERACTIVE-INTERRUPT-HANDLER
+
+> Runs BODY; if Control-C arrives meanwhile, dies (exit status 1)\
+>    printing THE-MESSAGE instead of landing in the debugger. The\
+>    for-each family wraps its loops in it. THE-MESSAGE is printed as\
+>    data (die's rule), so build it with `fn` if it needs directives\
+
+```{.commonlisp}
+(WITH-INTERACTIVE-INTERRUPT-HANDLER "interrupted!"
+  42)
+```
+
+<small><pre>=> 42</pre></small>
+
+
+
 -----
 
 ### error handling
@@ -807,9 +878,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G608 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G608
-      #:G608
+(LET ((#:G620 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G620
+      #:G620
       42))
 ```
 
@@ -942,6 +1013,9 @@ reader macro: `Ø<form>` errors if `<form>` is null, else passes it through
 
 <small><pre>>> "$ echo hi
 "</pre></small>
+
+
+(`sh-simple` and `zsh-simple` are the bare run-program underneath: the command runs, nothing is captured, nothing is signalled)
 
 
 
