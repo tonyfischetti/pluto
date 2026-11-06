@@ -1157,19 +1157,26 @@
 
 (def-test/doc-test 'basename
   `(markdown-able (test-able returns))
-  "Returns the filename portion of a path"
+  'function
   (string= test-return-value! "baz.txt")
   (basename "/foo/bar/baz.txt"))
 
 (def-test/doc-test 'change-extension
   `(markdown-able (test-able returns))
-  "Returns a pathname with the file extension changed"
+  'function
   (string= (namestring test-return-value!) "/foo/bar/baz.md")
   (change-extension "/foo/bar/baz.txt" "md"))
 
+  ; nil takes the extension off
+  (def-test/doc-test 'change-extension
+    `((test-able returns))
+    'function
+    (string= (namestring test-return-value!) "/foo/bar/baz")
+    (change-extension "/foo/bar/baz.txt" nil))
+
 (def-test/doc-test 'size-for-humans
   `(markdown-able (test-able returns))
-  "Formats a byte count for human consumption"
+  'function
   (string= test-return-value! "3M")
   (size-for-humans (* 3 (expt 2 20))))
 
@@ -1181,11 +1188,18 @@
 
 (def-test/doc-test 'file-exists-p
   `(markdown-able (test-able returns))
-  "FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL"
+  'function
   (equal test-return-value! `(t t nil))
   (list (if (file-exists-p "somebody.txt") t nil)
         (if (directory-exists-p "wayward files") t nil)
         (if (file-exists-p "no-such-file.txt") t nil)))
+
+(def-test/doc-test 'file-size
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(3497 "3K"))
+  (list (file-size "somebody.txt")
+        (file-size "somebody.txt" :human t)))
 
   (def-test/doc-test 'file-size
     `((test-able returns))
@@ -1200,8 +1214,16 @@
   (def-test/doc-test 'pwd
     `((test-able returns))
     'function
-    (search "tests" test-return-value!)
+    (and (search "tests" test-return-value!)
+         (char= #\/ (char test-return-value! (1- (length test-return-value!)))))
     (pwd))
+
+  (def-test/doc-test 'inspect-pathname
+    `((test-able stderr))
+    'function
+    (and (search "pathname name:" test-stderr!)
+         (search "somebody" test-stderr!))
+    (inspect-pathname "somebody.txt"))
 
 (def-test/doc-test 'pathname->native
   `(markdown-able (test-able returns))
@@ -1271,11 +1293,11 @@
         (zsh "rm -rf tmp-walk-empty")
         found)))
 
-  (def-test/doc-test '-path
-    `((test-able returns))
-    'function
-    (string= (namestring test-return-value!) "somebody.txt")
-    (-path "somebody.txt" "./"))
+(def-test/doc-test '-path
+  `(markdown-able (test-able returns))
+  'function
+  (string= (namestring test-return-value!) "somebody.txt")
+  (-path "somebody.txt" "./"))
 
   (def-test/doc-test '+path
     `((test-able returns))
@@ -1283,6 +1305,42 @@
     (and (search "tests" (namestring test-return-value!))
          (search "foo.txt" (namestring test-return-value!)))
     (+path "./" "foo.txt"))
+
+(def-test/doc-test 'absolute->relative
+  `(markdown-able (test-able returns))
+  'function
+  (string= (namestring test-return-value!) "somebody.txt")
+  (absolute->relative (probe-file "somebody.txt")))
+
+  ; a relative path isn't absolute
+  (def-test/doc-test 'absolute->relative
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (absolute->relative "relative/path.txt"))
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "readtable containment")
+
+(def-test/doc-test 'call-with-pluto-readtable
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "hi")
+  (let ((*readtable* (copy-readtable nil)))
+    (call-with-pluto-readtable (lambda () (read-from-string "•hi•")))))
+
+  ; under a standard readtable the same text is just a symbol
+  (def-test/doc-test '*pluto-readtable*
+    `((test-able returns))
+    'variable
+    (and (symbolp (car test-return-value!))
+         (string= (cadr test-return-value!) "hi")
+         (readtablep *pluto-readtable*))
+    (let ((*readtable* (copy-readtable nil)))
+      (list (read-from-string "•hi•")
+            (let ((*readtable* *pluto-readtable*))
+              (read-from-string "•hi•")))))
 
 ; --------------------------------------------------------------- ;
 

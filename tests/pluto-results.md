@@ -1197,7 +1197,10 @@ The cursor movements print escapes (compared against the `+ansi-escape-...+` con
 
 #### BASENAME
 
-Returns the filename portion of a path
+> The file part of APATH (name and extension) without the\
+>    directory: (basename "/foo/bar/baz.txt") => "baz.txt". A\
+>    directory pathname (trailing slash) has no file part, so ""\
+
 ```{.commonlisp}
 (BASENAME "/foo/bar/baz.txt")
 ```
@@ -1208,7 +1211,10 @@ Returns the filename portion of a path
 
 #### CHANGE-EXTENSION
 
-Returns a pathname with the file extension changed
+> APATH with its extension swapped for NEW-EXTENSION, as a\
+>    pathname: (change-extension "notes.txt" "md") => #P"notes.md"\
+>    (nil takes the extension off)\
+
 ```{.commonlisp}
 (CHANGE-EXTENSION "/foo/bar/baz.txt" "md")
 ```
@@ -1219,7 +1225,10 @@ Returns a pathname with the file extension changed
 
 #### SIZE-FOR-HUMANS
 
-Formats a byte count for human consumption
+> ASIZE (in bytes) as a short human-readable string -- 512, 3K,\
+>    2.0G: K and M are rounded to whole numbers, G and beyond get one\
+>    decimal. Binary units (1K is 1024)\
+
 ```{.commonlisp}
 (SIZE-FOR-HUMANS (* 3 (EXPT 2 20)))
 ```
@@ -1238,7 +1247,10 @@ Formats a byte count for human consumption
 
 #### FILE-EXISTS-P
 
-FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
+> Does PATHSPEC name an existing file -- a file, not a directory?\
+>    T or NIL (directory-exists-p and file-or-directory-exists-p are\
+>    the companions; those two return the truename)\
+
 ```{.commonlisp}
 (LIST
  (IF (FILE-EXISTS-P "somebody.txt")
@@ -1253,6 +1265,20 @@ FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
 ```
 
 <small><pre>=> (T T NIL)</pre></small>
+
+
+
+#### FILE-SIZE
+
+> The size of the file AFILENAME in bytes (file-length on a byte\
+>    stream), or as a human-readable string (size-for-humans) with\
+>    :human t\
+
+```{.commonlisp}
+(LIST (FILE-SIZE "somebody.txt") (FILE-SIZE "somebody.txt" :HUMAN T))
+```
+
+<small><pre>=> (3497 "3K")</pre></small>
 
 
 
@@ -1272,6 +1298,56 @@ FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or NIL
 ```
 
 <small><pre>=> "/foo/bar baz.txt"</pre></small>
+
+
+
+#### -PATH
+
+> PATHONE relative to the directory PATHTWO, as a pathname:\
+>    (-path "/a/b/c.txt" "/a/") => #P"b/c.txt". Both must exist, and\
+>    PATHONE goes through probe-file, so symlinks are resolved first\
+
+```{.commonlisp}
+(-PATH "somebody.txt" "./")
+```
+
+<small><pre>=> #P"somebody.txt"</pre></small>
+
+
+
+#### ABSOLUTE->RELATIVE
+
+> The absolute APATH made relative to ROOT (default: the current\
+>    directory), as a pathname; errors if APATH isn't absolute. Both\
+>    must exist (see -path)\
+
+```{.commonlisp}
+(ABSOLUTE->RELATIVE (PROBE-FILE "somebody.txt"))
+```
+
+<small><pre>=> #P"somebody.txt"</pre></small>
+
+
+
+-----
+
+### readtable containment
+
+
+#### CALL-WITH-PLUTO-READTABLE
+
+> Calls THUNK with *readtable* bound to *pluto-readtable*. It's the\
+>    :around-compile hook in charon.asd and styx.asd: their files read\
+>    pluto's syntax while the third-party dependencies compile under a\
+>    standard readtable (a bare `?` token in a dependency is a reader\
+>    error under pluto's)\
+
+```{.commonlisp}
+(LET ((*READTABLE* (COPY-READTABLE NIL)))
+  (CALL-WITH-PLUTO-READTABLE (LAMBDA () (READ-FROM-STRING "•hi•"))))
+```
+
+<small><pre>=> "hi"</pre></small>
 
 
 

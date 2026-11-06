@@ -1606,8 +1606,10 @@
 ; ------------------------------------------------------- ;
 ; file/filename/directory operations -------------------- ;
 
-; TODO: document
 (defun basename (apath)
+  "The file part of APATH (name and extension) without the
+   directory: (basename \"/foo/bar/baz.txt\") => \"baz.txt\". A
+   directory pathname (trailing slash) has no file part, so \"\""
   (file-namestring apath))
 
 (defparameter %%ylimit (expt 2 80))
@@ -1620,6 +1622,9 @@
 (defparameter %%klimit (expt 2 10))
 
 (defun size-for-humans (asize) ; have block size?
+  "ASIZE (in bytes) as a short human-readable string -- 512, 3K,
+   2.0G: K and M are rounded to whole numbers, G and beyond get one
+   decimal. Binary units (1K is 1024)"
   (cond
     ((> asize %%ylimit)     (fn "~1$Y" (/ asize %%ylimit)))
     ((> asize %%zlimit)     (fn "~1$Z" (/ asize %%zlimit)))
@@ -1632,10 +1637,15 @@
     (t                      (fn "~A" asize))))
 
 (defun file-size (afilename &key (human nil))
+  "The size of the file AFILENAME in bytes (file-length on a byte
+   stream), or as a human-readable string (size-for-humans) with
+   :human t"
   (with-open-file (s afilename :element-type '(unsigned-byte 8))
     (if human (size-for-humans (file-length s)) (file-length s))))
 
 (defun pwd ()
+  "The current working directory as a namestring, trailing slash
+   included"
   (let ((tmp
           #+ecl  (ext:getcwd)
           #+sbcl (sb-ext:parse-native-namestring (sb-unix:posix-getcwd/))))
@@ -1672,6 +1682,10 @@
     (nth-value 0 (sh command))))
 
 (defun inspect-pathname (apathname)
+  "Prints everything common lisp will say about APATHNAME to
+   *error-output* -- device, host, directory, name, type, truename,
+   namestrings, wildness, directory listing, write date... -- for
+   working out what a pathname actually is"
   (format *error-output* "received:              ~S~%" apathname)
   ; (format *error-output* "probe file:            ~S~%" (probe-file apathname))
   (format *error-output* "pathname device:       ~S~%" (pathname-device apathname))
@@ -1850,6 +1864,9 @@
          result)))
 
 (defun file-exists-p (pathspec)
+  "Does PATHSPEC name an existing file -- a file, not a directory?
+   T or NIL (directory-exists-p and file-or-directory-exists-p are
+   the companions; those two return the truename)"
   (let ((tmp (file-or-directory-exists-p pathspec)))
     (and tmp (not (directory-exists-p pathspec)))))
 
@@ -1907,20 +1924,31 @@
     (values)))
 
 
-; TODO: mention that it always FOLLOWS SYMLINKS
 (defun -path (pathone pathtwo)
+  "PATHONE relative to the directory PATHTWO, as a pathname:
+   (-path \"/a/b/c.txt\" \"/a/\") => #P\"b/c.txt\". Both must exist, and
+   PATHONE goes through probe-file, so symlinks are resolved first"
   (pathname (enough-namestring (probe-file pathone)
                                (directory-exists-p  pathtwo))))
 
 (defun +path (pathone pathtwo)
+  "The directory PATHONE with PATHTWO appended, as a pathname -- the
+   inverse of -path: (+path \"/a/\" \"b/c.txt\") => #P\"/a/b/c.txt\".
+   PATHONE must exist"
   (merge-pathnames pathtwo (directory-exists-p pathone)))
 
 (defun absolute->relative (apath &optional root)
+  "The absolute APATH made relative to ROOT (default: the current
+   directory), as a pathname; errors if APATH isn't absolute. Both
+   must exist (see -path)"
   (when (eq :RELATIVE (car (pathname-directory apath)))
     (error "pathname is not absolute"))
   (-path apath (if root root (pwd))))
 
 (defun change-extension (apath new-extension)
+  "APATH with its extension swapped for NEW-EXTENSION, as a
+   pathname: (change-extension \"notes.txt\" \"md\") => #P\"notes.md\"
+   (nil takes the extension off)"
   (make-pathname :type new-extension
                  :defaults apath))
 
@@ -1982,9 +2010,18 @@
 ; compile under a standard one (a bare `?` token in a dep — cxml's
 ; content-model `(? ...)` clauses, e.g. — is a reader error under
 ; pluto's readtable).
-(defparameter *pluto-readtable* *readtable*)
+(defparameter *pluto-readtable* *readtable*
+  "The readtable with pluto's reader macros (•, {, ?, Ø, #?)
+   installed, captured as pluto finished loading -- for reading
+   pluto syntax when *readtable* has been rebound to a standard
+   one (see call-with-pluto-readtable)")
 
 (defun call-with-pluto-readtable (thunk)
+  "Calls THUNK with *readtable* bound to *pluto-readtable*. It's the
+   :around-compile hook in charon.asd and styx.asd: their files read
+   pluto's syntax while the third-party dependencies compile under a
+   standard readtable (a bare `?` token in a dependency is a reader
+   error under pluto's)"
   (let ((*readtable* *pluto-readtable*))
     (funcall thunk)))
 
