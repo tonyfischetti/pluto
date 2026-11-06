@@ -21,8 +21,8 @@ A few special variables steer pluto. Rebind them (or `setq` them at the top of a
 #### \*PLUTO-EXTERNAL-FORMAT\*
 
 > The external format (character encoding) pluto reads and writes\
->    text with: slurp, slurp-lines, with-a-file, for-each/line, and\
->    the default for `sh`'s `enc`. :UTF-8 unless you say otherwise\
+>    text with: slurp, slurp-lines, barf, with-a-file, for-each/line,\
+>    and the default for `sh`'s `enc`. :UTF-8 unless you say otherwise\
 
 ```{.commonlisp}
 *PLUTO-EXTERNAL-FORMAT*
@@ -408,6 +408,40 @@ The color functions wrap a `format` control string in a bold ANSI escape and a r
 ```
 
 <small><pre>=> (A SEP B SEP C)</pre></small>
+
+
+
+#### BARF
+
+> Outputs CONTENTS into filename PATH with function PRINTFN\
+>    (default WRITE-STRING), appending unless OVERWRITE is true;\
+>    creates the file if it doesn't exist. Writes text in\
+>    *pluto-external-format*, like slurp reads it\
+
+```{.commonlisp}
+(LET ((TMPF "tmp-barf.txt"))
+  (BARF TMPF "one")
+  (BARF TMPF "two")
+  (LET ((APPENDED (SLURP TMPF)))
+    (BARF TMPF "three" :OVERWRITE T)
+    (LET ((OVERWRITTEN (SLURP TMPF)))
+      (DELETE-FILE TMPF)
+      (LIST APPENDED OVERWRITTEN))))
+```
+
+<small><pre>=> ("onetwo" "three")</pre></small>
+
+
+
+#### SLURP-LINES
+
+> Reads lines of a file into a list\
+
+```{.commonlisp}
+(SUBSEQ (SLURP-LINES "somebody.txt") 0 2)
+```
+
+<small><pre>=> ("we gotta celebrate diversity" "in the university")</pre></small>
 
 
 
@@ -941,9 +975,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G635 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G635
-      #:G635
+(LET ((#:G641 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G641
+      #:G641
       42))
 ```
 

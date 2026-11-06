@@ -351,6 +351,41 @@
     (and test-error! (null test-return-value!))
     (slurp "this-file-hopefully-does-not-exist.txt"))
 
+(def-test/doc-test 'barf
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("onetwo" "three"))
+  (let ((tmpf "tmp-barf.txt"))
+    (barf tmpf "one")
+    (barf tmpf "two")
+    (let ((appended (slurp tmpf)))
+      (barf tmpf "three" :overwrite t)
+      (let ((overwritten (slurp tmpf)))
+        (delete-file tmpf)
+        (list appended overwritten)))))
+
+  ; regression: barf wrote in the implementation's default encoding,
+  ; ignoring *pluto-external-format*; é is two bytes in UTF-8, one
+  ; in Latin-1
+  (def-test/doc-test 'barf
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(2 1))
+    (let ((tmpf "tmp-barf-enc.txt"))
+      (barf tmpf "é" :overwrite t)
+      (let ((utf8 (file-size tmpf)))
+        (let ((*pluto-external-format* :latin-1))
+          (barf tmpf "é" :overwrite t))
+        (let ((latin1 (file-size tmpf)))
+          (delete-file tmpf)
+          (list utf8 latin1)))))
+
+(def-test/doc-test 'slurp-lines
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("we gotta celebrate diversity" "in the university"))
+  (subseq (slurp-lines "somebody.txt") 0 2))
+
   ; regression: the reading modes used :if-does-not-exist
   ; :create — reading a missing file silently made an empty one
   (def-test/doc-test 'with-a-file

@@ -112,8 +112,8 @@
    case-insensitive string keys")
 (defparameter *pluto-external-format*  :UTF-8
   "The external format (character encoding) pluto reads and writes
-   text with: slurp, slurp-lines, with-a-file, for-each/line, and
-   the default for `sh`'s `enc`. :UTF-8 unless you say otherwise")
+   text with: slurp, slurp-lines, barf, with-a-file, for-each/line,
+   and the default for `sh`'s `enc`. :UTF-8 unless you say otherwise")
 (defun %resolve-shell ()
   "Resolves the shell that `sh` (et al.) will use:
    the PLUTO_SHELL environment variable (if set and non-empty),
@@ -433,11 +433,13 @@
 
 (defun barf (path contents &key (printfn #'write-string) (overwrite nil))
   "Outputs CONTENTS into filename PATH with function PRINTFN
-   (default WRITE-STRING) and appends by default (controllable by
-   by boolean OVERWRITE)"
+   (default WRITE-STRING), appending unless OVERWRITE is true;
+   creates the file if it doesn't exist. Writes text in
+   *pluto-external-format*, like slurp reads it"
   (with-open-file (stream path :direction :output
                           :if-exists (if overwrite :supersede :append)
-                          :if-does-not-exist :create)
+                          :if-does-not-exist :create
+                          :external-format *pluto-external-format*)
     (funcall printfn contents stream)))
 
 (defmacro debug-these (&rest therest)
@@ -957,10 +959,10 @@
 
 (defmacro for-each/call (aclosure &body body)
   "This works like `for-each` (see documentation for it) but
-   due to differences, it is not automatically dispatched so
-   if always needs to be called explicitly). It's only
-   argument (besides the body) is a closure that is repeatedly
-   `FUNCALL`ed and terminates when the closure returns NIL"
+   due to differences, it is not automatically dispatched, so
+   it always needs to be called explicitly. Its only argument
+   (besides the body) is a closure that is repeatedly FUNCALLed;
+   the loop ends when the closure returns NIL"
   `(with-interactive-interrupt-handler (fn "~%Loop aborted. Bailing out.~%")
      (let ((index!      0)
            (value!      nil))
