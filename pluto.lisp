@@ -596,12 +596,12 @@
                  (get-output-stream-string *standard-output*)
                  (get-output-stream-string *error-output*))))))
 
-#+coreutils
+; (this used to be #+coreutils, but mktemp and rm are everywhere; it's
+; realpath that needs GNU coreutils)
 (defmacro with-temp-file (&body body)
   "Anaphoric macro: runs BODY with `tempfile!` bound to the path of
    a fresh temporary file (from mktemp) and deletes the file
-   afterwards, however BODY exits. Only defined when :coreutils is
-   in *features* (the rc files put it there)"
+   afterwards, however BODY exits"
   `(let ((tempfile! (sh "mktemp")))
      (unwind-protect
        (progn
@@ -1667,22 +1667,27 @@
   #+sbcl (sb-ext:native-namestring apath)
   #-sbcl (namestring apath))
 
-; #+coreutils
 (defun realpath (apath &key (expand-symlinks t) (relative-to nil) (all-existing t))
-  "Prints resolved path. Needs coreutils and :coreutils must be in *features*
-   `expand-symlinks` boolean (default t)
-   `relative-to` print resolved path relative to supplied path
-   `all-existing` requires that all the directories/files exist (default t)
-                  when false, all but the last component must exist.
-   All paths must be escaped (if escaping is needed)"
+  "The resolved, absolute path of APATH as a string, from GNU
+   realpath (so it needs GNU coreutils: the :coreutils feature,
+   which the rc files declare and clix's `make doctor` verifies)
+   `expand-symlinks` nil keeps symlinks as they are (-s)
+   `relative-to` a directory: the result is relative to it
+   `all-existing` t (default) insists every path component exist
+                  (-e); nil lets the last one be missing -- moot
+                  while APATH itself has to exist for this to run
+   APATH is quoted for the shell here, so spaces and such are fine
+   Errors if APATH doesn't exist"
+  (unless (member :coreutils *features*)
+    (error "realpath: needs GNU coreutils (the :coreutils feature isn't set)"))
   (unless (probe-file apath)
     (error "no such file"))
   (let ((command (fn "realpath ~A ~A ~A ~A"
                      (if expand-symlinks "" "-s")
                      (if all-existing "-e" "")
-                     apath
+                     (q/sh apath)
                      (if relative-to
-                       (fn "--relative-to=~A" (realpath relative-to)) ""))))
+                       (fn "--relative-to=~A" (q/sh (realpath relative-to))) ""))))
     (nth-value 0 (sh command))))
 
 (defun inspect-pathname (apathname)

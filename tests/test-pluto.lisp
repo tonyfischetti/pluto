@@ -1430,6 +1430,34 @@
          (search "somebody" test-stderr!))
     (inspect-pathname "somebody.txt"))
 
+(def-test/doc-test 'realpath
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "wayward files/regular")
+  (realpath "wayward files/regular" :relative-to "./"))
+
+  ; absolute by default (and agrees with truename); -s keeps a
+  ; symlink as itself; a path with spaces survives the shell
+  (def-test/doc-test 'realpath
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(t "tmp-rp-link" "somebody.txt"))
+    (progn
+      (sh "ln -sf somebody.txt tmp-rp-link")
+      (let ((res (list (string= (realpath "somebody.txt")
+                                (namestring (truename "somebody.txt")))
+                       (basename (realpath "tmp-rp-link" :expand-symlinks nil))
+                       (basename (realpath "tmp-rp-link")))))
+        (sh "rm tmp-rp-link")
+        res)))
+
+  ; a missing path is an error
+  (def-test/doc-test 'realpath
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (realpath "no-such-file.txt"))
+
 (def-test/doc-test 'pathname->native
   `(markdown-able (test-able returns))
   'function

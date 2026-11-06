@@ -449,8 +449,7 @@ The color functions wrap a `format` control string in a bold ANSI escape and a r
 
 > Anaphoric macro: runs BODY with `tempfile!` bound to the path of\
 >    a fresh temporary file (from mktemp) and deletes the file\
->    afterwards, however BODY exits. Only defined when :coreutils is\
->    in *features* (the rc files put it there)\
+>    afterwards, however BODY exits\
 
 ```{.commonlisp}
 (WITH-TEMP-FILE
@@ -1435,6 +1434,27 @@ The cursor movements print escapes (compared against the `+ansi-escape-...+` con
 ```
 
 <small><pre>=> (3497 "3K")</pre></small>
+
+
+
+#### REALPATH
+
+> The resolved, absolute path of APATH as a string, from GNU\
+>    realpath (so it needs GNU coreutils: the :coreutils feature,\
+>    which the rc files declare and clix's `make doctor` verifies)\
+>    `expand-symlinks` nil keeps symlinks as they are (-s)\
+>    `relative-to` a directory: the result is relative to it\
+>    `all-existing` t (default) insists every path component exist\
+>                   (-e); nil lets the last one be missing -- moot\
+>                   while APATH itself has to exist for this to run\
+>    APATH is quoted for the shell here, so spaces and such are fine\
+>    Errors if APATH doesn't exist\
+
+```{.commonlisp}
+(REALPATH "wayward files/regular" :RELATIVE-TO "./")
+```
+
+<small><pre>=> "wayward files/regular"</pre></small>
 
 
 
