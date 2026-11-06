@@ -1012,7 +1012,24 @@
       (sh "echo -n oops >&2; exit 3"
           :err-fun (lambda (c e) (declare (ignore c e)) nil))))
 
-; system stuff (test-able only: results are machine-dependent)
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "system")
+
+(def-raw-markdown
+  (fn "`hostname` and `sys/info` answer for the machine they run on, so only `get-envvar` shows its output here~%~%"))
+
+(def-test/doc-test 'get-envvar
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "the-default")
+  (get-envvar "SURELY_THIS_ENVVAR_DOES_NOT_EXIST" "the-default"))
+
+  (def-test/doc-test 'get-envvar
+    `((test-able returns))
+    'function
+    (search "/" test-return-value!)
+    (get-envvar "HOME"))
 
   (def-test/doc-test 'hostname
     `((test-able returns))
@@ -1021,17 +1038,61 @@
          (> (length test-return-value!) 0))
     (hostname))
 
-  (def-test/doc-test 'get-envvar
+  ; an alist; the kernel is one of the two we develop on
+  (def-test/doc-test 'sys/info
     `((test-able returns))
     'function
-    (search "/" test-return-value!)
-    (get-envvar "HOME"))
+    (and (alistp test-return-value!)
+         (member { test-return-value! :kernel } `(:linux :darwin))
+         (string= { test-return-value! :hostname } (hostname))
+         t)
+    (sys/info))
 
-  (def-test/doc-test 'get-envvar
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "command-line arguments")
+
+(def-test/doc-test 'program/script-name
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "test-pluto.lisp")
+  (program/script-name))
+
+(def-test/doc-test 'def-cli-args
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("," t ("a.txt" "b.txt")))
+  (let (sep verbose)
+    (def-cli-args "demo" "[-v] -s SEP FILES..." "a demonstration"
+      (option "-h" "--help"    "print usage" (print-usage!))
+      (option "-v" "--verbose" "say more"    (setq verbose t)
+                                             (process-args! (cdr args!)))
+      (option "-s" "--sep"     "separator"   (setq sep (cadr args!))
+                                             (process-args! (cddr args!))))
+    (process-args! `("-s" "," "a.txt" "-v" "b.txt"))
+    (list sep verbose bare-args!)))
+
+(def-test/doc-test '+usage-text!+
+  `(markdown-able (test-able returns))
+  'variable
+  (eq test-return-value! t)
+  (and (search (fn "Usage: demo [-v] -s SEP FILES...~%a demonstration") +usage-text!+)
+       (search "-s, --sep" +usage-text!+)
+       t))
+
+  ; combined short flags split up, and assign-next-arg! is the
+  ; shorthand for a flag that takes a value
+  (def-test/doc-test 'def-cli-args
     `((test-able returns))
     'function
-    (string= test-return-value! "the-default")
-    (get-envvar "SURELY_THIS_ENVVAR_DOES_NOT_EXIST" "the-default"))
+    (equal test-return-value! `(";" t ("x")))
+    (let (sep verbose)
+      (def-cli-args "demo2" "" ""
+        (option "-v" "--verbose" "say more"  (setq verbose t)
+                                             (process-args! (cdr args!)))
+        (option "-s" "--sep"     "separator" (assign-next-arg! sep)))
+      (process-args! `("-vs" ";" "x"))
+      (list sep verbose bare-args!)))
 
 ; --------------------------------------------------------------- ;
 

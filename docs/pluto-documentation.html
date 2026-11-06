@@ -363,6 +363,18 @@ syntax</a>
 <li><a href="#qsh" id="toc-qsh">Q/SH</a></li>
 <li><a href="#qfmt" id="toc-qfmt">Q/FMT</a></li>
 </ul></li>
+<li><a href="#system" id="toc-system">system</a>
+<ul>
+<li><a href="#get-envvar" id="toc-get-envvar">GET-ENVVAR</a></li>
+</ul></li>
+<li><a href="#command-line-arguments"
+id="toc-command-line-arguments">command-line arguments</a>
+<ul>
+<li><a href="#programscript-name"
+id="toc-programscript-name">PROGRAM/SCRIPT-NAME</a></li>
+<li><a href="#def-cli-args" id="toc-def-cli-args">DEF-CLI-ARGS</a></li>
+<li><a href="#usage-text" id="toc-usage-text">+USAGE-TEXT!+</a></li>
+</ul></li>
 <li><a href="#filefilenamedirectory-operations"
 id="toc-filefilenamedirectory-operations">file/filename/directory
 operations</a>
@@ -1285,48 +1297,131 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb75
 <pre>=> "100% done ~ okay"</pre>
 <p></small></p>
 <hr />
+<h3 id="system">system</h3>
+<p><code>hostname</code> and <code>sys/info</code> answer for the
+machine they run on, so only <code>get-envvar</code> shows its output
+here</p>
+<h4 id="get-envvar">GET-ENVVAR</h4>
+<blockquote>
+<p>The value of the environment variable NAME, or DEFAULT (nil<br />
+unless given) when it isn’t set<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb76"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>(GET-ENVVAR <span class="st">&quot;SURELY_THIS_ENVVAR_DOES_NOT_EXIST&quot;</span> <span class="st">&quot;the-default&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "the-default"</pre>
+<p></small></p>
+<hr />
+<h3 id="command-line-arguments">command-line arguments</h3>
+<h4 id="programscript-name">PROGRAM/SCRIPT-NAME</h4>
+<blockquote>
+<p>The name of the running script, without its directory: the file<br />
+being loaded, or failing that the shell’s $_<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb77"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>(PROGRAM/SCRIPT-NAME)</span></code></pre></div>
+<small>
+<pre>=> "test-pluto.lisp"</pre>
+<p></small></p>
+<h4 id="def-cli-args">DEF-CLI-ARGS</h4>
+<blockquote>
+<p>Defines a command-line interface for a script. SCRIPT-NAME and<br />
+AFTER-NAME make the usage line
+(<code>Usage: SCRIPT-NAME AFTER-NAME</code>),<br />
+DESCRIPTION sits under it, and every clause in BODY is<br />
+(option SHORT LONG DESCRIPTION FORMS…)<br />
+FORMS run when SHORT or LONG turns up. A flag that takes a value<br />
+reads it from (cadr args!) and must hand the rest on with<br />
+(process-args! (cddr args!)) – or the shorthand<br />
+(assign-next-arg! var), which does both; a bare flag hands on<br />
+(cdr args!). Combined short flags (-abc) are split up, and<br />
+anything that isn’t a flag lands in bare-args!.<br />
+It defines, in the script’s package:<br />
+args! the arguments still to be processed<br />
+bare-args! the non-flag arguments, in order<br />
++usage-text!+ the usage text, built from the clauses<br />
+print-usage! prints it and exits 0<br />
+process-args! runs the clauses over a list of arguments –<br />
+call (process-args! (cdr (cmdargs))) right after<br />
+An error inside a clause dies, printing the usage text<br />
+e.g. (def-cli-args “frob” “[-v] -s SEP FILES…” “frobs the files”<br />
+(option “-h” “–help” “print usage” (print-usage!))<br />
+(option “-v” “–verbose” “say more” (setq <em>verbose</em> t)<br />
+(process-args! (cdr args!)))<br />
+(option “-s” “–sep” “separator” (assign-next-arg! <em>sep</em>)))<br />
+(process-args! (cdr (cmdargs)))<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb78"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>(LET (SEP VERBOSE)</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  (DEF-CLI-ARGS <span class="st">&quot;demo&quot;</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;[-v] -s SEP FILES...&quot;</span></span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;a demonstration&quot;</span></span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>    (OPTION <span class="st">&quot;-h&quot;</span> <span class="st">&quot;--help&quot;</span> <span class="st">&quot;print usage&quot;</span> (PRINT-USAGE!))</span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>    (OPTION <span class="st">&quot;-v&quot;</span> <span class="st">&quot;--verbose&quot;</span> <span class="st">&quot;say more&quot;</span> (SETQ VERBOSE T)</span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>     (PROCESS-ARGS! (CDR ARGS!)))</span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>    (OPTION <span class="st">&quot;-s&quot;</span> <span class="st">&quot;--sep&quot;</span> <span class="st">&quot;separator&quot;</span> (SETQ SEP (CADR ARGS!))</span>
+<span id="cb78-9"><a href="#cb78-9" aria-hidden="true" tabindex="-1"></a>     (PROCESS-ARGS! (CDDR ARGS!))))</span>
+<span id="cb78-10"><a href="#cb78-10" aria-hidden="true" tabindex="-1"></a>  (PROCESS-ARGS! `(<span class="st">&quot;-s&quot;</span> <span class="st">&quot;,&quot;</span> <span class="st">&quot;a.txt&quot;</span> <span class="st">&quot;-v&quot;</span> <span class="st">&quot;b.txt&quot;</span>))</span>
+<span id="cb78-11"><a href="#cb78-11" aria-hidden="true" tabindex="-1"></a>  (LIST SEP VERBOSE BARE-ARGS!))</span></code></pre></div>
+<small>
+<pre>=> ("," T ("a.txt" "b.txt"))</pre>
+<p></small></p>
+<h4 id="usage-text">+USAGE-TEXT!+</h4>
+<p>NIL</p>
+<div class="sourceCode" id="cb79"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>(AND</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a> (SEARCH (FN <span class="st">&quot;Usage: demo [-v] -s SEP FILES...~%a demonstration&quot;</span>)</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>         +USAGE-TEXT!+)</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a> (SEARCH <span class="st">&quot;-s, --sep&quot;</span> +USAGE-TEXT!+) T)</span></code></pre></div>
+<small>
+<pre>=> T</pre>
+<p></small></p>
+<hr />
 <h3 id="filefilenamedirectory-operations">file/filename/directory
 operations</h3>
 <h4 id="basename">BASENAME</h4>
 <p>Returns the filename portion of a path</p>
-<div class="sourceCode" id="cb76"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>(BASENAME <span class="st">&quot;/foo/bar/baz.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb80"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>(BASENAME <span class="st">&quot;/foo/bar/baz.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "baz.txt"</pre>
 <p></small></p>
 <h4 id="change-extension">CHANGE-EXTENSION</h4>
 <p>Returns a pathname with the file extension changed</p>
-<div class="sourceCode" id="cb77"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>(CHANGE-EXTENSION <span class="st">&quot;/foo/bar/baz.txt&quot;</span> <span class="st">&quot;md&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb81"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>(CHANGE-EXTENSION <span class="st">&quot;/foo/bar/baz.txt&quot;</span> <span class="st">&quot;md&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> #P"/foo/bar/baz.md"</pre>
 <p></small></p>
 <h4 id="size-for-humans">SIZE-FOR-HUMANS</h4>
 <p>Formats a byte count for human consumption</p>
-<div class="sourceCode" id="cb78"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>(SIZE-FOR-HUMANS (<span class="op">*</span> <span class="dv">3</span> (EXPT <span class="dv">2</span> <span class="dv">20</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb82"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>(SIZE-FOR-HUMANS (<span class="op">*</span> <span class="dv">3</span> (EXPT <span class="dv">2</span> <span class="dv">20</span>)))</span></code></pre></div>
 <small>
 <pre>=> "3M"</pre>
 <p></small></p>
-<div class="sourceCode" id="cb79"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>(SIZE-FOR-HUMANS (EXPT <span class="dv">2</span> <span class="dv">31</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb83"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>(SIZE-FOR-HUMANS (EXPT <span class="dv">2</span> <span class="dv">31</span>))</span></code></pre></div>
 <small>
 <pre>=> "2.0G"</pre>
 <p></small></p>
 <h4 id="file-exists-p">FILE-EXISTS-P</h4>
 <p>FILE-EXISTS-P and DIRECTORY-EXISTS-P return truthy (the truename) or
 NIL</p>
-<div class="sourceCode" id="cb80"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>(LIST</span>
-<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a> (IF (FILE-EXISTS-P <span class="st">&quot;somebody.txt&quot;</span>)</span>
-<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>     T</span>
-<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>     NIL)</span>
-<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a> (IF (DIRECTORY-EXISTS-P <span class="st">&quot;wayward files&quot;</span>)</span>
-<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a>     T</span>
-<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a>     NIL)</span>
-<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a> (IF (FILE-EXISTS-P <span class="st">&quot;no-such-file.txt&quot;</span>)</span>
-<span id="cb80-9"><a href="#cb80-9" aria-hidden="true" tabindex="-1"></a>     T</span>
-<span id="cb80-10"><a href="#cb80-10" aria-hidden="true" tabindex="-1"></a>     NIL))</span></code></pre></div>
+<div class="sourceCode" id="cb84"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>(LIST</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a> (IF (FILE-EXISTS-P <span class="st">&quot;somebody.txt&quot;</span>)</span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>     T</span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>     NIL)</span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a> (IF (DIRECTORY-EXISTS-P <span class="st">&quot;wayward files&quot;</span>)</span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>     T</span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a>     NIL)</span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a> (IF (FILE-EXISTS-P <span class="st">&quot;no-such-file.txt&quot;</span>)</span>
+<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a>     T</span>
+<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a>     NIL))</span></code></pre></div>
 <small>
 <pre>=> (T T NIL)</pre>
 <p></small></p>
@@ -1343,8 +1438,8 @@ containing glob characters as wild pathnames, which PROBE-FILE<br />
 et al. won’t accept, the string this returns is still correct)<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb81"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>(PATHNAME-&gt;NATIVE #P<span class="st">&quot;/foo/bar baz.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb85"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>(PATHNAME-&gt;NATIVE #P<span class="st">&quot;/foo/bar baz.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "/foo/bar baz.txt"</pre>
 <p></small></p>
@@ -1362,8 +1457,8 @@ the character before the exponent. Note that the exponent is only<br />
 parsed if RADIX is 10.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb82"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>(PARSE-FLOAT <span class="st">&quot;5.4&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb86"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>(PARSE-FLOAT <span class="st">&quot;5.4&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> 5.4</pre>
 <p></small></p>
@@ -1372,16 +1467,16 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb82
 <p>Quote, i.e. prefix with #\, all non-word characters in STRING.<br />
 </p>
 </blockquote>
-<div class="sourceCode" id="cb83"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>(LIST (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> <span class="st">&quot;3.50&quot;</span>)</span>
-<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>      (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> (Q/RE <span class="st">&quot;3.50&quot;</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb87"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>(LIST (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> <span class="st">&quot;3.50&quot;</span>)</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>      (STR-DETECT <span class="st">&quot;price: 3x50&quot;</span> (Q/RE <span class="st">&quot;3.50&quot;</span>)))</span></code></pre></div>
 <small>
 <pre>=> (T NIL)</pre>
 <p></small></p>
 <h4 id="quri">Q/URI</h4>
 <p>NIL</p>
-<div class="sourceCode" id="cb84"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>(Q/URI <span class="st">&quot;café &amp; bar?q=1&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb88"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>(Q/URI <span class="st">&quot;café &amp; bar?q=1&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "caf%C3%A9%20%26%20bar%3Fq%3D1"</pre>
 <p></small></p>
@@ -1390,52 +1485,52 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb84
 <h4 id="stat-filesize">STAT-FILESIZE</h4>
 <p>Size of a file (via <code>stat</code>/<code>lstat</code>) without
 opening it</p>
-<div class="sourceCode" id="cb85"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>(STAT-FILESIZE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb89"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>(STAT-FILESIZE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> 3497</pre>
 <p></small></p>
 <h4 id="is-symlink-p">IS-SYMLINK-P</h4>
 <p>Is it a symlink? (something portable CL cannot ask)</p>
-<div class="sourceCode" id="cb86"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>(PROGN</span>
-<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a> (SH <span class="st">&quot;ln -sf somebody.txt tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a> (LET ((RES</span>
-<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a>        (LIST (IS-SYMLINK-P <span class="st">&quot;tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a>              (IS-SYMLINK-P <span class="st">&quot;somebody.txt&quot;</span>))))</span>
-<span id="cb86-6"><a href="#cb86-6" aria-hidden="true" tabindex="-1"></a>   (SH <span class="st">&quot;rm tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb86-7"><a href="#cb86-7" aria-hidden="true" tabindex="-1"></a>   RES))</span></code></pre></div>
+<div class="sourceCode" id="cb90"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>(PROGN</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a> (SH <span class="st">&quot;ln -sf somebody.txt tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a> (LET ((RES</span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a>        (LIST (IS-SYMLINK-P <span class="st">&quot;tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a>              (IS-SYMLINK-P <span class="st">&quot;somebody.txt&quot;</span>))))</span>
+<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>   (SH <span class="st">&quot;rm tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a>   RES))</span></code></pre></div>
 <small>
 <pre>=> (T NIL)</pre>
 <p></small></p>
 <h4 id="md5string">MD5/STRING</h4>
 <p>Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file
 variants</p>
-<div class="sourceCode" id="cb87"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>(MD5/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb91"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>(MD5/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "5d41402abc4b2a76b9719d911017c592"</pre>
 <p></small></p>
 <h4 id="sha256file">SHA256/FILE</h4>
 <p>File hashing streams in 64KB chunks (never slurps the whole file)</p>
-<div class="sourceCode" id="cb88"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>(SHA256/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb92"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>(SHA256/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0"</pre>
 <p></small></p>
 <h4 id="with-lock-file">WITH-LOCK-FILE</h4>
 <p>Runs body while flock-holding path (e.g. so a cron script won’t run
 twice); <code>:wait nil</code> skips the body instead of blocking</p>
-<div class="sourceCode" id="cb89"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>(LET ((LOCKF <span class="st">&quot;tmp-demo.lock&quot;</span>))</span>
-<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  (LET ((RES</span>
-<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>         (WITH-LOCK-FILE (LOCKF)</span>
-<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))</span>
-<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))</span>
-<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>      (WHEN HANDLE</span>
-<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))</span>
-<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a>    (DELETE-FILE LOCKF)</span>
-<span id="cb89-9"><a href="#cb89-9" aria-hidden="true" tabindex="-1"></a>    RES))</span></code></pre></div>
+<div class="sourceCode" id="cb93"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>(LET ((LOCKF <span class="st">&quot;tmp-demo.lock&quot;</span>))</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>  (LET ((RES</span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>         (WITH-LOCK-FILE (LOCKF)</span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a>           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))</span>
+<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a>    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))</span>
+<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a>      (WHEN HANDLE</span>
+<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a>        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))</span>
+<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a>    (DELETE-FILE LOCKF)</span>
+<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a>    RES))</span></code></pre></div>
 <small>
 <pre>=> (:RAN NIL :FREE-AGAIN T)</pre>
 <p></small></p>

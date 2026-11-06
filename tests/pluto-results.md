@@ -1051,6 +1051,104 @@ reader macro: `Ø<form>` errors if `<form>` is null, else passes it through
 
 -----
 
+### system
+
+`hostname` and `sys/info` answer for the machine they run on, so only `get-envvar` shows its output here
+
+
+
+#### GET-ENVVAR
+
+> The value of the environment variable NAME, or DEFAULT (nil\
+>    unless given) when it isn't set\
+
+```{.commonlisp}
+(GET-ENVVAR "SURELY_THIS_ENVVAR_DOES_NOT_EXIST" "the-default")
+```
+
+<small><pre>=> "the-default"</pre></small>
+
+
+
+-----
+
+### command-line arguments
+
+
+#### PROGRAM/SCRIPT-NAME
+
+> The name of the running script, without its directory: the file\
+>    being loaded, or failing that the shell's $_\
+
+```{.commonlisp}
+(PROGRAM/SCRIPT-NAME)
+```
+
+<small><pre>=> "test-pluto.lisp"</pre></small>
+
+
+
+#### DEF-CLI-ARGS
+
+> Defines a command-line interface for a script. SCRIPT-NAME and\
+>    AFTER-NAME make the usage line (`Usage: SCRIPT-NAME AFTER-NAME`),\
+>    DESCRIPTION sits under it, and every clause in BODY is\
+>      (option SHORT LONG DESCRIPTION FORMS...)\
+>    FORMS run when SHORT or LONG turns up. A flag that takes a value\
+>    reads it from (cadr args!) and must hand the rest on with\
+>    (process-args! (cddr args!)) -- or the shorthand\
+>    (assign-next-arg! var), which does both; a bare flag hands on\
+>    (cdr args!). Combined short flags (-abc) are split up, and\
+>    anything that isn't a flag lands in bare-args!.\
+>    It defines, in the script's package:\
+>      args!          the arguments still to be processed\
+>      bare-args!     the non-flag arguments, in order\
+>      +usage-text!+  the usage text, built from the clauses\
+>      print-usage!   prints it and exits 0\
+>      process-args!  runs the clauses over a list of arguments --\
+>                     call (process-args! (cdr (cmdargs))) right after\
+>    An error inside a clause dies, printing the usage text\
+>    e.g. (def-cli-args "frob" "[-v] -s SEP FILES..." "frobs the files"\
+>           (option "-h" "--help"    "print usage" (print-usage!))\
+>           (option "-v" "--verbose" "say more"    (setq *verbose* t)\
+>                                                  (process-args! (cdr args!)))\
+>           (option "-s" "--sep"     "separator"   (assign-next-arg! *sep*)))\
+>         (process-args! (cdr (cmdargs)))\
+
+```{.commonlisp}
+(LET (SEP VERBOSE)
+  (DEF-CLI-ARGS "demo"
+      "[-v] -s SEP FILES..."
+      "a demonstration"
+    (OPTION "-h" "--help" "print usage" (PRINT-USAGE!))
+    (OPTION "-v" "--verbose" "say more" (SETQ VERBOSE T)
+     (PROCESS-ARGS! (CDR ARGS!)))
+    (OPTION "-s" "--sep" "separator" (SETQ SEP (CADR ARGS!))
+     (PROCESS-ARGS! (CDDR ARGS!))))
+  (PROCESS-ARGS! `("-s" "," "a.txt" "-v" "b.txt"))
+  (LIST SEP VERBOSE BARE-ARGS!))
+```
+
+<small><pre>=> ("," T ("a.txt" "b.txt"))</pre></small>
+
+
+
+#### +USAGE-TEXT!+
+
+NIL
+```{.commonlisp}
+(AND
+ (SEARCH (FN "Usage: demo [-v] -s SEP FILES...~%a demonstration")
+         +USAGE-TEXT!+)
+ (SEARCH "-s, --sep" +USAGE-TEXT!+) T)
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+-----
+
 ### file/filename/directory operations
 
 

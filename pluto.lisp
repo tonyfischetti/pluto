@@ -70,7 +70,7 @@
 
     ; command-line arguments
     :program/script-name :cmdargs :def-cli-args :args! :bare-args!
-    :+USAGE-TEXT!+ :print-usage! :process-args!
+    :+USAGE-TEXT!+ :print-usage! :process-args! :assign-next-arg!
 
     ; terminal things / terminal manipulation
     :clear-screen
@@ -1240,11 +1240,19 @@
 ; TODO: USE UIOP FOR THESE?!
 
 (defun hostname ()
+  "The machine's hostname (machine-instance)"
   (machine-instance))
 
 ; TODO: beef out
 ; TODO: distro
 (defun sys/info ()
+  "An alist describing the machine, from uname:
+     (:kernel . :linux | :darwin | :unknown)
+     (:os . :gnu/linux | :darwin | :android | :unknown)
+     (:hostname . \"...\")
+     (:architecture . :x86 | :arm)
+   plus, on GNU/Linux, (:distro . :debian ...) from lsb_release
+   e.g. (eq { (sys/info) :os } :darwin)"
   (let ((kernel         (sh "uname -s"))
         (os             (sh "uname -o"))
         (hostname       (hostname))
@@ -1265,10 +1273,11 @@
               info))
       info)))
 
-; TODO: write documentation
 ; TODO: SBCL DOESN't get columns
 ; TODO: https://stackoverflow.com/questions/44236376/how-do-i-get-the-list-of-all-environment-variables-available-in-a-lisp-process
 (defun get-envvar (name &optional default)
+  "The value of the environment variable NAME, or DEFAULT (nil
+   unless given) when it isn't set"
   (or
     #+sbcl (sb-ext:posix-getenv name)
     #+ecl  (ext:getenv name)
@@ -1282,9 +1291,10 @@
 ;---------------------------------------------------------;
 ; command line arguments ---------------------------------;
 
-; TODO: document
 ; TODO: implementation-dependent? with the envvar thing?
 (defun program/script-name ()
+  "The name of the running script, without its directory: the file
+   being loaded, or failing that the shell's $_"
   (basename (if *load-truename*
               (namestring *load-truename*)
               (get-envvar "_"))))
@@ -1304,7 +1314,37 @@
          (> (length as-chars) 2)
          (every #'alpha-char-p (cdr as-chars)))))
 
+; def-cli-args defines these with defparameter, but code that refers
+; to them can get compiled before that runs (a def-cli-args inside a
+; function, say) -- declaring them special up front keeps the
+; compiler from flagging such references as undefined variables
+(declaim (special args! bare-args! +USAGE-TEXT!+))
+
 (defmacro def-cli-args (script-name after-name description &body body)
+  "Defines a command-line interface for a script. SCRIPT-NAME and
+   AFTER-NAME make the usage line (`Usage: SCRIPT-NAME AFTER-NAME`),
+   DESCRIPTION sits under it, and every clause in BODY is
+     (option SHORT LONG DESCRIPTION FORMS...)
+   FORMS run when SHORT or LONG turns up. A flag that takes a value
+   reads it from (cadr args!) and must hand the rest on with
+   (process-args! (cddr args!)) -- or the shorthand
+   (assign-next-arg! var), which does both; a bare flag hands on
+   (cdr args!). Combined short flags (-abc) are split up, and
+   anything that isn't a flag lands in bare-args!.
+   It defines, in the script's package:
+     args!          the arguments still to be processed
+     bare-args!     the non-flag arguments, in order
+     +usage-text!+  the usage text, built from the clauses
+     print-usage!   prints it and exits 0
+     process-args!  runs the clauses over a list of arguments --
+                    call (process-args! (cdr (cmdargs))) right after
+   An error inside a clause dies, printing the usage text
+   e.g. (def-cli-args \"frob\" \"[-v] -s SEP FILES...\" \"frobs the files\"
+          (option \"-h\" \"--help\"    \"print usage\" (print-usage!))
+          (option \"-v\" \"--verbose\" \"say more\"    (setq *verbose* t)
+                                                 (process-args! (cdr args!)))
+          (option \"-s\" \"--sep\"     \"separator\"   (assign-next-arg! *sep*)))
+        (process-args! (cdr (cmdargs)))"
   (let* ((switches       (mapcar #'second    body))
          (longswitches   (mapcar #'third     body))
          (descriptions   (mapcar #'fourth    body))
@@ -1321,9 +1361,15 @@
                                             ,(second x) error! +USAGE-TEXT!+)))))
                       body)))
   `(progn
-     (defparameter args!        nil)
-     (defparameter bare-args!   nil)
-     (defparameter +USAGE-TEXT!+ nil)
+     (defparameter args!        nil
+       "The command-line arguments process-args! still has to look at;
+        inside a def-cli-args clause, (cadr args!) is the flag's value")
+     (defparameter bare-args!   nil
+       "The command-line arguments that weren't flags, in order
+        (complete once process-args! returns)")
+     (defparameter +USAGE-TEXT!+ nil
+       "The usage text def-cli-args built from its clauses
+        (print-usage! prints it; an error in a clause dies with it)")
      (macrolet ((assign-next-arg! (avar)
        `(progn (setq ,avar (cadr args!)) (process-args! (cddr args!)))))
        (or-die
@@ -1333,9 +1379,13 @@
                    ,script-name ,after-name ,description
                    (format nil "~{~A~}" (list ,@flag-lines))))
          (defun print-usage! ()
+           "Prints +usage-text!+ to stdout and exits with status 0"
            (format t "~A" +USAGE-TEXT!+)
            (die "" :status 0))
          (defun process-args! (args)
+           "Runs def-cli-args' clauses over ARGS (normally (cdr (cmdargs))):
+            flags run their forms, combined short flags (-abc) are split
+            up, and everything else is collected into bare-args!"
            (setq args! args)
            (if (null args!)
              (setq bare-args! (reverse bare-args!))
