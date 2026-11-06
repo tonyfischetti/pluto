@@ -1464,6 +1464,108 @@ Regexes (cl-ppcre), HTTP (dexador), XML and XPath (cxml, plexippus), JSON (yason
 <small><pre>=> T</pre></small>
 
 
+The regex wrappers put the string first (cl-ppcre puts the pattern first), and each has a one-character alias: `~s` split, `~r` replace, `~ra` replace-all, `~m` match, `~f` filter (subset), `~e` extract, `~c` compile. A pattern may be a string or a compiled scanner
+
+
+
+#### STR-SPLIT
+
+> Wrapper around cl-ppcre:split with string first\
+
+```{.commonlisp}
+(STR-SPLIT "11/2/2026" "/")
+```
+
+<small><pre>=> ("11" "2" "2026")</pre></small>
+
+
+
+```{.commonlisp}
+(STR-SPLIT "k=v=w" "=" :LIMIT 2)
+```
+
+<small><pre>=> ("k" "v=w")</pre></small>
+
+
+
+#### STR-REPLACE
+
+> Wrapper around cl-ppcre:regex-replace with string first\
+
+```{.commonlisp}
+(STR-REPLACE "2026-11-02" "(\\d+)-(\\d+)-(\\d+)" "\\3/\\2/\\1")
+```
+
+<small><pre>=> "02/11/2026"</pre></small>
+
+
+
+#### STR-REPLACE-ALL
+
+> Wrapper around cl-ppcre:regex-replace-all with string first\
+
+```{.commonlisp}
+(STR-REPLACE-ALL "a-b-c" "-" "_")
+```
+
+<small><pre>=> "a_b_c"</pre></small>
+
+
+
+#### STR-DETECT
+
+> Returns true if `pattern` matches `astr`\
+>    Wrapper around cl-ppcre:scan\
+
+```{.commonlisp}
+(LIST (STR-DETECT "price: $3.50" "\\$\\d") (STR-DETECT "abc" "^b"))
+```
+
+<small><pre>=> (T NIL)</pre></small>
+
+
+
+#### STR-SUBSET
+
+> Returns all elements that match pattern\
+
+```{.commonlisp}
+(STR-SUBSET `("apple" "banana" "cherry") "an")
+```
+
+<small><pre>=> ("banana")</pre></small>
+
+
+
+#### STR-EXTRACT
+
+> If one match, it returns the register group as a string.\
+>    If more than one match/register-group, returns a list\
+>    of register groups. If there is a match but no register\
+>    group, it will still return nil\
+
+```{.commonlisp}
+(LIST (STR-EXTRACT "v1.2" "v(\\d)")
+      (STR-EXTRACT "Nov 2, 2026" "(\\d+), (\\d+)"))
+```
+
+<small><pre>=> ("1" ("2" "2026"))</pre></small>
+
+
+
+#### STR-SCAN-TO-STRINGS
+
+> Wrapper around cl-ppcre:scan-to-strings with string first\
+>    and only returns the important part (the vector of matches)\
+
+```{.commonlisp}
+(LIST (STR-SCAN-TO-STRINGS "a1b2" "(\\d)\\w(\\d)")
+      (STR-SCAN-TO-STRINGS "abc" "(z)"))
+```
+
+<small><pre>=> (#("1" "2") NIL)</pre></small>
+
+
 
 #### PARSE-XML
 

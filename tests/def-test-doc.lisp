@@ -154,24 +154,28 @@
 
 ;; -----------------------------------
 ;; testing
+;;
+;; the colored strings are printed with (ft "~A" ...), never as the
+;; control string: by then they hold test names and values, and a
+;; `~` in one of those (a test named ~s, say) would be a directive
 
 (defmethod run-test ((el test/doc-element))
   t)
 
 (defmethod run-test ((el test/doc-title))
-  (ft (cyan "beginning tests for ~A~%" { el 'section })))
+  (ft "~A" (cyan "beginning tests for ~A~%" { el 'section })))
 
 (defmethod run-test ((el test/doc-section))
-  (ft (yellow "testing section: ~A~%" { el 'section })))
+  (ft "~A" (yellow "testing section: ~A~%" { el 'section })))
 
 ; a test that isn't TEST-ABLE gets this method (the TEST-ABLE
 ; mixin precedes TEST/DOC-TEST in the class precedence list)
 (defmethod run-test ((test test/doc-test))
-  (ft (grey "skipping test of ~S~%" { test 'the-function })))
+  (ft "~A" (grey "skipping test of ~S~%" { test 'the-function })))
 
 ; TODO: actually run it BENCH-TIMES times
 (defmethod run-test :around ((test bench-able))
-  (ft (magenta "benchmarking: ~S ~A times~%"
+  (ft "~A" (magenta "benchmarking: ~S ~A times~%"
                { test 'the-function }
                { test 'bench-times }))
   (call-next-method))
@@ -196,23 +200,23 @@
       (let ((test-result
               (handler-case (funcall { test 'test-closure })
                 (error (e)
-                  (ft (red "error in the test expression itself for ~A: ~A~%"
+                  (ft "~A" (red "error in the test expression itself for ~A: ~A~%"
                            { test 'the-function } e))
                   nil))))
         (if test-result
           (progn
-            (ft (green "passed: ~A~%" { test 'the-function }))
+            (ft "~A" (green "passed: ~A~%" { test 'the-function }))
             (setf { test 'pass-p } t)
             (setf { test 'output }
                   `(,test-return-value! ,test-stdout! ,test-stderr!)))
           (progn
-            (ft (red "failed: ~A (test #~A)~%" { test 'the-function }
+            (ft "~A" (red "failed: ~A (test #~A)~%" { test 'the-function }
                                                { test 'test-number }))
-            (ft (red "    returned:  ~S~%" test-return-value!))
-            (ft (red "    stdout:    ~S~%" test-stdout!))
-            (ft (red "    stderr:    ~S~%" test-stderr!))
+            (ft "~A" (red "    returned:  ~S~%" test-return-value!))
+            (ft "~A" (red "    stdout:    ~S~%" test-stdout!))
+            (ft "~A" (red "    stderr:    ~S~%" test-stderr!))
             (when test-error!
-              (ft (red "    signalled: ~A~%" test-error!)))))))))
+              (ft "~A" (red "    signalled: ~A~%" test-error!)))))))))
 
 (defmethod passed-p ((el test/doc-element)) t)
 (defmethod passed-p ((test test-able))
@@ -223,9 +227,9 @@
   (let ((failures (remove-if #'passed-p /all-test-docs/)))
     (if failures
       (progn
-        (ft (red "~%~A test(s) failed:~%" (length failures)))
+        (ft "~A" (red "~%~A test(s) failed:~%" (length failures)))
         (for-each/list failures
-          (ft (red "  #~A ~A~%" { value! 'test-number }
+          (ft "~A" (red "  #~A ~A~%" { value! 'test-number }
                                 { value! 'the-function })))
         nil)
       t)))
@@ -283,5 +287,5 @@
 
 (defun render-markdown (&optional (stream t))
   (mapcar (lambda (x) (to-markdown x stream)) /all-test-docs/)
-  (ft (blue "~%rendered markdown~%")))
+  (ft "~A" (blue "~%rendered markdown~%")))
 ;; -----------------------------------

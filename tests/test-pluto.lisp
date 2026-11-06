@@ -1486,6 +1486,115 @@
   (let ((digits (re-compile "\\d+")))
     (str-detect "abc123" digits)))
 
+(def-raw-markdown
+  (fn "The regex wrappers put the string first (cl-ppcre puts the pattern first), and each has a one-character alias: `~~s` split, `~~r` replace, `~~ra` replace-all, `~~m` match, `~~f` filter (subset), `~~e` extract, `~~c` compile. A pattern may be a string or a compiled scanner~%~%"))
+
+(def-test/doc-test 'str-split
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("11" "2" "2026"))
+  (str-split "11/2/2026" "/"))
+
+(def-test/doc-test 'str-split
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("k" "v=w"))
+  (str-split "k=v=w" "=" :limit 2))
+
+  ; empty fields survive in the middle and at the start; trailing
+  ; ones are dropped (cl-ppcre's rule, like perl's)
+  (def-test/doc-test 'str-split
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(("a" "" "b") ("" "a") ("a" "b" "c")))
+    (list (str-split "a,,b,," ",")
+          (str-split ",a" ",")
+          (str-split "a b   c" "\\s+")))
+
+(def-test/doc-test 'str-replace
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "02/11/2026")
+  (str-replace "2026-11-02" "(\\d+)-(\\d+)-(\\d+)" "\\3/\\2/\\1"))
+
+  ; first match only, and a second value says whether anything matched
+  (def-test/doc-test 'str-replace
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(("baa" t) ("abc" nil)))
+    (list (multiple-value-list (str-replace "aaa" "a" "b"))
+          (multiple-value-list (str-replace "abc" "z" "y"))))
+
+(def-test/doc-test 'str-replace-all
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "a_b_c")
+  (str-replace-all "a-b-c" "-" "_"))
+
+(def-test/doc-test 'str-detect
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `(t nil))
+  (list (str-detect "price: $3.50" "\\$\\d")
+        (str-detect "abc" "^b")))
+
+  ; cl-ppcre:scan's keywords pass through
+  (def-test/doc-test 'str-detect
+    `((test-able returns))
+    'function
+    (null test-return-value!)
+    (str-detect "xab" "a" :start 2))
+
+(def-test/doc-test 'str-subset
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("banana"))
+  (str-subset `("apple" "banana" "cherry") "an"))
+
+  ; with a compiled scanner
+  (def-test/doc-test 'str-subset
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("a1" "c2"))
+    (str-subset `("a1" "b" "c2") (re-compile "\\d")))
+
+(def-test/doc-test 'str-extract
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("1" ("2" "2026")))
+  (list (str-extract "v1.2" "v(\\d)")
+        (str-extract "Nov 2, 2026" "(\\d+), (\\d+)")))
+
+  ; no group, no match, and an unmatched optional group
+  (def-test/doc-test 'str-extract
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(nil nil ("a" nil "b")))
+    (list (str-extract "abc" "b")
+          (str-extract "abc" "(z)")
+          (str-extract "ab" "(a)(x)?(b)")))
+
+(def-test/doc-test 'str-scan-to-strings
+  `(markdown-able (test-able returns))
+  'function
+  (and (equalp (car test-return-value!) #("1" "2"))
+       (null (cadr test-return-value!)))
+  (list (str-scan-to-strings "a1b2" "(\\d)\\w(\\d)")
+        (str-scan-to-strings "abc" "(z)")))
+
+  ; the one-character aliases are the same thing
+  (def-test/doc-test '~s
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(t t t t t t t))
+    (list (equal (~s "a/b" "/")         (str-split "a/b" "/"))
+          (equal (~r "aa" "a" "b")       (str-replace "aa" "a" "b"))
+          (equal (~ra "aa" "a" "b")      (str-replace-all "aa" "a" "b"))
+          (eq    (~m "abc" "b")          (str-detect "abc" "b"))
+          (equal (~f `("ab" "c") "a")    (str-subset `("ab" "c") "a"))
+          (equal (~e "a1" "(\\d)")       (str-extract "a1" "(\\d)"))
+          (functionp (~c "a"))))
+
 (def-test/doc-test 'parse-xml
   `(markdown-able (test-able returns))
   'function
