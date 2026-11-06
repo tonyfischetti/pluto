@@ -127,6 +127,69 @@
   (string= test-return-value! "ababab")
   (repeat-string "ab" 3))
 
+(def-test/doc-test 'str-pad
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "02")
+  (str-pad "2" 2 :pad "0"))
+
+; the motivating case: pieces of a parsed date (integers work, too)
+(def-test/doc-test 'str-pad
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "2026-11-02")
+  (fn "~A-~A-~A" 2026 (str-pad 11 2 :pad "0") (str-pad 2 2 :pad "0")))
+
+(def-test/doc-test 'str-pad
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "name    ")
+  (str-pad "name" 8 :side :right))
+
+(def-test/doc-test 'str-pad
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "--name---")
+  (str-pad "name" 9 :side :both :pad #\-))
+
+  ; defaults: spaces, on the left
+  (def-test/doc-test 'str-pad
+    `((test-able returns))
+    'function
+    (string= test-return-value! "    name")
+    (str-pad "name" 8))
+
+  ; never truncates (and exactly-wide comes back as is)
+  (def-test/doc-test 'str-pad
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("2026" "ab" "2026" "2026"))
+    (list (str-pad "2026" 2 :pad "0")
+          (str-pad "ab" 2)
+          (str-pad "2026" 2 :side :right)
+          (str-pad "2026" 2 :side :both)))
+
+  ; :both with an even leftover is symmetric
+  (def-test/doc-test 'str-pad
+    `((test-able returns))
+    'function
+    (string= test-return-value! "  ab  ")
+    (str-pad "ab" 6 :side :both))
+
+  ; the pad is ONE character
+  (def-test/doc-test 'str-pad
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (str-pad "2" 4 :pad "ab"))
+
+  ; an unknown side is an error (not a silent left-pad)
+  (def-test/doc-test 'str-pad
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (str-pad "2" 4 :side :middle))
+
 
 ; --------------------------------------------------------------- ;
 

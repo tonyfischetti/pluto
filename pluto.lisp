@@ -31,7 +31,7 @@
 
     ; string operations
     :str+ :str-join :str-sub :string->char-list :split-string->lines
-    :repeat-string
+    :repeat-string :str-pad
 
     ; some essential utilities/macros
     :with-gensyms :mac :nil! :alambda :self! :abbr :flatten :take :group
@@ -226,6 +226,27 @@
 ; TODO: document
 (defun repeat-string (str times)
   (fn "~{~A~}" (loop for i from 1 to times collect str)))
+
+(defun str-pad (thing width &key (side :left) (pad #\Space))
+  "Pads THING (which gets princ-ed) with PAD until it's WIDTH
+   characters wide. It never truncates: if THING is already
+   WIDTH (or wider) it comes back as is
+   `side` is where the padding goes: :left (default), :right,
+          or :both (centered; an odd leftover goes on the right)
+   `pad` is the character to pad with (default is a space);
+         a one-character string works, too
+   e.g. (str-pad 2 2 :pad \"0\")  =>  \"02\""
+  (let ((astring (format nil "~A" thing))
+        (padchar (character pad)))
+    (ecase side
+      (:left    (format nil "~v,,,v@A" width padchar astring))
+      (:right   (format nil "~v,,,vA"  width padchar astring))
+      (:both    (let* ((needed (max 0 (- width (length astring))))
+                       (left   (floor needed 2)))
+                  (str+ (make-string left :initial-element padchar)
+                        astring
+                        (make-string (- needed left)
+                                     :initial-element padchar)))))))
 
 ; ------------------------------------------------------- ;
 

@@ -217,6 +217,3 @@ Classes that were never asked for are never created.
 - **Sections always render** — a `def-test/doc-section` whose tests are
   all test-only still leaves a header in the docs. Add doc content or
   don't declare a section.
-- **`make test-sbcl` passes `--no-userinit`**, but `test-pluto.lisp`
-  quickloads charon near the end, which needs your init. Run the suite
-  with your normal init until that's reconciled.

@@ -152,6 +152,49 @@ Repeats a string TIMES times
 
 
 
+#### STR-PAD
+
+> Pads THING (which gets princ-ed) with PAD until it's WIDTH\
+>    characters wide. It never truncates: if THING is already\
+>    WIDTH (or wider) it comes back as is\
+>    `side` is where the padding goes: :left (default), :right,\
+>           or :both (centered; an odd leftover goes on the right)\
+>    `pad` is the character to pad with (default is a space);\
+>          a one-character string works, too\
+>    e.g. (str-pad 2 2 :pad "0")  =>  "02"\
+
+```{.commonlisp}
+(STR-PAD "2" 2 :PAD "0")
+```
+
+<small><pre>=> "02"</pre></small>
+
+
+
+```{.commonlisp}
+(FN "~A-~A-~A" 2026 (STR-PAD 11 2 :PAD "0") (STR-PAD 2 2 :PAD "0"))
+```
+
+<small><pre>=> "2026-11-02"</pre></small>
+
+
+
+```{.commonlisp}
+(STR-PAD "name" 8 :SIDE :RIGHT)
+```
+
+<small><pre>=> "name    "</pre></small>
+
+
+
+```{.commonlisp}
+(STR-PAD "name" 9 :SIDE :BOTH :PAD #\-)
+```
+
+<small><pre>=> "--name---"</pre></small>
+
+
+
 -----
 
 ### some essential utilities/macros
@@ -574,9 +617,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G558 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G558
-      #:G558
+(LET ((#:G576 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G576
+      #:G576
       42))
 ```
 
