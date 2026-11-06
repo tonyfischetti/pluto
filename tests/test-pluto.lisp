@@ -550,13 +550,13 @@
   (= test-return-value! 42)
   ?(gethash :missing (make-hash-table)) 42)
 
-  ; Ø is possibly getting excised, so: tests but no docs
-  (def-test/doc-test '|Ø|
-    `((test-able returns))
-    "reader macro: `Ø<form>` errors if `<form>` is null, else passes it through"
-    (= test-return-value! 42)
-    (let ((x 42)) Øx))
+(def-test/doc-test '|Ø|
+  `(markdown-able (test-able returns))
+  "reader macro: `Ø<form>` errors if `<form>` is null, else passes it through"
+  (= test-return-value! 42)
+  (let ((x 42)) Øx))
 
+  ; the null case signals
   (def-test/doc-test '|Ø|
     `((test-able returns))
     "reader macro: `Ø<form>` errors if `<form>` is null, else passes it through"

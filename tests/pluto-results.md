@@ -584,6 +584,18 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 
 
 
+#### Ø
+
+reader macro: `Ø<form>` errors if `<form>` is null, else passes it through
+```{.commonlisp}
+(LET ((X 42))
+  (AIF X IT! (ERROR "its null")))
+```
+
+<small><pre>=> 42</pre></small>
+
+
+
 -----
 
 ### universal indexing operator syntax
