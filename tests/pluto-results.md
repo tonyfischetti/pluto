@@ -397,7 +397,7 @@ Repeats a string TIMES times
 >      a string             (that goes character by character)\
 >      or a stream          (that goes line by line)\
 >   It is anaphoric and introduces\
->      index!               (which is a zero indexed counter of which element we are on)\
+>      index!               (which is a counter of which element we are on, starting at 1)\
 >      key!                 (the key of the current hash-table entry [only for hash-tables and alists])\
 >      value!               (the value of the current element)\
 >      this-pass!           (a block that returning from immediately moves to the next iteration)\
