@@ -563,6 +563,112 @@ The color functions wrap a `format` control string in a bold ANSI escape and a r
 
 
 
+-----
+
+### queries
+
+
+#### Y-OR-N-DEF
+
+> Asks PROMPT on *query-io* and returns T for y, NIL for n. With\
+>    DEFAULT (#\y or #\n) the prompt shows [Y/n] or [y/N] and a bare\
+>    Enter picks the default; without one it's plain y-or-n-p\
+
+```{.commonlisp}
+(LET ((*QUERY-IO*
+       (MAKE-TWO-WAY-STREAM (MAKE-STRING-INPUT-STREAM (FN "~%"))
+                            (MAKE-STRING-OUTPUT-STREAM))))
+  (Y-OR-N-DEF "proceed?" :DEFAULT #\y))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+-----
+
+### other abbreviations and shortcuts
+
+
+#### Λ
+
+> lambda, in one character: (λ (x) (* x x))\
+
+```{.commonlisp}
+(MAPCAR
+ (Λ
+   (X)
+   (* X X))
+ `(1 2 3))
+```
+
+<small><pre>=> (1 4 9)</pre></small>
+
+
+
+-----
+
+### what's the deal with time?
+
+Universal time is common lisp's (seconds since 1900), unix time is everyone else's (since 1970). The pretty-printers read the clock in the local time zone, so the examples build their instants with `encode-universal-time` in local time, too
+
+
+
+#### UNIVERSAL->UNIX-TIME
+
+> Converts universal (common lisp time from `(get-universal-time)`\
+>    to UNIX time\
+
+```{.commonlisp}
+(UNIVERSAL->UNIX-TIME (ENCODE-UNIVERSAL-TIME 0 0 0 1 1 1970 0))
+```
+
+<small><pre>=> 0</pre></small>
+
+
+
+#### UNIX->UNIVERSAL-TIME
+
+> Converts UNIX time to universal (common lisp time from\
+>    `(get-universal-time)`\
+
+```{.commonlisp}
+(UNIX->UNIVERSAL-TIME 0)
+```
+
+<small><pre>=> 2208988800</pre></small>
+
+
+
+#### MAKE-PRETTY-TIME
+
+> Makes a nicely formatted (YYYY-MM-DD HH:MM:SS) from a UNIX time\
+>    `just-date` will return just the pretty date\
+>    `just-time` will return just the pretty time\
+>    `time-sep`  will use the supplied string to separate the hours\
+>    minutes and seconds (default ':')\
+>    `dt-sep` will use the supplied string to separate the date from the time\
+>    (default ' ')\
+
+```{.commonlisp}
+(MAKE-PRETTY-TIME (UNIVERSAL->UNIX-TIME (ENCODE-UNIVERSAL-TIME 5 4 3 2 1 2026)))
+```
+
+<small><pre>=> "2026-01-02 03:04:05"</pre></small>
+
+
+
+```{.commonlisp}
+(LET ((THEN (UNIVERSAL->UNIX-TIME (ENCODE-UNIVERSAL-TIME 5 4 3 2 1 2026))))
+  (LIST (MAKE-PRETTY-TIME THEN :JUST-DATE T)
+        (MAKE-PRETTY-TIME THEN :JUST-TIME T)
+        (MAKE-PRETTY-TIME THEN :TIME-SEP "." :DT-SEP "T")))
+```
+
+<small><pre>=> ("2026-01-02" "03:04:05" "2026-01-02T03.04.05")</pre></small>
+
+
+
 #### WITH-TIME
 
 > Anaphoric macro that executes the car of the body and\
@@ -605,49 +711,6 @@ The color functions wrap a `format` control string in a bold ANSI escape and a r
 ```
 
 <small><pre>=> "2.21 days"</pre></small>
-
-
-
------
-
-### queries
-
-
-#### Y-OR-N-DEF
-
-> Asks PROMPT on *query-io* and returns T for y, NIL for n. With\
->    DEFAULT (#\y or #\n) the prompt shows [Y/n] or [y/N] and a bare\
->    Enter picks the default; without one it's plain y-or-n-p\
-
-```{.commonlisp}
-(LET ((*QUERY-IO*
-       (MAKE-TWO-WAY-STREAM (MAKE-STRING-INPUT-STREAM (FN "~%"))
-                            (MAKE-STRING-OUTPUT-STREAM))))
-  (Y-OR-N-DEF "proceed?" :DEFAULT #\y))
-```
-
-<small><pre>=> T</pre></small>
-
-
-
------
-
-### other abbreviations and shortcuts
-
-
-#### Λ
-
-> lambda, in one character: (λ (x) (* x x))\
-
-```{.commonlisp}
-(MAPCAR
- (Λ
-   (X)
-   (* X X))
- `(1 2 3))
-```
-
-<small><pre>=> (1 4 9)</pre></small>
 
 
 
@@ -878,9 +941,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G620 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G620
-      #:G620
+(LET ((#:G635 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G635
+      #:G635
       42))
 ```
 

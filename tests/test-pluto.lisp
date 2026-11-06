@@ -483,61 +483,6 @@
   (let ((tmp 42))
     (debug-these tmp (* tmp 2))))
 
-(def-test/doc-test 'with-time
-  `((test-able returns) markdown-able)
-  'function
-  (string= test-return-value! "time elapsed: 1")
-  (with-time
-    (sleep 1)
-    (format nil "time elapsed: ~A" (round time!))))
-
-  ; regression: time! is a float with sub-second resolution now
-  (def-test/doc-test 'with-time
-    `((test-able returns))
-    'function
-    (and (floatp test-return-value!)
-         (< 0.05 test-return-value! 1.0))
-    (with-time
-      (sleep 0.1)
-      time!))
-
-(def-test/doc-test 'time-for-humans
-  `((test-able returns) markdown-able)
-  'function
-  (string= test-return-value! "4 seconds")
-  (time-for-humans 4))
-
-(def-test/doc-test 'time-for-humans
-  `((test-able returns) markdown-able)
-  'function
-  (string= test-return-value! "1.11 hours")
-  (time-for-humans 4000))
-
-(def-test/doc-test 'time-for-humans
-  `((test-able returns) markdown-able)
-  'function
-  (string= test-return-value! "2.21 days")
-  (time-for-humans 191000))
-
-  ; regression: boundary values used to fall through and return NIL
-  (def-test/doc-test 'time-for-humans
-    `((test-able returns))
-    'function
-    (string= test-return-value! "1.00 minutes")
-    (time-for-humans 60))
-
-  (def-test/doc-test 'time-for-humans
-    `((test-able returns))
-    'function
-    (string= test-return-value! "1.00 hours")
-    (time-for-humans 3600))
-
-  (def-test/doc-test 'time-for-humans
-    `((test-able returns))
-    'function
-    (string= test-return-value! "1.00 days")
-    (time-for-humans 86400))
-
 ; --------------------------------------------------------------- ;
 
 (def-test/doc-section "queries")
@@ -583,6 +528,138 @@
 ;   'function
 ;   (= test-return-value! 14433)
 ;   (file-size "interior-of-a-heart.txt" :just-bytes t))
+
+; --------------------------------------------------------------- ;
+
+(def-test/doc-section "what's the deal with time?")
+
+(def-raw-markdown
+  (fn "Universal time is common lisp's (seconds since 1900), unix time is everyone else's (since 1970). The pretty-printers read the clock in the local time zone, so the examples build their instants with `encode-universal-time` in local time, too~%~%"))
+
+(def-test/doc-test 'universal->unix-time
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 0)
+  (universal->unix-time (encode-universal-time 0 0 0 1 1 1970 0)))
+
+(def-test/doc-test 'unix->universal-time
+  `(markdown-able (test-able returns))
+  'function
+  (= test-return-value! 2208988800)
+  (unix->universal-time 0))
+
+  ; they're inverses
+  (def-test/doc-test 'unix->universal-time
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (let ((now (get-universal-time)))
+      (and (= now (unix->universal-time (universal->unix-time now)))
+           (= 1700000000 (universal->unix-time (unix->universal-time 1700000000)))
+           t)))
+
+  ; the clock: within a second of doing it by hand, and after 2023
+  (def-test/doc-test 'get-unix-time
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (let ((ours   (get-unix-time))
+          (theirs (- (get-universal-time) *unix-epoch-difference*)))
+      (and (<= 0 (- theirs ours) 1)
+           (> ours 1700000000)
+           t)))
+
+; (an early hour, deliberately: it used to be the one field that
+; wasn't zero-padded)
+(def-test/doc-test 'make-pretty-time
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "2026-01-02 03:04:05")
+  (make-pretty-time (universal->unix-time (encode-universal-time 5 4 3 2 1 2026))))
+
+(def-test/doc-test 'make-pretty-time
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("2026-01-02" "03:04:05" "2026-01-02T03.04.05"))
+  (let ((then (universal->unix-time (encode-universal-time 5 4 3 2 1 2026))))
+    (list (make-pretty-time then :just-date t)
+          (make-pretty-time then :just-time t)
+          (make-pretty-time then :time-sep "." :dt-sep "T"))))
+
+  ; asked for both, just-date wins; two digits everywhere at the
+  ; far end of a year
+  (def-test/doc-test 'make-pretty-time
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("2026-01-02" "1999-12-31 23:59:59"))
+    (list (make-pretty-time (universal->unix-time (encode-universal-time 5 4 3 2 1 2026))
+                            :just-date t :just-time t)
+          (make-pretty-time (universal->unix-time (encode-universal-time 59 59 23 31 12 1999)))))
+
+  ; get-current-time is make-pretty-time of right now, same keywords;
+  ; the clock moves, so this checks the shape
+  (def-test/doc-test 'get-current-time
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (let ((date (get-current-time :just-date t))
+          (time (get-current-time :just-time t :time-sep "h"))
+          (both (get-current-time :dt-sep "T")))
+      (and (= (length date) 10)
+           (char= #\- (char date 4)) (char= #\- (char date 7))
+           (= 2 (count #\h time)) (not (find #\: time))
+           (search date both) (find #\T both)
+           t)))
+
+(def-test/doc-test 'with-time
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "time elapsed: 1")
+  (with-time
+    (sleep 1)
+    (format nil "time elapsed: ~A" (round time!))))
+
+  ; regression: time! is a float with sub-second resolution now
+  (def-test/doc-test 'with-time
+    `((test-able returns))
+    'function
+    (and (floatp test-return-value!)
+         (< 0.05 test-return-value! 1.0))
+    (with-time
+      (sleep 0.1)
+      time!))
+
+(def-test/doc-test 'time-for-humans
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "4 seconds")
+  (time-for-humans 4))
+
+(def-test/doc-test 'time-for-humans
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "1.11 hours")
+  (time-for-humans 4000))
+
+(def-test/doc-test 'time-for-humans
+  `((test-able returns) markdown-able)
+  'function
+  (string= test-return-value! "2.21 days")
+  (time-for-humans 191000))
+
+  ; regression: boundary values used to fall through and return NIL
+  (def-test/doc-test 'time-for-humans
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("1.00 minutes" "1.00 hours" "1.00 days"))
+    (list (time-for-humans 60) (time-for-humans 3600) (time-for-humans 86400)))
+
+  ; zero, and a float, pass through as given
+  (def-test/doc-test 'time-for-humans
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("0 seconds" "59.5 seconds" "1.50 minutes"))
+    (list (time-for-humans 0) (time-for-humans 59.5) (time-for-humans 90)))
 
 ; --------------------------------------------------------------- ;
 

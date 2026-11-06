@@ -766,7 +766,7 @@
 
 (defun make-pretty-time (a-unix-time &key (just-date nil) (just-time nil)
                                           (time-sep ":") (dt-sep " "))
-  "Makes a nicely formatted (YYYY-MM-DD HH?:MM:SS) from a UNIX time
+  "Makes a nicely formatted (YYYY-MM-DD HH:MM:SS) from a UNIX time
    `just-date` will return just the pretty date
    `just-time` will return just the pretty time
    `time-sep`  will use the supplied string to separate the hours
@@ -776,12 +776,14 @@
   (let ((thisuniversaltime (unix->universal-time a-unix-time)))
     (multiple-value-bind (second minute hour date month year)
       (decode-universal-time thisuniversaltime)
+      ; (the hour is padded like everything else now; it used to be
+      ; the one bare ~d, so timestamps before 10am sorted wrong)
       (if (and (not just-date) (not just-time))
-        (format nil "~d-~2,'0d-~2,'0d~A~d~A~2,'0d~A~2,'0d"
+        (format nil "~d-~2,'0d-~2,'0d~A~2,'0d~A~2,'0d~A~2,'0d"
                 year month date dt-sep hour TIME-SEP minute TIME-SEP second)
         (if just-date
           (format nil "~d-~2,'0d-~2,'0d" year month date)
-          (format nil "~d~A~2,'0d~A~2,'0d"
+          (format nil "~2,'0d~A~2,'0d~A~2,'0d"
                   hour TIME-SEP minute TIME-SEP second))))))
 
 (defun get-current-time (&key (just-date nil) (just-time nil)
