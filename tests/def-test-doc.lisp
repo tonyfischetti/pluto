@@ -86,6 +86,13 @@
 
 ;; -----------------------------------
 
+; a heading like *pluto-shell* would be italics to markdown
+(defun md-escape (astring)
+  (with-output-to-string (out)
+    (loop for ch across astring
+          do (when (find ch "*_") (write-char #\\ out))
+             (write-char ch out))))
+
 (defun process-docstring (astring)
   (when (not (null astring))
     (-<> astring
@@ -257,7 +264,7 @@
   (let ((thefun { test 'the-function }))
     (if (eq thefun /last-element-rendered/)
       (format stream "~%")
-      (format stream "~%#### ~A~%~%~A~%" { test 'the-function }
+      (format stream "~%#### ~A~%~%~A~%" (md-escape (fn "~A" { test 'the-function }))
                                          { test 'doc }))
     (format stream "```{.commonlisp}~%~S~%```~%~%" (car { test 'raw-code }))
     (setq /last-element-rendered/ thefun)))

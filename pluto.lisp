@@ -96,11 +96,24 @@
 ;---------------------------------------------------------;
 ; pluto parameters ---------------------------------------;
 
-(defparameter *pluto-output-stream*    *terminal-io*)
-(defparameter *pluto-log-level*        2)
-(defparameter *pluto-log-file*         "pluto-log.out")
-(defparameter *pluto-curly-test*       #'equal)
-(defparameter *pluto-external-format*  :UTF-8)
+(defparameter *pluto-output-stream*    *terminal-io*
+  "Where pluto's own output would go. Not used by anything yet:
+   a knob left over from the logging experiment (see the
+   commented-out reader macros at the bottom of charon)")
+(defparameter *pluto-log-level*        2
+  "How chatty the logging would be. Not used by anything yet
+   (see *pluto-output-stream*)")
+(defparameter *pluto-log-file*         "pluto-log.out"
+  "Where the logging would write. Not used by anything yet
+   (see *pluto-output-stream*)")
+(defparameter *pluto-curly-test*       #'equal
+  "The equality test `{ }` uses to find a key in an alist
+   (default #'equal). Bind it to #'string-equal, say, for
+   case-insensitive string keys")
+(defparameter *pluto-external-format*  :UTF-8
+  "The external format (character encoding) pluto reads and writes
+   text with: slurp, slurp-lines, with-a-file, for-each/line, and
+   the default for `sh`'s `enc`. :UTF-8 unless you say otherwise")
 (defun %resolve-shell ()
   "Resolves the shell that `sh` (et al.) will use:
    the PLUTO_SHELL environment variable (if set and non-empty),
@@ -113,13 +126,20 @@
                               "/usr/bin/zsh" "/bin/zsh"))
       "/bin/sh")))
 
-(defparameter *pluto-shell* (%resolve-shell))
+(defparameter *pluto-shell* (%resolve-shell)
+  "The shell `sh` (and `zsh`) run commands through. Resolved when
+   pluto loads: the PLUTO_SHELL environment variable if it's set,
+   else the first zsh found in the usual places, else /bin/sh")
 
 (defvar *unix-epoch-difference*
-  (encode-universal-time 0 0 0 1 1 1970 0))
+  (encode-universal-time 0 0 0 1 1 1970 0)
+  "The seconds between the common lisp epoch (1900-01-01) and the
+   unix one (1970-01-01); what universal->unix-time subtracts")
 
 (defvar *whitespaces* '(#\Space #\Newline #\Backspace #\Tab
-                        #\Linefeed #\Page #\Return #\Rubout))
+                        #\Linefeed #\Page #\Return #\Rubout)
+  "The characters that count as whitespace: a character bag for
+   string-trim and friends (charon's str-trim uses it)")
 
 ;---------------------------------------------------------;
 

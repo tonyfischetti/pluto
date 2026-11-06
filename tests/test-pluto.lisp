@@ -17,7 +17,39 @@
 
 (def-test/doc-section "pluto parameters")
 
-(def-raw-markdown "fill this out")
+(def-raw-markdown
+  (fn "A few special variables steer pluto. Rebind them (or `setq` them at the top of a script) to change the defaults~%~%"))
+
+(def-test/doc-test '*pluto-external-format*
+  `(markdown-able (test-able returns))
+  'variable
+  (eq test-return-value! :utf-8)
+  *pluto-external-format*)
+
+(def-test/doc-test '*pluto-curly-test*
+  `(markdown-able (test-able returns))
+  'variable
+  (= test-return-value! 2)
+  (let ((*pluto-curly-test* #'string-equal))
+    { `(("a" . 1) ("b" . 2)) "B" }))
+
+(def-test/doc-test '*pluto-shell*
+  `(markdown-able (test-able returns))
+  'variable
+  (eq test-return-value! t)
+  (and (stringp *pluto-shell*) (probe-file *pluto-shell*) t))
+
+(def-test/doc-test '*unix-epoch-difference*
+  `(markdown-able (test-able returns))
+  'variable
+  (= test-return-value! 2208988800)
+  *unix-epoch-difference*)
+
+(def-test/doc-test '*whitespaces*
+  `(markdown-able (test-able returns))
+  'variable
+  (string= test-return-value! "hi")
+  (string-trim *whitespaces* (fn "~C hi ~C~%" #\Tab #\Return)))
 
   ; *pluto-shell* should always resolve to a real executable
   (def-test/doc-test '*pluto-shell*

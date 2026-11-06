@@ -14,7 +14,78 @@ a common lisp package that's out there
 
 ### pluto parameters
 
-fill this out
+A few special variables steer pluto. Rebind them (or `setq` them at the top of a script) to change the defaults
+
+
+
+#### \*PLUTO-EXTERNAL-FORMAT\*
+
+> The external format (character encoding) pluto reads and writes\
+>    text with: slurp, slurp-lines, with-a-file, for-each/line, and\
+>    the default for `sh`'s `enc`. :UTF-8 unless you say otherwise\
+
+```{.commonlisp}
+*PLUTO-EXTERNAL-FORMAT*
+```
+
+<small><pre>=> :UTF-8</pre></small>
+
+
+
+#### \*PLUTO-CURLY-TEST\*
+
+> The equality test `{ }` uses to find a key in an alist\
+>    (default #'equal). Bind it to #'string-equal, say, for\
+>    case-insensitive string keys\
+
+```{.commonlisp}
+(LET ((*PLUTO-CURLY-TEST* #'STRING-EQUAL))
+  (PLUTO::PLUTO-GET `(("a" . 1) ("b" . 2)) "B"))
+```
+
+<small><pre>=> 2</pre></small>
+
+
+
+#### \*PLUTO-SHELL\*
+
+> The shell `sh` (and `zsh`) run commands through. Resolved when\
+>    pluto loads: the PLUTO_SHELL environment variable if it's set,\
+>    else the first zsh found in the usual places, else /bin/sh\
+
+```{.commonlisp}
+(AND (STRINGP *PLUTO-SHELL*) (PROBE-FILE *PLUTO-SHELL*) T)
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### \*UNIX-EPOCH-DIFFERENCE\*
+
+> The seconds between the common lisp epoch (1900-01-01) and the\
+>    unix one (1970-01-01); what universal->unix-time subtracts\
+
+```{.commonlisp}
+*UNIX-EPOCH-DIFFERENCE*
+```
+
+<small><pre>=> 2208988800</pre></small>
+
+
+
+#### \*WHITESPACES\*
+
+> The characters that count as whitespace: a character bag for\
+>    string-trim and friends (charon's str-trim uses it)\
+
+```{.commonlisp}
+(STRING-TRIM *WHITESPACES* (FN "~C hi ~C~%" #\Tab #\Return))
+```
+
+<small><pre>=> "hi"</pre></small>
+
+
 
 -----
 
@@ -617,9 +688,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G576 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G576
-      #:G576
+(LET ((#:G586 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G586
+      #:G586
       42))
 ```
 
