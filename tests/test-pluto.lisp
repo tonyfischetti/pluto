@@ -568,7 +568,7 @@
 (def-test/doc-section "universal indexing operator syntax")
 
 (def-raw-markdown
-  (fn "`{ thing index }` works on lists, alists, vectors, hash-tables, structs, and CLOS objects — and is setf-able. Successive indexes burrow into nested structures. (The docs below show the `{ }` reader macro already expanded into `PLUTO-GET`)~%~%"))
+  (fn "`{ thing index }` works on lists, alists, vectors, hash-tables, structs, and CLOS objects — and is setf-able. Successive indexes burrow into nested structures. On a list, an integer index is always a position; any other index is an alist key (so an alist keyed by integers needs a plain `assoc`). (The docs below show the `{ }` reader macro already expanded into `PLUTO-GET`)~%~%"))
 
 (def-test/doc-test '|{}|
   `(markdown-able (test-able returns))
@@ -591,13 +591,52 @@
     (setf (gethash :red tmp) "cadmium")
     { tmp :red }))
 
-; note: a list-of-lists can't be nth-indexed with { } because
-; every element is a cons, so GET-AT dispatches to alist/assoc
 (def-test/doc-test '|{}|
   `(markdown-able (test-able returns))
   ""
   (= test-return-value! 3)
   { #(#(1 2) #(3 4)) 1 0 })
+
+(def-test/doc-test '|{}|
+  `(markdown-able (test-able returns))
+  ""
+  (= test-return-value! 3)
+  { `((1 2) (3 4)) 1 0 })
+
+  ; regression: a list of lists looks just like an alist (every
+  ; element is a cons), so an integer index used to be an assoc
+  ; KEY — this returned (2), not the second row
+  (def-test/doc-test '|{}|
+    `((test-able returns))
+    ""
+    (equal test-return-value! `(3 4))
+    { `((1 2) (3 4)) 1 })
+
+  ; an integer is a position even when the list IS an alist...
+  (def-test/doc-test '|{}|
+    `((test-able returns))
+    ""
+    (equal test-return-value! `(:b . 2))
+    (let ((tmp `((:a . 1) (:b . 2))))
+      { tmp 1 }))
+
+  ; ...and setf follows the same rule
+  (def-test/doc-test '|{}|
+    `((test-able returns))
+    ""
+    (equal test-return-value! `((1 2) (:new) (5 6)))
+    (let ((tmp (list (list 1 2) (list 3 4) (list 5 6))))
+      (setf { tmp 1 } (list :new))
+      tmp))
+
+  ; non-integer keys still set through the alist
+  (def-test/doc-test '|{}|
+    `((test-able returns))
+    ""
+    (equal test-return-value! `((:a . 1) (:b . 99)))
+    (let ((tmp (list (cons :a 1) (cons :b 2))))
+      (setf { tmp :b } 99)
+      tmp))
 
 (def-test/doc-test '|{}|
   `(markdown-able (test-able returns))

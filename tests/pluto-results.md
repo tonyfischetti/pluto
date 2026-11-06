@@ -574,9 +574,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G1153 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G1153
-      #:G1153
+(LET ((#:G558 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G558
+      #:G558
       42))
 ```
 
@@ -588,7 +588,7 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 
 ### universal indexing operator syntax
 
-`{ thing index }` works on lists, alists, vectors, hash-tables, structs, and CLOS objects — and is setf-able. Successive indexes burrow into nested structures. (The docs below show the `{ }` reader macro already expanded into `PLUTO-GET`)
+`{ thing index }` works on lists, alists, vectors, hash-tables, structs, and CLOS objects — and is setf-able. Successive indexes burrow into nested structures. On a list, an integer index is always a position; any other index is an alist key (so an alist keyed by integers needs a plain `assoc`). (The docs below show the `{ }` reader macro already expanded into `PLUTO-GET`)
 
 
 
@@ -624,6 +624,14 @@ reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else 
 
 ```{.commonlisp}
 (PLUTO::PLUTO-GET #(#(1 2) #(3 4)) 1 0)
+```
+
+<small><pre>=> 3</pre></small>
+
+
+
+```{.commonlisp}
+(PLUTO::PLUTO-GET `((1 2) (3 4)) 1 0)
 ```
 
 <small><pre>=> 3</pre></small>

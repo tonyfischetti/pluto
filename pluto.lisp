@@ -938,8 +938,14 @@
     (let ((leido (read-from-string (fn "(~A)" inbetween))))
       `(pluto-get ,@leido))))
 
+; on a list, the INDEX decides: an integer is always a position
+; (nth), anything else is an alist key. A list of lists looks
+; exactly like an alist (every element is a cons), so guessing
+; from the list's shape made { '((1 2) (3 4)) 1 } a key lookup.
+; (the price: an alist keyed by integers needs a plain `assoc`)
 (defmethod get-at ((this list) that)
-  (cond ((alistp this)        (cdr (assoc that this :test *pluto-curly-test*)))
+  (cond ((integerp that)      (nth that this))
+        ((alistp this)        (cdr (assoc that this :test *pluto-curly-test*)))
         (t                    (nth that this))))
 
 (defmethod get-at ((this vector) that)
@@ -965,6 +971,9 @@
     ((simple-vector-p this)         (setf (svref this that) new))
     ((vectorp this)                 (setf (aref this that) new))
     ((hash-table-p this)            (setf (gethash that this) new))
+    ; same rule as get-at: integer index -> position
+    ((and (listp this)
+          (integerp that))          (setf (nth that this) new))
     ((alistp this)                  (setf (cdr (assoc that this
                                                       :test *pluto-curly-test*))
                                           new))
