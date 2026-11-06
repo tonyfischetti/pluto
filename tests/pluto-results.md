@@ -120,7 +120,67 @@ A few special variables steer pluto. Rebind them (or `setq` them at the top of a
 
 ### ansi colors and codes
 
-fill this out
+The color functions wrap a `format` control string in a bold ANSI escape and a reset. The escapes themselves are the `+...+` constants (`+red-bold+`, `+reset-terminal-color+`, and the cursor movements `+ansi-escape-up+`, `+ansi-escape-left-all+`, `+ansi-escape-left-one+` that the progress bar leans on). The examples compare against the raw escapes, since the strings themselves don't render here
+
+
+
+#### RED
+
+> Returns THESTRING wrapped in bold red (and a reset),\
+>    so it prints red on an ANSI terminal. THESTRING is a format\
+>    control string and THINGS are its arguments:\
+>    e.g. (red "~A of ~A" 1 2)\
+
+```{.commonlisp}
+(STRING= (RED "hi") (FN "~C[31;1mhi~C[0m" #\Esc #\Esc))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### YELLOW
+
+> Returns THESTRING wrapped in bold yellow (and a reset),\
+>    so it prints yellow on an ANSI terminal. THESTRING is a format\
+>    control string and THINGS are its arguments:\
+>    e.g. (yellow "~A of ~A" 1 2)\
+
+```{.commonlisp}
+(STRING= (YELLOW "~A of ~A" 1 2) (FN "~C[33;1m1 of 2~C[0m" #\Esc #\Esc))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### MAKE-ANSI-ESCAPE
+
+> Builds an ANSI escape sequence (ESC[<anum>;<decoration>m) for\
+>    the terminal: ANUM is the SGR code (31 is red, 90 grey, 0 is\
+>    reset) and DECORATION is bold (the default), underline, or\
+>    reversed -- as a symbol or keyword from any package -- or nil\
+>    for none. The +...-bold+ constants are made with it\
+
+```{.commonlisp}
+(STRING= (MAKE-ANSI-ESCAPE 4 'UNDERLINE) (FN "~C[4;4m" #\Esc))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### +RESET-TERMINAL-COLOR+
+
+> The escape that turns colors and decorations back off (ESC[0m)\
+
+```{.commonlisp}
+(STRING= +RESET-TERMINAL-COLOR+ (FN "~C[0m" #\Esc))
+```
+
+<small><pre>=> T</pre></small>
+
+
 
 -----
 
@@ -688,9 +748,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G586 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G586
-      #:G586
+(LET ((#:G600 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G600
+      #:G600
       42))
 ```
 

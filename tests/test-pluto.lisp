@@ -80,7 +80,64 @@
 
 (def-test/doc-section "ansi colors and codes")
 
-(def-raw-markdown "fill this out")
+(def-raw-markdown
+  (fn "The color functions wrap a `format` control string in a bold ANSI escape and a reset. The escapes themselves are the `+...+` constants (`+red-bold+`, `+reset-terminal-color+`, and the cursor movements `+ansi-escape-up+`, `+ansi-escape-left-all+`, `+ansi-escape-left-one+` that the progress bar leans on). The examples compare against the raw escapes, since the strings themselves don't render here~%~%"))
+
+(def-test/doc-test 'red
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (string= (red "hi") (fn "~C[31;1mhi~C[0m" #\ESC #\ESC)))
+
+(def-test/doc-test 'yellow
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (string= (yellow "~A of ~A" 1 2) (fn "~C[33;1m1 of 2~C[0m" #\ESC #\ESC)))
+
+(def-test/doc-test 'make-ansi-escape
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (string= (make-ansi-escape 4 'underline) (fn "~C[4;4m" #\ESC)))
+
+(def-test/doc-test '+reset-terminal-color+
+  `(markdown-able (test-able returns))
+  'variable
+  (eq test-return-value! t)
+  (string= +reset-terminal-color+ (fn "~C[0m" #\ESC)))
+
+  ; regression: the decoration used to be compared with EQ against
+  ; pluto's own symbols, so 'underline from any other package (this
+  ; file's, your script's) fell through to "no decoration"
+  (def-test/doc-test 'make-ansi-escape
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (and (string= (make-ansi-escape 7 'reversed)  (fn "~C[7;7m" #\ESC))
+         (string= (make-ansi-escape 7 :reversed)  (fn "~C[7;7m" #\ESC))
+         (string= (make-ansi-escape 0 nil)        (fn "~C[0m"   #\ESC))
+         t))
+
+  ; every color function is made by the same macro; spot-check the
+  ; rest against their escapes
+  (def-test/doc-test 'magenta
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (and (string= (magenta "x") (str+ +magenta-bold+ "x" +reset-terminal-color+))
+         (string= (green "x")   (str+ +green-bold+   "x" +reset-terminal-color+))
+         (string= (cyan "x")    (str+ +cyan-bold+    "x" +reset-terminal-color+))
+         (string= (blue "x")    (str+ +blue-bold+    "x" +reset-terminal-color+))
+         (string= (grey "x")    (str+ +grey-bold+    "x" +reset-terminal-color+))
+         t))
+
+  ; the docstring the macro writes names the color
+  (def-test/doc-test 'red
+    `((test-able returns))
+    'function
+    (search "bold red" test-return-value!)
+    (documentation 'red 'function))
 
   (def-test/doc-test 'green
     `((test-able returns))

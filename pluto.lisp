@@ -171,32 +171,62 @@
 ; ansi colors and codes ----------------------------------;
 
 (defun make-ansi-escape (anum &optional (decoration 'bold))
-  (format nil "~c[~A~Am" #\ESC anum (cond
-                                      ((eq decoration 'bold)        ";1")
-                                      ((eq decoration 'underline)   ";4")
-                                      ((eq decoration 'reversed)    ";7")
-                                      (t                            ""))))
+  "Builds an ANSI escape sequence (ESC[<anum>;<decoration>m) for
+   the terminal: ANUM is the SGR code (31 is red, 90 grey, 0 is
+   reset) and DECORATION is bold (the default), underline, or
+   reversed -- as a symbol or keyword from any package -- or nil
+   for none. The +...-bold+ constants are made with it"
+  ; compared by name: an EQ against pluto's own symbols meant
+  ; 'underline from a script (another package) silently matched
+  ; nothing, so only the default bold ever worked from outside
+  (format nil "~c[~A~Am" #\ESC anum
+          (cond
+            ((null decoration)                      "")
+            ((string-equal decoration "bold")       ";1")
+            ((string-equal decoration "underline")  ";4")
+            ((string-equal decoration "reversed")   ";7")
+            (t                                      ""))))
 
-(defvar +reset-terminal-color+  (make-ansi-escape 0 nil))
-(defvar +magenta-bold+          (make-ansi-escape 35))
-(defvar +red-bold+              (make-ansi-escape 31))
-(defvar +yellow-bold+           (make-ansi-escape 33))
-(defvar +green-bold+            (make-ansi-escape 32))
-(defvar +cyan-bold+             (make-ansi-escape 36))
-(defvar +blue-bold+             (make-ansi-escape 34))
-(defvar +grey-bold+             (make-ansi-escape 90))
+(defvar +reset-terminal-color+  (make-ansi-escape 0 nil)
+  "The escape that turns colors and decorations back off (ESC[0m)")
+(defvar +magenta-bold+          (make-ansi-escape 35)
+  "The escape for bold magenta (ESC[35;1m)")
+(defvar +red-bold+              (make-ansi-escape 31)
+  "The escape for bold red (ESC[31;1m)")
+(defvar +yellow-bold+           (make-ansi-escape 33)
+  "The escape for bold yellow (ESC[33;1m)")
+(defvar +green-bold+            (make-ansi-escape 32)
+  "The escape for bold green (ESC[32;1m)")
+(defvar +cyan-bold+             (make-ansi-escape 36)
+  "The escape for bold cyan (ESC[36;1m)")
+(defvar +blue-bold+             (make-ansi-escape 34)
+  "The escape for bold blue (ESC[34;1m)")
+(defvar +grey-bold+             (make-ansi-escape 90)
+  "The escape for bold grey (ESC[90;1m -- 'bright black')")
 
-(defvar +ansi-escape-up+        (format nil "~c[1A" #\ESC))
-(defvar +ansi-escape-left-all+  (format nil "~c[500D" #\ESC))
-(defvar +ansi-escape-left-one+  (format nil "~c[1D" #\ESC))
+(defvar +ansi-escape-up+        (format nil "~c[1A" #\ESC)
+  "The escape that moves the cursor up one line (ESC[1A)")
+(defvar +ansi-escape-left-all+  (format nil "~c[500D" #\ESC)
+  "The escape that moves the cursor 500 columns left, which is to
+   say to the start of the line (ESC[500D)")
+(defvar +ansi-escape-left-one+  (format nil "~c[1D" #\ESC)
+  "The escape that moves the cursor one column left (ESC[1D)")
 
 (defun do-with-color (acolor thestring &rest everything)
+  "Wraps THESTRING (a format control string, EVERYTHING its
+   arguments) in the escape ACOLOR and a reset"
   (apply #'format nil
          (format nil "~A~A~A" acolor thestring +reset-terminal-color+)
          everything))
 
 (defmacro make-color-fun (thename acolor)
+  "Defines THENAME as a function that colors a string with ACOLOR
+   (see `red` et al. below)"
   `(defun ,thename (thestring &rest things)
+     ,(format nil "Returns THESTRING wrapped in bold ~(~A~) (and a reset),
+   so it prints ~(~A~) on an ANSI terminal. THESTRING is a format
+   control string and THINGS are its arguments:
+   e.g. (~(~A~) \"~~A of ~~A\" 1 2)" thename thename thename)
      (apply #'do-with-color ,acolor thestring things)))
 
 (make-color-fun magenta +magenta-bold+)
