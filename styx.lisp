@@ -55,7 +55,9 @@
 ; ------------------------------------------------------- ;
 ; systemd ----------------------------------------------- ;
 
-(defparameter *sd-log-priority* 4)
+(defparameter *sd-log-priority* 4
+  "The syslog priority sd-journal logs with unless told otherwise:
+   4 (warning). 0 is emergency, 3 error, 6 informational, 7 debug")
 
 #+linux
 (cffi:define-foreign-library libsystemd
@@ -76,6 +78,10 @@
 #+linux
 (defun sd-journal (message &key (priority *sd-log-priority*)
                                 (identifier nil))
+  "Logs MESSAGE to the systemd journal (sd_journal_send) with
+   PRIORITY (default *sd-log-priority*) under IDENTIFIER (default:
+   the script's name). T on success. Linux only, and errors if
+   libsystemd couldn't be loaded on this machine"
   (unless *libsystemd-loaded-p*
     (error "sd-journal: libsystemd could not be loaded on this machine"))
   (unless identifier
@@ -134,6 +140,9 @@
   (afilename :string) (follow_symlinks :int))
 
 (defun stat-filesize (afilename &key (follow-symlinks t))
+  "The size of AFILENAME in bytes, from stat(2), without opening
+   the file. With FOLLOW-SYMLINKS nil it's lstat: the size of the
+   link itself. Errors if it can't be stat-ed"
   (let ((ret (styx-stat-filesize (%->native afilename)
                                  (if follow-symlinks 1 0))))
     (if (< ret 0)
@@ -145,6 +154,10 @@
 (cffi:defcfun "styx_stat_is_symlink_p" :int (afilename :string))
 
 (defun is-symlink-p (afilename)
+  "Is AFILENAME a symbolic link? (lstat(2) -- something portable
+   lisp can't ask.) Errors if it can't be lstat-ed. Give it the
+   link's name without a trailing slash: with one, the system looks
+   through the link at the directory"
   (let ((ret (styx-stat-is-symlink-p (%->native afilename))))
     (if (< ret 0)
       (error "is-symlink-p: cannot lstat ~A" afilename)
@@ -248,10 +261,15 @@
 (cffi:defcfun "styx_md5_file" :pointer (afilename :string))
 
 (defun md5/string (astring)
+  "The MD5 digest of ASTRING as a hex string (OpenSSL). The /file
+   variants hash a file, streamed in 64KB chunks; the /hexstring
+   variants hash the bytes a hex string stands for"
   (or (%claim-c-string (styx-md5-string astring))
       (error "md5/string: hashing failed")))
 
 (defun md5/file (afilename)
+  "The MD5 digest of the file AFILENAME as a hex string, streamed
+   in 64KB chunks (OpenSSL). Errors if the file can't be read"
   (or (%claim-c-string (styx-md5-file (%->native afilename)))
       (error "md5/file: cannot hash ~A" afilename)))
 
@@ -263,14 +281,21 @@
 (cffi:defcfun "styx_sha256_file" :pointer (afilename :string))
 
 (defun sha256/string (astring)
+  "The SHA-256 digest of ASTRING as a hex string (OpenSSL)"
   (or (%claim-c-string (styx-sha256-string astring))
       (error "sha256/string: hashing failed")))
 
 (defun sha256/hexstring (astring)
+  "The SHA-256 digest, as a hex string, of the BYTES the hex string
+   ASTRING spells out (\"00ff\" is two bytes) -- a hash of a hash, say.
+   Errors on an odd length or a non-hex character"
   (or (%claim-c-string (styx-sha256-hexstring astring))
       (error "sha256/hexstring: invalid hex string ~S" astring)))
 
 (defun sha256/file (afilename)
+  "The SHA-256 digest of the file AFILENAME as a hex string,
+   streamed in 64KB chunks (OpenSSL). Errors if the file can't be
+   read"
   (or (%claim-c-string (styx-sha256-file (%->native afilename)))
       (error "sha256/file: cannot hash ~A" afilename)))
 
@@ -281,10 +306,14 @@
 (cffi:defcfun "styx_sha512_file" :pointer (afilename :string))
 
 (defun sha512/string (astring)
+  "The SHA-512 digest of ASTRING as a hex string (OpenSSL)"
   (or (%claim-c-string (styx-sha512-string astring))
       (error "sha512/string: hashing failed")))
 
 (defun sha512/file (afilename)
+  "The SHA-512 digest of the file AFILENAME as a hex string,
+   streamed in 64KB chunks (OpenSSL). Errors if the file can't be
+   read"
   (or (%claim-c-string (styx-sha512-file (%->native afilename)))
       (error "sha512/file: cannot hash ~A" afilename)))
 
@@ -295,10 +324,15 @@
 (cffi:defcfun "styx_ripemd160_hexstring" :pointer (astring :string))
 
 (defun ripemd160/string (astring)
+  "The RIPEMD-160 digest of ASTRING as a hex string (OpenSSL's
+   legacy provider, which libstyx loads on demand)"
   (or (%claim-c-string (styx-ripemd160-string astring))
       (error "ripemd160/string: hashing failed")))
 
 (defun ripemd160/hexstring (astring)
+  "The RIPEMD-160 digest, as a hex string, of the bytes the hex
+   string ASTRING spells out (see sha256/hexstring). Errors on an
+   odd length or a non-hex character"
   (or (%claim-c-string (styx-ripemd160-hexstring astring))
       (error "ripemd160/hexstring: invalid hex string ~S" astring)))
 

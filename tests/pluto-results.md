@@ -1600,12 +1600,31 @@ Regexes (cl-ppcre), HTTP (dexador), XML and XPath (cxml, plexippus), JSON (yason
 
 -----
 
-### temporary styx tests
+### styx: the syscall tier
+
+What pluto reaches for below portable lisp, through libstyx (C, in `libstyx/`): stat, symlinks, the terminal, file locks, and OpenSSL hashing. `sd-journal` (systemd logging) is linux-only, so it isn't exercised here
+
+
+
+#### \*SD-LOG-PRIORITY\*
+
+> The syslog priority sd-journal logs with unless told otherwise:\
+>    4 (warning). 0 is emergency, 3 error, 6 informational, 7 debug\
+
+```{.commonlisp}
+*SD-LOG-PRIORITY*
+```
+
+<small><pre>=> 4</pre></small>
+
 
 
 #### STAT-FILESIZE
 
-Size of a file (via `stat`/`lstat`) without opening it
+> The size of AFILENAME in bytes, from stat(2), without opening\
+>    the file. With FOLLOW-SYMLINKS nil it's lstat: the size of the\
+>    link itself. Errors if it can't be stat-ed\
+
 ```{.commonlisp}
 (STAT-FILESIZE "somebody.txt")
 ```
@@ -1616,7 +1635,11 @@ Size of a file (via `stat`/`lstat`) without opening it
 
 #### IS-SYMLINK-P
 
-Is it a symlink? (something portable CL cannot ask)
+> Is AFILENAME a symbolic link? (lstat(2) -- something portable\
+>    lisp can't ask.) Errors if it can't be lstat-ed. Give it the\
+>    link's name without a trailing slash: with one, the system looks\
+>    through the link at the directory\
+
 ```{.commonlisp}
 (PROGN
  (SH "ln -sf somebody.txt tmp-demo-link.txt")
@@ -1633,7 +1656,10 @@ Is it a symlink? (something portable CL cannot ask)
 
 #### MD5/STRING
 
-Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file variants
+> The MD5 digest of ASTRING as a hex string (OpenSSL). The /file\
+>    variants hash a file, streamed in 64KB chunks; the /hexstring\
+>    variants hash the bytes a hex string stands for\
+
 ```{.commonlisp}
 (MD5/STRING "hello")
 ```
@@ -1642,9 +1668,51 @@ Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file variants
 
 
 
+#### MD5/FILE
+
+> The MD5 digest of the file AFILENAME as a hex string, streamed\
+>    in 64KB chunks (OpenSSL). Errors if the file can't be read\
+
+```{.commonlisp}
+(MD5/FILE "somebody.txt")
+```
+
+<small><pre>=> "03d1f29193f99d260ee99b6cac7fd3a4"</pre></small>
+
+
+
+#### SHA256/STRING
+
+> The SHA-256 digest of ASTRING as a hex string (OpenSSL)\
+
+```{.commonlisp}
+(SHA256/STRING "hello")
+```
+
+<small><pre>=> "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"</pre></small>
+
+
+
+#### SHA256/HEXSTRING
+
+> The SHA-256 digest, as a hex string, of the BYTES the hex string\
+>    ASTRING spells out ("00ff" is two bytes) -- a hash of a hash, say.\
+>    Errors on an odd length or a non-hex character\
+
+```{.commonlisp}
+(SHA256/HEXSTRING "00ff")
+```
+
+<small><pre>=> "06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8"</pre></small>
+
+
+
 #### SHA256/FILE
 
-File hashing streams in 64KB chunks (never slurps the whole file)
+> The SHA-256 digest of the file AFILENAME as a hex string,\
+>    streamed in 64KB chunks (OpenSSL). Errors if the file can't be\
+>    read\
+
 ```{.commonlisp}
 (SHA256/FILE "somebody.txt")
 ```
@@ -1653,9 +1721,66 @@ File hashing streams in 64KB chunks (never slurps the whole file)
 
 
 
+#### SHA512/STRING
+
+> The SHA-512 digest of ASTRING as a hex string (OpenSSL)\
+
+```{.commonlisp}
+(SHA512/STRING "hello")
+```
+
+<small><pre>=> "9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043"</pre></small>
+
+
+
+#### SHA512/FILE
+
+> The SHA-512 digest of the file AFILENAME as a hex string,\
+>    streamed in 64KB chunks (OpenSSL). Errors if the file can't be\
+>    read\
+
+```{.commonlisp}
+(SHA512/FILE "somebody.txt")
+```
+
+<small><pre>=> "55e28f5838f7c60563990384b60acc2f9a778f8dbc4fd8e8ac77585124c766f8c624baac29fed6e9b9235c64878315c678f3c56e41788a585da267b105071acf"</pre></small>
+
+
+
+#### RIPEMD160/STRING
+
+> The RIPEMD-160 digest of ASTRING as a hex string (OpenSSL's\
+>    legacy provider, which libstyx loads on demand)\
+
+```{.commonlisp}
+(RIPEMD160/STRING "hello")
+```
+
+<small><pre>=> "108f07b8382412612c048d07d13f814118445acd"</pre></small>
+
+
+
+#### RIPEMD160/HEXSTRING
+
+> The RIPEMD-160 digest, as a hex string, of the bytes the hex\
+>    string ASTRING spells out (see sha256/hexstring). Errors on an\
+>    odd length or a non-hex character\
+
+```{.commonlisp}
+(RIPEMD160/HEXSTRING "00ff")
+```
+
+<small><pre>=> "742dcba5d24837058e3fa56f1c36f9878484d1c2"</pre></small>
+
+
+
 #### WITH-LOCK-FILE
 
-Runs body while flock-holding path (e.g. so a cron script won't run twice); `:wait nil` skips the body instead of blocking
+> Runs BODY while holding an flock on PATH (great for cron\
+>    scripts that shouldn't run concurrently). If WAIT is nil and\
+>    the lock is already held elsewhere, BODY is skipped and nil\
+>    is returned\
+
 ```{.commonlisp}
 (LET ((LOCKF "tmp-demo.lock"))
   (LET ((RES

@@ -436,14 +436,26 @@ id="toc-escape-namestringshell">ESCAPE-NAMESTRING/SHELL</a></li>
 <li><a href="#pathname-shell"
 id="toc-pathname-shell">PATHNAME-&gt;SHELL</a></li>
 </ul></li>
-<li><a href="#temporary-styx-tests"
-id="toc-temporary-styx-tests">temporary styx tests</a>
+<li><a href="#styx-the-syscall-tier"
+id="toc-styx-the-syscall-tier">styx: the syscall tier</a>
 <ul>
+<li><a href="#sd-log-priority"
+id="toc-sd-log-priority">*SD-LOG-PRIORITY*</a></li>
 <li><a href="#stat-filesize"
 id="toc-stat-filesize">STAT-FILESIZE</a></li>
 <li><a href="#is-symlink-p" id="toc-is-symlink-p">IS-SYMLINK-P</a></li>
 <li><a href="#md5string" id="toc-md5string">MD5/STRING</a></li>
+<li><a href="#md5file" id="toc-md5file">MD5/FILE</a></li>
+<li><a href="#sha256string" id="toc-sha256string">SHA256/STRING</a></li>
+<li><a href="#sha256hexstring"
+id="toc-sha256hexstring">SHA256/HEXSTRING</a></li>
 <li><a href="#sha256file" id="toc-sha256file">SHA256/FILE</a></li>
+<li><a href="#sha512string" id="toc-sha512string">SHA512/STRING</a></li>
+<li><a href="#sha512file" id="toc-sha512file">SHA512/FILE</a></li>
+<li><a href="#ripemd160string"
+id="toc-ripemd160string">RIPEMD160/STRING</a></li>
+<li><a href="#ripemd160hexstring"
+id="toc-ripemd160hexstring">RIPEMD160/HEXSTRING</a></li>
 <li><a href="#with-lock-file"
 id="toc-with-lock-file">WITH-LOCK-FILE</a></li>
 </ul></li>
@@ -1816,56 +1828,174 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb10
 <pre>=> "/tmp/it's got spaces!.txt"</pre>
 <p></small></p>
 <hr />
-<h3 id="temporary-styx-tests">temporary styx tests</h3>
-<h4 id="stat-filesize">STAT-FILESIZE</h4>
-<p>Size of a file (via <code>stat</code>/<code>lstat</code>) without
-opening it</p>
+<h3 id="styx-the-syscall-tier">styx: the syscall tier</h3>
+<p>What pluto reaches for below portable lisp, through libstyx (C, in
+<code>libstyx/</code>): stat, symlinks, the terminal, file locks, and
+OpenSSL hashing. <code>sd-journal</code> (systemd logging) is
+linux-only, so it isn’t exercised here</p>
+<h4 id="sd-log-priority">*SD-LOG-PRIORITY*</h4>
+<blockquote>
+<p>The syslog priority sd-journal logs with unless told otherwise:<br />
+4 (warning). 0 is emergency, 3 error, 6 informational, 7 debug<br />
+</p>
+</blockquote>
 <div class="sourceCode" id="cb108"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>(STAT-FILESIZE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>*SD-LOG-PRIORITY*</span></code></pre></div>
+<small>
+<pre>=> 4</pre>
+<p></small></p>
+<h4 id="stat-filesize">STAT-FILESIZE</h4>
+<blockquote>
+<p>The size of AFILENAME in bytes, from stat(2), without opening<br />
+the file. With FOLLOW-SYMLINKS nil it’s lstat: the size of the<br />
+link itself. Errors if it can’t be stat-ed<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb109"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>(STAT-FILESIZE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> 3497</pre>
 <p></small></p>
 <h4 id="is-symlink-p">IS-SYMLINK-P</h4>
-<p>Is it a symlink? (something portable CL cannot ask)</p>
-<div class="sourceCode" id="cb109"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>(PROGN</span>
-<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a> (SH <span class="st">&quot;ln -sf somebody.txt tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a> (LET ((RES</span>
-<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>        (LIST (IS-SYMLINK-P <span class="st">&quot;tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>              (IS-SYMLINK-P <span class="st">&quot;somebody.txt&quot;</span>))))</span>
-<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>   (SH <span class="st">&quot;rm tmp-demo-link.txt&quot;</span>)</span>
-<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>   RES))</span></code></pre></div>
+<blockquote>
+<p>Is AFILENAME a symbolic link? (lstat(2) – something portable<br />
+lisp can’t ask.) Errors if it can’t be lstat-ed. Give it the<br />
+link’s name without a trailing slash: with one, the system looks<br />
+through the link at the directory<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb110"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>(PROGN</span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a> (SH <span class="st">&quot;ln -sf somebody.txt tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a> (LET ((RES</span>
+<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>        (LIST (IS-SYMLINK-P <span class="st">&quot;tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>              (IS-SYMLINK-P <span class="st">&quot;somebody.txt&quot;</span>))))</span>
+<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>   (SH <span class="st">&quot;rm tmp-demo-link.txt&quot;</span>)</span>
+<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>   RES))</span></code></pre></div>
 <small>
 <pre>=> (T NIL)</pre>
 <p></small></p>
 <h4 id="md5string">MD5/STRING</h4>
-<p>Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file
-variants</p>
-<div class="sourceCode" id="cb110"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>(MD5/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
+<blockquote>
+<p>The MD5 digest of ASTRING as a hex string (OpenSSL). The /file<br />
+variants hash a file, streamed in 64KB chunks; the /hexstring<br />
+variants hash the bytes a hex string stands for<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb111"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>(MD5/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "5d41402abc4b2a76b9719d911017c592"</pre>
 <p></small></p>
+<h4 id="md5file">MD5/FILE</h4>
+<blockquote>
+<p>The MD5 digest of the file AFILENAME as a hex string, streamed<br />
+in 64KB chunks (OpenSSL). Errors if the file can’t be read<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb112"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>(MD5/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "03d1f29193f99d260ee99b6cac7fd3a4"</pre>
+<p></small></p>
+<h4 id="sha256string">SHA256/STRING</h4>
+<blockquote>
+<p>The SHA-256 digest of ASTRING as a hex string (OpenSSL)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb113"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>(SHA256/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"</pre>
+<p></small></p>
+<h4 id="sha256hexstring">SHA256/HEXSTRING</h4>
+<blockquote>
+<p>The SHA-256 digest, as a hex string, of the BYTES the hex
+string<br />
+ASTRING spells out (“00ff” is two bytes) – a hash of a hash, say.<br />
+Errors on an odd length or a non-hex character<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb114"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>(SHA256/HEXSTRING <span class="st">&quot;00ff&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8"</pre>
+<p></small></p>
 <h4 id="sha256file">SHA256/FILE</h4>
-<p>File hashing streams in 64KB chunks (never slurps the whole file)</p>
-<div class="sourceCode" id="cb111"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>(SHA256/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+<blockquote>
+<p>The SHA-256 digest of the file AFILENAME as a hex string,<br />
+streamed in 64KB chunks (OpenSSL). Errors if the file can’t be<br />
+read<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb115"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>(SHA256/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
 <small>
 <pre>=> "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0"</pre>
 <p></small></p>
+<h4 id="sha512string">SHA512/STRING</h4>
+<blockquote>
+<p>The SHA-512 digest of ASTRING as a hex string (OpenSSL)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb116"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>(SHA512/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043"</pre>
+<p></small></p>
+<h4 id="sha512file">SHA512/FILE</h4>
+<blockquote>
+<p>The SHA-512 digest of the file AFILENAME as a hex string,<br />
+streamed in 64KB chunks (OpenSSL). Errors if the file can’t be<br />
+read<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb117"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>(SHA512/FILE <span class="st">&quot;somebody.txt&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "55e28f5838f7c60563990384b60acc2f9a778f8dbc4fd8e8ac77585124c766f8c624baac29fed6e9b9235c64878315c678f3c56e41788a585da267b105071acf"</pre>
+<p></small></p>
+<h4 id="ripemd160string">RIPEMD160/STRING</h4>
+<blockquote>
+<p>The RIPEMD-160 digest of ASTRING as a hex string (OpenSSL’s<br />
+legacy provider, which libstyx loads on demand)<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb118"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a>(RIPEMD160/STRING <span class="st">&quot;hello&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "108f07b8382412612c048d07d13f814118445acd"</pre>
+<p></small></p>
+<h4 id="ripemd160hexstring">RIPEMD160/HEXSTRING</h4>
+<blockquote>
+<p>The RIPEMD-160 digest, as a hex string, of the bytes the hex<br />
+string ASTRING spells out (see sha256/hexstring). Errors on an<br />
+odd length or a non-hex character<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb119"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>(RIPEMD160/HEXSTRING <span class="st">&quot;00ff&quot;</span>)</span></code></pre></div>
+<small>
+<pre>=> "742dcba5d24837058e3fa56f1c36f9878484d1c2"</pre>
+<p></small></p>
 <h4 id="with-lock-file">WITH-LOCK-FILE</h4>
-<p>Runs body while flock-holding path (e.g. so a cron script won’t run
-twice); <code>:wait nil</code> skips the body instead of blocking</p>
-<div class="sourceCode" id="cb112"><pre
-class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>(LET ((LOCKF <span class="st">&quot;tmp-demo.lock&quot;</span>))</span>
-<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>  (LET ((RES</span>
-<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>         (WITH-LOCK-FILE (LOCKF)</span>
-<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))</span>
-<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a>    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))</span>
-<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a>      (WHEN HANDLE</span>
-<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a>        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))</span>
-<span id="cb112-8"><a href="#cb112-8" aria-hidden="true" tabindex="-1"></a>    (DELETE-FILE LOCKF)</span>
-<span id="cb112-9"><a href="#cb112-9" aria-hidden="true" tabindex="-1"></a>    RES))</span></code></pre></div>
+<blockquote>
+<p>Runs BODY while holding an flock on PATH (great for cron<br />
+scripts that shouldn’t run concurrently). If WAIT is nil and<br />
+the lock is already held elsewhere, BODY is skipped and nil<br />
+is returned<br />
+</p>
+</blockquote>
+<div class="sourceCode" id="cb120"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a>(LET ((LOCKF <span class="st">&quot;tmp-demo.lock&quot;</span>))</span>
+<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>  (LET ((RES</span>
+<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>         (WITH-LOCK-FILE (LOCKF)</span>
+<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>           (LIST :RAN (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))))</span>
+<span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a>    (LET ((HANDLE (ACQUIRE-LOCK-FILE LOCKF :WAIT NIL)))</span>
+<span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a>      (WHEN HANDLE</span>
+<span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a>        (SETQ RES (APPEND RES (LIST :FREE-AGAIN (RELEASE-LOCK-FILE HANDLE))))))</span>
+<span id="cb120-8"><a href="#cb120-8" aria-hidden="true" tabindex="-1"></a>    (DELETE-FILE LOCKF)</span>
+<span id="cb120-9"><a href="#cb120-9" aria-hidden="true" tabindex="-1"></a>    RES))</span></code></pre></div>
 <small>
 <pre>=> (:RAN NIL :FREE-AGAIN T)</pre>
 <p></small></p>

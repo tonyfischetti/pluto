@@ -1532,17 +1532,38 @@
   (ql:quickload :styx :silent t))
 (use-package :styx)
 
-(def-test/doc-section "temporary styx tests")
+(def-test/doc-section "styx: the syscall tier")
+
+(def-raw-markdown
+  (fn "What pluto reaches for below portable lisp, through libstyx (C, in `libstyx/`): stat, symlinks, the terminal, file locks, and OpenSSL hashing. `sd-journal` (systemd logging) is linux-only, so it isn't exercised here~%~%"))
+
+(def-test/doc-test '*sd-log-priority*
+  `(markdown-able (test-able returns))
+  'variable
+  (= test-return-value! 4)
+  *sd-log-priority*)
 
 (def-test/doc-test 'stat-filesize
   `(markdown-able (test-able returns))
-  "Size of a file (via `stat`/`lstat`) without opening it"
+  'function
   (= test-return-value! 3497)
   (stat-filesize "somebody.txt"))
 
+  ; without following, it's the link itself: as long as its target's name
+  (def-test/doc-test 'stat-filesize
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(3497 12))
+    (progn
+      (sh "ln -sf somebody.txt tmp-size-link")
+      (let ((res (list (stat-filesize "tmp-size-link")
+                       (stat-filesize "tmp-size-link" :follow-symlinks nil))))
+        (sh "rm tmp-size-link")
+        res)))
+
 (def-test/doc-test 'is-symlink-p
   `(markdown-able (test-able returns))
-  "Is it a symlink? (something portable CL cannot ask)"
+  'function
   (equal test-return-value! `(t nil))
   (progn
     (sh "ln -sf somebody.txt tmp-demo-link.txt")
@@ -1553,39 +1574,79 @@
 
 (def-test/doc-test 'md5/string
   `(markdown-able (test-able returns))
-  "Hashes (via OpenSSL) — also sha256/sha512/ripemd160, also /file variants"
+  'function
   (string= test-return-value! "5d41402abc4b2a76b9719d911017c592")
   (md5/string "hello"))
 
-(def-test/doc-test 'sha256/file
+(def-test/doc-test 'md5/file
   `(markdown-able (test-able returns))
-  "File hashing streams in 64KB chunks (never slurps the whole file)"
-  (string= test-return-value!
-           "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0")
-  (sha256/file "somebody.txt"))
-
-; RIPEMD160 lives in OpenSSL 3's legacy provider
-(def-test/doc-test 'ripemd160/string
-  `((test-able returns))
   'function
-  (string= test-return-value! "108f07b8382412612c048d07d13f814118445acd")
-  (ripemd160/string "hello"))
+  (string= test-return-value! "03d1f29193f99d260ee99b6cac7fd3a4")
+  (md5/file "somebody.txt"))
 
-; regression: hex strings with embedded 00 bytes used to be
-; truncated by strlen before hashing
+(def-test/doc-test 'sha256/string
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value!
+           "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824")
+  (sha256/string "hello"))
+
+; the hex string stands for bytes: "00ff" is two of them (and
+; regression: an embedded 00 byte used to end the input, strlen-wise)
 (def-test/doc-test 'sha256/hexstring
-  `((test-able returns))
+  `(markdown-able (test-able returns))
   'function
   (string= test-return-value!
            "06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8")
   (sha256/hexstring "00ff"))
 
-; hashing a missing file signals instead of segfaulting
-(def-test/doc-test 'md5/file
-  `((test-able returns))
+(def-test/doc-test 'sha256/file
+  `(markdown-able (test-able returns))
   'function
-  (and test-error! (null test-return-value!))
-  (md5/file "no-such-file.bin"))
+  (string= test-return-value!
+           "d10edb841b13927faf6dc9032bb9422ab19cc5f9096208c3f67de1da615589a0")
+  (sha256/file "somebody.txt"))
+
+(def-test/doc-test 'sha512/string
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value!
+           "9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043")
+  (sha512/string "hello"))
+
+(def-test/doc-test 'sha512/file
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value!
+           "55e28f5838f7c60563990384b60acc2f9a778f8dbc4fd8e8ac77585124c766f8c624baac29fed6e9b9235c64878315c678f3c56e41788a585da267b105071acf")
+  (sha512/file "somebody.txt"))
+
+; RIPEMD160 lives in OpenSSL 3's legacy provider
+(def-test/doc-test 'ripemd160/string
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "108f07b8382412612c048d07d13f814118445acd")
+  (ripemd160/string "hello"))
+
+(def-test/doc-test 'ripemd160/hexstring
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "742dcba5d24837058e3fa56f1c36f9878484d1c2")
+  (ripemd160/hexstring "00ff"))
+
+  ; hashing a missing file signals instead of segfaulting
+  (def-test/doc-test 'md5/file
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (md5/file "no-such-file.bin"))
+
+  ; so does a hex string that isn't one (odd length here)
+  (def-test/doc-test 'sha256/hexstring
+    `((test-able returns))
+    'function
+    (and test-error! (null test-return-value!))
+    (sha256/hexstring "abc"))
 
 ; whether stdout is a tty depends on how the tests are run,
 ; but a bogus fd is deterministically not one
@@ -1630,7 +1691,7 @@
 ; open file description) fails while held, succeeds after release
 (def-test/doc-test 'with-lock-file
   `(markdown-able (test-able returns))
-  "Runs body while flock-holding path (e.g. so a cron script won't run twice); `:wait nil` skips the body instead of blocking"
+  'function
   (equal test-return-value! `(:ran nil :free-again t))
   (let ((lockf "tmp-demo.lock"))
     (let ((res (with-lock-file (lockf)
