@@ -1138,6 +1138,50 @@
       (sh "echo -n oops >&2; exit 3"
           :err-fun (lambda (c e) (declare (ignore c e)) nil))))
 
+(def-raw-markdown
+  (fn "`:in` is the command's stdin: `t` inherits ours (the default), `nil` is /dev/null, and a stream or a filename feeds it. `:enc` is the encoding the output is read with~%~%"))
+
+(def-test/doc-test 'sh
+  `(markdown-able (test-able returns))
+  'function
+  (string= test-return-value! "HI")
+  (sh "tr a-z A-Z" :in (make-string-input-stream "hi")))
+
+  (def-test/doc-test 'sh
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("" "3497" "3497"))
+    (list (sh "cat" :in nil)
+          (string-trim " " (sh "wc -c" :in "somebody.txt"))
+          (string-trim " " (sh "wc -c" :in #P"somebody.txt"))))
+
+  ; :return-string nil hands stdout and stderr to ours and returns
+  ; nothing -- but a failing command still signals
+  (def-test/doc-test 'sh
+    `((test-able returns))
+    'function
+    (equal test-return-value! `((nil) "3"))
+    (list (multiple-value-list (sh "true" :return-string nil))
+          (handler-case (sh "exit 3" :return-string nil)
+            (error (e) (and (search "3" (fn "~A" e)) "3")))))
+
+  ; :interactive runs the shell with -i (it reads its rc files, so
+  ; aliases and functions from there work): $- carries the i flag
+  (def-test/doc-test 'sh
+    `((test-able returns))
+    'function
+    (equal test-return-value! `(t nil))
+    (flet ((flags-with-i-p (line) (and (every #'alphanumericp line) (find #\i line) t)))
+      (list (and (some #'flags-with-i-p (sh "echo $-" :interactive t :split t)) t)
+            (flags-with-i-p (sh "echo $-")))))
+
+(def-test/doc-test 'sh
+  `(markdown-able (test-able returns))
+  'function
+  (equal test-return-value! `("é" "é"))
+  (list (sh "printf '\\303\\251'")
+        (sh "printf '\\351'" :enc :latin-1)))
+
 ; --------------------------------------------------------------- ;
 
 (def-test/doc-section "system")

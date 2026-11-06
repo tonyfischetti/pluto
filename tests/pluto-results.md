@@ -1139,6 +1139,37 @@ reader macro: `Ø<form>` errors if `<form>` is null, else passes it through
 <small><pre>=> "100% done ~ okay"</pre></small>
 
 
+`:in` is the command's stdin: `t` inherits ours (the default), `nil` is /dev/null, and a stream or a filename feeds it. `:enc` is the encoding the output is read with
+
+
+
+#### SH
+
+> Runs command `acommand` through the shell specified by the global *pluto-shell*\
+>    `dry-run` just prints the command (default nil)\
+>    `err-fun` takes a function that takes an error code and the STDERR output\
+>    `echo` will print the command before running it\
+>    `enc` takes a format (default is *pluto-external-format* [which is :UTF-8 by default])\
+>    `in` t is inherited STDIN. nil is /dev/null. (default t)\
+>    `return-string` t returns the output string. nil inherits stdout and stderr (default t)\
+>    `split` will separate the stdout by newlines and return a list (default: nil)\
+>    `interactive` will use the '-i' option to make the shell interactive (default: nil)\
+
+```{.commonlisp}
+(SH "tr a-z A-Z" :IN (MAKE-STRING-INPUT-STREAM "hi"))
+```
+
+<small><pre>=> "HI"</pre></small>
+
+
+
+```{.commonlisp}
+(LIST (SH "printf '\\303\\251'") (SH "printf '\\351'" :ENC :LATIN-1))
+```
+
+<small><pre>=> ("é" "é")</pre></small>
+
+
 
 -----
 
