@@ -1096,6 +1096,63 @@
 
 ; --------------------------------------------------------------- ;
 
+(def-test/doc-section "terminal things / terminal manipulation")
+
+(def-raw-markdown
+  (fn "The cursor movements print escapes (compared against the `+ansi-escape-...+` constants here, since they don't render); the progress bar is shown with `:one-line nil`, so it doesn't try to redraw over the previous line~%~%"))
+
+(def-test/doc-test 'ansi-up-line
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (string= (with-output-to-string (s) (ansi-up-line s)) +ansi-escape-up+))
+
+  (def-test/doc-test 'ansi-left-all
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (and (string= (with-output-to-string (s) (ansi-left-all s)) +ansi-escape-left-all+)
+         (string= (with-output-to-string (s) (ansi-left-one s)) +ansi-escape-left-one+)))
+
+  ; regression: the start-of-line escape went to *error-output*
+  ; whatever WHERE was; now the whole thing lands on WHERE
+  (def-test/doc-test 'ansi-clear-line
+    `((test-able returns))
+    'function
+    (eq test-return-value! t)
+    (let* ((out    (with-output-to-string (s) (ansi-clear-line s)))
+           (prefix (length +ansi-escape-left-all+)))
+      (and (> (length out) prefix)
+           (string= (subseq out 0 prefix) +ansi-escape-left-all+)
+           (every (lambda (c) (char= c #\Space)) (subseq out prefix))
+           t)))
+
+(def-test/doc-test 'progress-bar
+  `(markdown-able (test-able returns))
+  'function
+  (eq test-return-value! t)
+  (let ((out (with-output-to-string (s)
+               (progress-bar 5 10 :where s :width 10 :one-line nil :out-of t))))
+    (and (search "◖▬▬▬▬▬▭▭▭▭▭ ◗  50.00%  [5/10]" out) t)))
+
+  ; drawn every INTERVAL-th index and always at the end; one-line
+  ; mode starts by moving up and clearing
+  (def-test/doc-test 'progress-bar
+    `((test-able returns))
+    'function
+    (equal test-return-value! `("" t t))
+    (list (with-output-to-string (s) (progress-bar 3 10 :where s :interval 5 :one-line nil))
+          (and (search "100.00%" (with-output-to-string (s)
+                                   (progress-bar 10 10 :where s :interval 7 :one-line nil)))
+               t)
+          (let ((out (with-output-to-string (s) (progress-bar 1 2 :where s :width 4))))
+            (and (search +ansi-escape-up+ out)
+                 (search +ansi-escape-left-all+ out)
+                 (search "◖▬▬▭▭ ◗" out)
+                 t))))
+
+; --------------------------------------------------------------- ;
+
 (def-test/doc-section "file/filename/directory operations")
 
 (def-test/doc-test 'basename

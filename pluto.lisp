@@ -1443,16 +1443,27 @@
 
 ; TODO: is there are better DRY way?
 (defun ansi-up-line (&optional (where *error-output*))
+  "Moves the cursor up one line on WHERE (default *error-output*)
+   by printing +ansi-escape-up+"
   (format where "~A" +ansi-escape-up+))
 
 (defun ansi-left-all (&optional (where *error-output*))
+  "Moves the cursor to the start of the line on WHERE (default
+   *error-output*) by printing +ansi-escape-left-all+"
   (format where "~A" +ansi-escape-left-all+))
 
 (defun ansi-clear-line (&optional (where *error-output*))
-  (ansi-left-all)
+  "Blanks the current line on WHERE (default *error-output*): back
+   to the start of the line, then as many spaces as the terminal is
+   wide (get-terminal-columns)"
+  ; (the start-of-line escape used to go to *error-output* no
+  ; matter what WHERE was)
+  (ansi-left-all where)
   (format where "~A" (make-string (get-terminal-columns) :initial-element #\Space)))
 
 (defun ansi-left-one (&optional (where *error-output*))
+  "Moves the cursor one column left on WHERE (default *error-output*)
+   by printing +ansi-escape-left-one+"
   (format where "~A" +ansi-escape-left-one+))
 
 ; TODO: what if it's interactive
@@ -1462,6 +1473,14 @@
                                       (width 60)
                                       (one-line t)
                                       (out-of nil))
+  "Draws a progress bar for INDEX out of LIMIT on WHERE (default
+   *error-output*), in yellow: ◖▬▬▬▭▭▭ ◗  50.00%. It's WIDTH cells
+   wide (default 60) and only drawn when INDEX is a multiple of
+   INTERVAL (default 1) -- and always when INDEX reaches LIMIT.
+   ONE-LINE (default t) redraws over the previous bar (up a line,
+   clear it, start of line) so the bar stays put; nil prints a
+   fresh line each time. OUT-OF adds [INDEX/LIMIT] after the
+   percentage. Made for the inside of a for-each, with index!"
   (when (or (= index limit) (and (= 0 (mod index interval))))
     (let* ((perc-done (/ index limit))
            (filled    (round (* perc-done width))))
@@ -1477,6 +1496,10 @@
       (force-output where))))
 
 (defun loading-forever ()
+  "Spins a - \\ | / cursor on *standard-output*, ten frames a second,
+   forever: with-loading runs it in a thread alongside its body and
+   kills it when the body is done. Dies gracefully on Control-C
+   (it's a `forever`)"
   (let ((counter -1))
     (forever
       (incf counter)

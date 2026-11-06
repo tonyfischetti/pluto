@@ -1149,6 +1149,49 @@ NIL
 
 -----
 
+### terminal things / terminal manipulation
+
+The cursor movements print escapes (compared against the `+ansi-escape-...+` constants here, since they don't render); the progress bar is shown with `:one-line nil`, so it doesn't try to redraw over the previous line
+
+
+
+#### ANSI-UP-LINE
+
+> Moves the cursor up one line on WHERE (default *error-output*)\
+>    by printing +ansi-escape-up+\
+
+```{.commonlisp}
+(STRING= (WITH-OUTPUT-TO-STRING (S) (ANSI-UP-LINE S)) +ANSI-ESCAPE-UP+)
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+#### PROGRESS-BAR
+
+> Draws a progress bar for INDEX out of LIMIT on WHERE (default\
+>    *error-output*), in yellow: ◖▬▬▬▭▭▭ ◗  50.00%. It's WIDTH cells\
+>    wide (default 60) and only drawn when INDEX is a multiple of\
+>    INTERVAL (default 1) -- and always when INDEX reaches LIMIT.\
+>    ONE-LINE (default t) redraws over the previous bar (up a line,\
+>    clear it, start of line) so the bar stays put; nil prints a\
+>    fresh line each time. OUT-OF adds [INDEX/LIMIT] after the\
+>    percentage. Made for the inside of a for-each, with index!\
+
+```{.commonlisp}
+(LET ((OUT
+       (WITH-OUTPUT-TO-STRING (S)
+         (PROGRESS-BAR 5 10 :WHERE S :WIDTH 10 :ONE-LINE NIL :OUT-OF T))))
+  (AND (SEARCH "◖▬▬▬▬▬▭▭▭▭▭ ◗  50.00%  [5/10]" OUT) T))
+```
+
+<small><pre>=> T</pre></small>
+
+
+
+-----
+
 ### file/filename/directory operations
 
 
