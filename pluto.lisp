@@ -1157,9 +1157,12 @@
 ; from the list's shape made { '((1 2) (3 4)) 1 } a key lookup.
 ; (the price: an alist keyed by integers needs a plain `assoc`)
 (defmethod get-at ((this list) that)
-  (cond ((integerp that)      (nth that this))
-        ((alistp this)        (cdr (assoc that this :test *pluto-curly-test*)))
-        (t                    (nth that this))))
+  ; (one NTH, reached either way: a separate "not an alist" branch
+  ; after the integer test made sbcl warn, rightly, that NTH could
+  ; never be happy there)
+  (if (or (integerp that) (not (alistp this)))
+    (nth that this)
+    (cdr (assoc that this :test *pluto-curly-test*))))
 
 (defmethod get-at ((this vector) that)
   (aref this that))

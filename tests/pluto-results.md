@@ -997,9 +997,9 @@ reader macro: `#?<form>` wraps `<form>` in `ignore-errors`
 
 reader macro: `? <form> <fallback>` evaluates to `<form>` if it's non-nil, else `<fallback>`
 ```{.commonlisp}
-(LET ((#:G649 (GETHASH :MISSING (MAKE-HASH-TABLE))))
-  (IF #:G649
-      #:G649
+(LET ((#:G650 (GETHASH :MISSING (MAKE-HASH-TABLE))))
+  (IF #:G650
+      #:G650
       42))
 ```
 
