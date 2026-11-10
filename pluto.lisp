@@ -55,6 +55,9 @@
     :universal->unix-time :unix->universal-time :get-unix-time
     :make-pretty-time :get-current-time :with-time :time-for-humans :time!
 
+    ; threads
+    :make-thread :join-thread :make-mutex :with-mutex
+
     ; for-each and friends
     :with-interactive-interrupt-handler
     :progress :break! :continue! :index! :value! :key! :for-each/line
@@ -73,9 +76,6 @@
     ; command-line arguments
     :program/script-name :cmdargs :def-cli-args :args! :bare-args!
     :+USAGE-TEXT!+ :print-usage! :process-args! :assign-next-arg!
-
-    ; threads
-    :make-thread :join-thread :make-mutex :with-mutex
 
     ; terminal things / terminal manipulation
     :clear-screen
@@ -842,6 +842,52 @@
 ;---------------------------------------------------------;
 
 
+; ------------------------------------------------------- ;
+; threads ----------------------------------------------- ;
+
+; the two blessed implementations' threads under one set of names
+; (pluto can't lean on bordeaux-threads: zero deps). with-loading,
+; for-each/parallel and with-status-lines are built on these
+
+(defun make-thread (fn &key (name "pluto-thread"))
+  "Starts FN (a function of no arguments) in a new thread and
+   returns the thread; join-thread waits for it and hands back FN's
+   value. The new thread sees the global values of special
+   variables, not the caller's dynamic bindings -- pass what it
+   needs lexically"
+  #+sbcl (sb-thread:make-thread fn :name name)
+  #+ecl  (mp:process-run-function name fn))
+
+(defun join-thread (thread)
+  "Waits for THREAD (from make-thread) to finish and returns what
+   its function returned"
+  #+sbcl (sb-thread:join-thread thread)
+  #+ecl  (mp:process-join thread))
+
+(defun %terminate-thread (thread)
+  #+sbcl (sb-thread:terminate-thread thread)
+  #+ecl  (mp:process-kill thread))
+
+(defun make-mutex (&key (name "pluto-mutex"))
+  "A mutex, for with-mutex: whatever two threads must never do at
+   once (update a shared list, a hash table, a counter) is done
+   holding it. Not recursive: taking it again from the thread that
+   holds it is an error, not a no-op"
+  #+sbcl (sb-thread:make-mutex :name name)
+  #+ecl  (mp:make-lock :name name))
+
+(defmacro with-mutex ((mutex) &body body)
+  "Runs BODY holding MUTEX (from make-mutex) -- waiting first if
+   another thread has it -- and releases it however BODY exits.
+   Every thread touching the shared thing must go through the same
+   mutex; a write that skips it is still a race
+   e.g. (with-mutex (m) (incf count))"
+  #+sbcl `(sb-thread:with-mutex (,mutex) ,@body)
+  #+ecl  `(mp:with-lock (,mutex) ,@body))
+
+; ------------------------------------------------------- ;
+
+
 ;---------------------------------------------------------;
 ; for-each and friends  ----------------------------------;
 
@@ -1477,52 +1523,6 @@
          "invalid arguments")))))
 
 ;---------------------------------------------------------;
-
-
-; ------------------------------------------------------- ;
-; threads ----------------------------------------------- ;
-
-; the two blessed implementations' threads under one set of names
-; (pluto can't lean on bordeaux-threads: zero deps). with-loading,
-; for-each/parallel and with-status-lines are built on these
-
-(defun make-thread (fn &key (name "pluto-thread"))
-  "Starts FN (a function of no arguments) in a new thread and
-   returns the thread; join-thread waits for it and hands back FN's
-   value. The new thread sees the global values of special
-   variables, not the caller's dynamic bindings -- pass what it
-   needs lexically"
-  #+sbcl (sb-thread:make-thread fn :name name)
-  #+ecl  (mp:process-run-function name fn))
-
-(defun join-thread (thread)
-  "Waits for THREAD (from make-thread) to finish and returns what
-   its function returned"
-  #+sbcl (sb-thread:join-thread thread)
-  #+ecl  (mp:process-join thread))
-
-(defun %terminate-thread (thread)
-  #+sbcl (sb-thread:terminate-thread thread)
-  #+ecl  (mp:process-kill thread))
-
-(defun make-mutex (&key (name "pluto-mutex"))
-  "A mutex, for with-mutex: whatever two threads must never do at
-   once (update a shared list, a hash table, a counter) is done
-   holding it. Not recursive: taking it again from the thread that
-   holds it is an error, not a no-op"
-  #+sbcl (sb-thread:make-mutex :name name)
-  #+ecl  (mp:make-lock :name name))
-
-(defmacro with-mutex ((mutex) &body body)
-  "Runs BODY holding MUTEX (from make-mutex) -- waiting first if
-   another thread has it -- and releases it however BODY exits.
-   Every thread touching the shared thing must go through the same
-   mutex; a write that skips it is still a race
-   e.g. (with-mutex (m) (incf count))"
-  #+sbcl `(sb-thread:with-mutex (,mutex) ,@body)
-  #+ecl  `(mp:with-lock (,mutex) ,@body))
-
-; ------------------------------------------------------- ;
 
 
 ; ------------------------------------------------------- ;
